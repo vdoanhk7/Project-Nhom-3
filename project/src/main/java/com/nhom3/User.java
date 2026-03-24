@@ -1,6 +1,6 @@
 package com.nhom3;
 
-public abstract class User {
+public abstract class User extends Entity {
     protected String userName;
     protected String password;
     protected String name;

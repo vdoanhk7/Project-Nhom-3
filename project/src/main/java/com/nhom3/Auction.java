@@ -4,6 +4,6 @@ import java.time.LocalDate;
 
 public class Auction {
     LocalDate startDate;
-    LocalDate endDate;
+    LocalDate endDate;x1
 
 }

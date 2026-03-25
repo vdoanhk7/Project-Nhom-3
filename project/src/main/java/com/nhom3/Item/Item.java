@@ -1,43 +1,47 @@
-package com.nhom3;
+package com.nhom3.Item;
+import java.time.LocalDate;
 
-public abstract class Item extends Entity{
-	private String iName;
-	private String info;
-	private double startPrice;
-	private double curHighest;
-	private LocalDate startAuction;
-	private LocalDate endAuction;
+abstract class Item extends Entity{
+	protected String iName;
+	protected String info;
+	protected double startPrice;
+	protected double curHighest;
+	protected LocalDate startAuction;
+	protected LocalDate endAuction;
 	
-	protected Item(String id, String name, String info, double startPrice, double curHighest, LocalDate start, LocalDate end){
+	//Constructor Item 
+	protected Item(String id, String name, String info, double startPrice, LocalDate startAuction, LocalDate endAuction){
 		super(id);
 		this.iName = name;
 		this.info = info;
 		this.startPrice = startPrice;
-		this.curHighest = curHighest;
-		this.start = start;
-		this.end = end;
+		// curHighest starting is startPrice
+		this.curHighest = startPrice;
+		this.startAuction = startAuction;
+		this.endAuction = endAuction;
 	}
+
+	// Setter getter name 
+	abstract protected void setName();
+	abstract protected void getName();
 	
-	protected void setName(){
+	// Setter getter info	
+	abstract protected void setInfo();
+	abstract protected void getInfo();
 		
-	}
-	protected void setName(){
+	// Setter getter startPrice
+	abstract protected void setStartPrice();
+	abstract protected void getStartPrice();
+	
+	// Setter getter curHighest
+	abstract protected void getCurHighest();
+	abstract protected void setCurHighest();
 
-	}
-	protected void setName(){
+	// Setter getter startAuction
+	abstract protected void setStartAuction();
+	abstract protected void getStartAuction();
 
-	}
-	protected void setName(){
-
-	}
-	protected void setName(){
-
-	}
-	protected void setName(){
-
-	}
-	protected void setName(){
-
-	}
-
+	// Setter getter startAuction
+	abstract protected void setEndAuction();
+	abstract protected void getEndAuction();
 }

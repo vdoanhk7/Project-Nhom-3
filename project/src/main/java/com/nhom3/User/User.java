@@ -8,7 +8,7 @@ public abstract class User extends Entity {
     protected String name;
     protected String email;
     protected String phoneNumber;
-    public User(String id,String userName, String password, String name, String email, String phoneNumber) {
+    public User(String id, String userName, String password, String name, String email, String phoneNumber) {
         super("U-" + id);
         this.userName = userName;
         this.password = password;

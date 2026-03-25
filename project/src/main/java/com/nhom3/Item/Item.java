@@ -10,14 +10,15 @@ abstract class Item extends Entity{
 	protected LocalDate endAuction;
 	
 	//Constructor Item 
-	protected Item(String id, String name, String info, double startPrice, double curHighest, LocalDate start, LocalDate end){
+	protected Item(String id, String name, String info, double startPrice, LocalDate startAuction, LocalDate endAuction){
 		super(id);
 		this.iName = name;
 		this.info = info;
 		this.startPrice = startPrice;
-		this.curHighest = curHighest;
-		this.start = start;
-		this.end = end;
+		// curHighest starting is startPrice
+		this.curHighest = startPrice;
+		this.startAuction = startAuction;
+		this.endAuction = endAuction;
 	}
 
 	// Setter getter name 

@@ -1,4 +1,4 @@
-public class Art extends Item{
+public class Other extends Item{
 	// Constructor
 	protected Item(String id, String name, String info, double startPrice, LocalDate start, LocalDate end){
 		super(id, name, info, startPrice, start, end);

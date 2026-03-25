@@ -8,6 +8,8 @@ public abstract class Entity {
         this.id = id;
     }
 
-    public abstract String getId();
+    public String getId(){
+        return id;
+    }
     public abstract void displayInfo();
 }

@@ -1,6 +1,6 @@
 package com.nhom3;
 
-abstract class Item extends Entity{
+public abstract class Item extends Entity{
 	private String iName;
 	private String info;
 	private double startPrice;

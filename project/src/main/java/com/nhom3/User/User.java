@@ -8,7 +8,8 @@ public abstract class User extends Entity {
     protected String name;
     protected String email;
     protected String phoneNumber;
-    public User(String userName, String password, String name, String email, String phoneNumber) {
+    public User(String id,String userName, String password, String name, String email, String phoneNumber) {
+        super("U-" + id);
         this.userName = userName;
         this.password = password;
         this.name = name;
@@ -45,7 +46,13 @@ public abstract class User extends Entity {
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
-    public abstract String getRoleName() // Tên vai trò của người dùng (Bidder,Seller,Admin)
-     ;
-    
+    public abstract String getRoleName(); // Tên vai trò của người dùng (Bidder,Seller,Admin)
+    public void displayInfo() {
+        System.out.println("ID: " + id);
+        System.out.println("Username: " + userName);
+        System.out.println("Name: " + name);
+        System.out.println("Email: " + email);
+        System.out.println("Phone Number: " + phoneNumber);
+        System.out.println("Role: " + getRoleName());
+    }
 }

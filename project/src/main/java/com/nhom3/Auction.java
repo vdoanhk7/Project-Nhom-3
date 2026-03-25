@@ -10,4 +10,12 @@ public class Auction{
     public Auction() {
         this.sellers = new ArrayList<>();
     }
+
+    public void display() {
+        for (Seller seller : sellers) {
+            for (Item item : seller.) {
+                
+            }
+        }
+    }
 }

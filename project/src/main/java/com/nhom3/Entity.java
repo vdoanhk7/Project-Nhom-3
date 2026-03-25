@@ -2,26 +2,14 @@ package com.nhom3;
 
 public abstract class Entity {
     // Moi thuc the deu phai co id xac dinh duy nhat
-    protected int id;
+    protected String id;
     protected String type;
 
-    public Entity(int id) {
+    public Entity(String id) {
         this.id = id;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
+    public abstract String getId();
+    public abstract String getType();
+    public abstract void displayInfo();
 }

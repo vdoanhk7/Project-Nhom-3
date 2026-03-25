@@ -46,13 +46,11 @@ public abstract class User extends Entity {
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
-    public abstract String getRoleName(); // Tên vai trò của người dùng (Bidder,Seller,Admin)
     public void displayInfo() {
         System.out.println("ID: " + id);
         System.out.println("Username: " + userName);
         System.out.println("Name: " + name);
         System.out.println("Email: " + email);
         System.out.println("Phone Number: " + phoneNumber);
-        System.out.println("Role: " + getRoleName());
     }
 }

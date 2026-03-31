@@ -1,48 +1,58 @@
+package com.nhom3.Item;
+
+import java.time.LocalDate;
+
 public class Art extends Item{
 	// Constructor
-	protected Item(String id, String name, String info, double startPrice, LocalDate start, LocalDate end){
+	public Art(String id, String name, String info, double startPrice, LocalDate start, LocalDate end){
 		super(id, name, info, startPrice, start, end);
 	}
 
-	protected void setName(){
+	public void setName(){
 		this.name = name;
 	}
-	protected String getName(){
+	public String getName(){
 		return name;	
 	}
 	
-	protected void setInfo(){
+	public void setInfo(){
 		this.info = info;
 	}
-	protected String getInfo(){
+	public String getInfo(){
 		return info;
 	}
 
-	protected void setStartPrice(){
+	public void setStartPrice(){
 		this.startPrice = startPrice;
 	}
-	protected double getStartPrice(){
+	public double getStartPrice(){
 		return startPrice;
 	}
 	
-	protected double getCurHighest(){
+	public double getCurHighest(){
 		return curHighest;
 	}
-	protected void setCurHighest(){
+	public void setCurHighest(){
 		this.curHighest = curHighest;
 	}
 
-	protected void setStartAuction(){
+	public void setStartAuction(){
 		this.startAuction = startAuction;
 	}
-	protected LocalDate getStartAuction(){
+	public LocalDate getStartAuction(){
 		return startAuction;
 	}
 
-	protected void setEndAuction(){
+	public void setEndAuction(){
 		this.endAuction = endAuction;
 	}
-	protected LocalDate getEndAuction(){
+	public LocalDate getEndAuction(){
 		return endAuction;
+	}
+
+	@Override
+	public void displayInfo() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'displayInfo'");
 	}
 }

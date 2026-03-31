@@ -33,7 +33,7 @@ abstract class Item extends Entity{
 	public void setInfo(String info){
 		this.info = info;
 	}
-	abstract public String getInfo(){
+	public String getInfo(){
 		return info;
 	}
 		

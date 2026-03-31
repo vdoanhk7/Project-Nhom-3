@@ -1,47 +1,40 @@
 package com.nhom3.Item;
 import java.time.LocalDate;
+import com.nhom3.Entity;
 
-abstract class Item extends Entity{
-	protected String iName;
+public abstract class Item extends Entity{
+	protected String name;
 	protected String info;
 	protected double startPrice;
 	protected double curHighest;
 	protected LocalDate startAuction;
 	protected LocalDate endAuction;
 	
-	//Constructor Item 
-	protected Item(String id, String name, String info, double startPrice, LocalDate startAuction, LocalDate endAuction){
+	public Item(String id, String name, String info, double startPrice, LocalDate startAuction, LocalDate endAuction){
 		super(id);
-		this.iName = name;
+		this.name = name;
 		this.info = info;
 		this.startPrice = startPrice;
-		// curHighest starting is startPrice
 		this.curHighest = startPrice;
 		this.startAuction = startAuction;
 		this.endAuction = endAuction;
 	}
 
-	// Setter getter name 
-	abstract protected void setName();
-	abstract protected void getName();
+	abstract public void setName(String newName);
+	abstract public String getName();
 	
-	// Setter getter info	
-	abstract protected void setInfo();
-	abstract protected void getInfo();
+	abstract public void setInfo(String newInfo);
+	abstract public String getInfo();
 		
-	// Setter getter startPrice
-	abstract protected void setStartPrice();
-	abstract protected void getStartPrice();
+	abstract public void setStartPrice(double newStartPrice);
+	abstract public double getStartPrice();
 	
-	// Setter getter curHighest
-	abstract protected void getCurHighest();
-	abstract protected void setCurHighest();
+	abstract public double getCurHighest();
+	abstract public void setCurHighest(double newCurHighest);
 
-	// Setter getter startAuction
-	abstract protected void setStartAuction();
-	abstract protected void getStartAuction();
+	abstract public void setStartAuction(LocalDate newStartAuction);
+	abstract public LocalDate getStartAuction();
 
-	// Setter getter startAuction
-	abstract protected void setEndAuction();
-	abstract protected void getEndAuction();
+	abstract public void setEndAuction(LocalDate newEndAuction);
+	abstract public LocalDate getEndAuction();
 }

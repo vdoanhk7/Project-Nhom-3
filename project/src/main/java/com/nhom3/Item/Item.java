@@ -10,38 +10,62 @@ abstract class Item extends Entity{
 	protected LocalDate endAuction;
 	
 	//Constructor Item 
-	protected Item(String id, String name, String info, double startPrice, LocalDate startAuction, LocalDate endAuction){
+	public Item(String id, String iName, String info, double startPrice, LocalDate startAuction, LocalDate endAuction){
 		super(id);
-		this.iName = name;
+		this.iName = iName;
 		this.info = info;
 		this.startPrice = startPrice;
-		// curHighest starting is startPrice
+		// curHighest starting price is startPrice
 		this.curHighest = startPrice;
 		this.startAuction = startAuction;
 		this.endAuction = endAuction;
 	}
 
 	// Setter getter name 
-	abstract protected void setName();
-	abstract protected void getName();
+	public void setName(String iName){
+		this.iName = iName;
+	}
+	public String getName(){
+		return iName;
+	}
 	
 	// Setter getter info	
-	abstract protected void setInfo();
-	abstract protected void getInfo();
+	public void setInfo(String info){
+		this.info = info;
+	}
+	abstract public String getInfo(){
+		return info;
+	}
 		
 	// Setter getter startPrice
-	abstract protected void setStartPrice();
-	abstract protected void getStartPrice();
+	public void setStartPrice(double startPrice){
+		this.startPrice = startPrice;
+	}
+	public double getStartPrice(){
+		return startPrice;
+	}
 	
 	// Setter getter curHighest
-	abstract protected void getCurHighest();
-	abstract protected void setCurHighest();
+	public void setCurHighest(double curHighest){
+		this.curHighest = curHighest;
+	}
+	public double getCurHighest(){
+		return curHighest;
+	}
 
 	// Setter getter startAuction
-	abstract protected void setStartAuction();
-	abstract protected void getStartAuction();
+	public void setStartAuction(LocalDate startAuction){
+		this.startAuction = startAuction;
+	}
+	public LocalDate getStartAuction(){
+		return startAuction;
+	}
 
-	// Setter getter startAuction
-	abstract protected void setEndAuction();
-	abstract protected void getEndAuction();
+	// Setter getter endAuction
+	public void setEndAuction(LocalDate endAuction){
+		this.endAuction = endAuction;
+	}
+	public LocalDate getEndAuction(){
+		return endAuction;
+	}
 }

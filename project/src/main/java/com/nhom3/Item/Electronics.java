@@ -3,7 +3,6 @@ package com.nhom3.Item;
 import java.time.LocalDate;
 
 public class Electronics extends Item{
-	// Constructor
 	public Electronics(String id, String name, String info, double startPrice, LocalDate start, LocalDate end){
 		super(id, name, info, startPrice, start, end);
 	}

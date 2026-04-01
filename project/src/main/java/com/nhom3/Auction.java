@@ -6,7 +6,7 @@ public class Auction extends Entity{
     private ArrayList<Seller> sellers;
 
     public Auction(String id) {
-        super(id);
+        super("AU-" + id);
         this.sellers = new ArrayList<>();
     }
 

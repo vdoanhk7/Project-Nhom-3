@@ -1,5 +1,6 @@
 package com.nhom3.Item;
 import java.time.LocalDate;
+import com.nhom3.Entity;
 
 abstract class Item extends Entity{
 	protected String iName;

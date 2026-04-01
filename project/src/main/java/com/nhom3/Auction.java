@@ -1,7 +1,5 @@
 package com.nhom3;
-
 import java.util.ArrayList;
-
 import com.nhom3.User.Seller;
 
 public class Auction{
@@ -13,7 +11,8 @@ public class Auction{
 
     public void display() {
         for (Seller seller : sellers) {
-            for (Item item : seller.) {
+            for (Item item : seller.getItems()) {
+                item.displayInfo();
                 
             }
         }

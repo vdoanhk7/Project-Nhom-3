@@ -12,7 +12,7 @@ public abstract class Item extends Entity{
 	
 	//Constructor Item 
 	public Item(String id, String iName, String info, double startPrice, LocalDate startAuction, LocalDate endAuction){
-		super(id);
+		super("I- " + id);
 		this.iName = iName;
 		this.info = info;
 		this.startPrice = startPrice;

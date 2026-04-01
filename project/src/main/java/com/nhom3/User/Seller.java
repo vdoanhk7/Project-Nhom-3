@@ -1,6 +1,7 @@
 package com.nhom3.User;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
 import com.nhom3.Item.Item;
 public class Seller extends User {
     private List<Item> managedItems;
@@ -24,7 +25,7 @@ public class Seller extends User {
         }
         return false; // Không tìm thấy item với id đã cho
     }
-    public boolean updateItem(String itemId, String newName, String newStartPrice, String newStartAution, String newEndAuction) { // Cập nhật thông tin item theo id
+    public boolean updateItem(String itemId, String newName, Double newStartPrice, LocalDate newStartAution, LocalDate newEndAuction) { // Cập nhật thông tin item theo id
         for (Item item : managedItems) {
             if (item.getId().equals(itemId)) {
                 item.setName(newName);

@@ -1,10 +1,16 @@
 package com.nhom3;
 import java.util.ArrayList;
-import com.nhom3.User.Seller;
+import java.time.LocalDate;
+import com.nhom3.Item.Item;
+import com.nhom3.User.Bidder;
+
 
 public class Auction extends Entity{
-    private ArrayList<Seller> sellers;
-
+    private Item item;
+    private LocalDate startTime;
+    private LocalDate endTime;
+    private Bidder highestBidder;
+    private StatusOfAuction status;
     public Auction(String id) {
         super("AU-" + id);
         this.sellers = new ArrayList<>();
@@ -15,6 +21,13 @@ public class Auction extends Entity{
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'displayInfo'");
     }
+    public void addBid(BidTransaction bid) {
+        if (status == StatusOfAuction.RUNNING) {
+            if (highestBidder == null || bid.getBidAmount() > item.getCurHighest()) {
+                highestBidder = bid.getBidder();
+                item.setCurHighest(bid.getBidAmount());
+            }
+        }
+    }
 
-    
 }

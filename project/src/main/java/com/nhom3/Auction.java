@@ -12,7 +12,8 @@ public class Auction extends Entity{
     private Bidder highestBidder;
     private StatusOfAuction status;
     public Auction(String id) {
-        super(id);
+        super("AU-" + id);
+        this.sellers = new ArrayList<>();
     }
 
     @Override

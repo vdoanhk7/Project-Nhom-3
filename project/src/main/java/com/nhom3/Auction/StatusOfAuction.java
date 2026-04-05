@@ -1,9 +1,9 @@
-package com.nhom3;
+package com.nhom3.Auction;
 
 public enum StatusOfAuction {
     OPEN,
     RUNNING,
     FINISHED,
     PAID,
-    CANCELED
+    CANCELLED
 }

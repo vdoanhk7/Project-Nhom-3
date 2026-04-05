@@ -1,7 +1,22 @@
 package com.nhom3.User;
+import com.nhom3.Auction.Auction;
+import com.nhom3.Auction.BidTransaction;
+import java.time.LocalDateTime;
 
 public class Bidder extends User {
     public Bidder(String id, String userName, String password, String name, String email, String phoneNumber) {
         super("BD-" + id, userName, password, name, email, phoneNumber);
     }
+
+    public void createBidTransaction(String id, Auction auction, double amount, String note) {
+        if (auction == null) {
+            System.out.println("Auction is null. Cannot create bid transaction.");
+            return;
+        }
+        BidTransaction bidTransaction = new BidTransaction(id, this, amount, LocalDateTime.now(), note);
+        auction.addBid(bidTransaction);
+    }
+    
+        
+        
 }

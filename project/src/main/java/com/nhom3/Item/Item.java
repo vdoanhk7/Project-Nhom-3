@@ -1,72 +1,61 @@
 package com.nhom3.Item;
-import java.time.LocalDate;
 import com.nhom3.Entity;
 
 public abstract class Item extends Entity{
-	protected String iName;
+	protected String name;
 	protected String info;
 	protected double startPrice;
 	protected double curHighest;
-	protected LocalDate startAuction;
-	protected LocalDate endAuction;
-	
-	//Constructor Item 
-	public Item(String id, String iName, String info, double startPrice, LocalDate startAuction, LocalDate endAuction){
-		super("I- " + id);
-		this.iName = iName;
+	protected String type;
+
+	public Item(String id, String name, String info, double startPrice){
+		super(id);
+		this.name = name;
 		this.info = info;
 		this.startPrice = startPrice;
 		// curHighest starting price is startPrice
 		this.curHighest = startPrice;
-		this.startAuction = startAuction;
-		this.endAuction = endAuction;
+
 	}
 
-	// Setter getter name 
-	public void setName(String iName){
-		this.iName = iName;
+	public void setName(String name){
+		this.name = name;
 	}
 	public String getName(){
-		return iName;
+		return name;
 	}
-	
-	// Setter getter info	
 	public void setInfo(String info){
 		this.info = info;
 	}
 	public String getInfo(){
 		return info;
 	}
-		
-	// Setter getter startPrice
 	public void setStartPrice(double startPrice){
 		this.startPrice = startPrice;
 	}
 	public double getStartPrice(){
 		return startPrice;
 	}
-	
-	// Setter getter curHighest
 	public void setCurHighest(double curHighest){
 		this.curHighest = curHighest;
 	}
 	public double getCurHighest(){
 		return curHighest;
 	}
+	public String getType() {
+		return type;
+	}
+	
+	@Override
+	public void displayInfo() {
+		System.out.println("Item Info:");
+		System.out.println("Name: " + name);
+		System.out.println("Info: " + info);
+		System.out.println("Start Price: " + startPrice);
+		System.out.println("Current Highest: " + curHighest);
+		System.out.println("Type: " + type);
+	}
 
-	// Setter getter startAuction
-	public void setStartAuction(LocalDate startAuction){
-		this.startAuction = startAuction;
-	}
-	public LocalDate getStartAuction(){
-		return startAuction;
-	}
+	
 
-	// Setter getter endAuction
-	public void setEndAuction(LocalDate endAuction){
-		this.endAuction = endAuction;
-	}
-	public LocalDate getEndAuction(){
-		return endAuction;
-	}
 }

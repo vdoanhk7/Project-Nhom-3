@@ -1,5 +1,4 @@
 package com.nhom3.User;
-
 import com.nhom3.Entity;
 
 public abstract class User extends Entity {

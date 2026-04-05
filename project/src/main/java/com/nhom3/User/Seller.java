@@ -1,43 +1,71 @@
 package com.nhom3.User;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import com.nhom3.Auction.Auction;
 import com.nhom3.Item.Item;
+
 public class Seller extends User {
     private List<Item> managedItems;
+    private List<Auction> managedAuctions;
 
     public Seller(String id, String userName, String password, String name, String email, String phoneNumber) {
         super("S-" + id, userName, password, name, email, phoneNumber);
         this.managedItems = new ArrayList<>();
     }
     // Các phương thức quản lý item
-    public void addItem(Item newItem) { // Thêm item mới vào danh sách quản lý
-        if (newItem != null) {
-            this.managedItems.add(newItem);
+    public void createItem(Item newItem) { // Thêm item mới vào danh sách quản lý
+        if (managedItems == null) {
+            managedItems = new ArrayList<>();
         }
+        managedItems.add(newItem);
     }
-    public boolean removeItem(String itemId) {  //Xoá item theo id 
-        for (int i = 0; i < managedItems.size(); i++) {
-            if (managedItems.get(i).getId().equals(itemId)) {
-                managedItems.remove(i);
-                return true; // Xóa thành công
-            }
+    public void removeItem(String itemId) {
+        if (managedItems == null) {
+            System.out.println("No items to remove.");
+            return;
         }
-        return false; // Không tìm thấy item với id đã cho
-    }
-    public boolean updateItem(String itemId, String newName, Double newStartPrice, LocalDate newStartAution, LocalDate newEndAuction) { // Cập nhật thông tin item theo id
-        for (Item item : managedItems) {
-            if (item.getId().equals(itemId)) {
-                item.setName(newName);
-                item.setStartPrice(newStartPrice);
-                item.setStartAuction(newStartAution);
-                item.setEndAuction(newEndAuction);
-                return true; // Cập nhật thành công
-            }
+        if (!managedItems.removeIf(item -> item.getId().equals(item.getType() +"-" + itemId))) {
+            System.out.println("Item with ID " + itemId + " not found.");
         }
-        return false; // Không tìm thấy item với id đã cho
     }
 
+    public void createAuction(Item item, String id, LocalDateTime startTime, LocalDateTime endTime) {
+        if (managedAuctions == null) {
+            managedAuctions = new ArrayList<>();
+        }
+        Auction newAuction = new Auction(id, item, startTime, endTime);
+        managedAuctions.add(newAuction);
+    }
+    public void removeAuction(String auctionId) {
+        if (managedAuctions == null) {
+            System.out.println("No auctions to remove.");
+            return;
+        }
+        if (!managedAuctions.removeIf(auction -> auction.getId().equals("Auction-" + auctionId))) {
+            System.out.println("Auction with ID " + auctionId + " not found.");
+        }
+    }
+
+    public void runAuction(String auctionId) {
+        if (managedAuctions == null) {
+            System.out.println("No auctions to run.");
+            return;
+        }
+        for (Auction auction : managedAuctions) {
+            if (auction.getId().equals("Auction-" + auctionId)) {
+                auction.runAuction();
+                return;
+            }
+        }
+        System.out.println("Auction with ID " + auctionId + " not found.");
+    }
+
+    public List<Item> getManagedItems() {
+        return managedItems;
+    }
+    public List<Auction> getManagedAuctions() {
+        return managedAuctions;
+    }
 }
-
 

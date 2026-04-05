@@ -1,4 +1,4 @@
-package com.nhom3;
+package com.nhom3.Application;
 
 /**
  * Hello world!

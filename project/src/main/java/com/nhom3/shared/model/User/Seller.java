@@ -31,30 +31,30 @@ public class Seller extends User {
         }
     }
 
-    public void createAuction(Item item, String id, LocalDateTime startTime, LocalDateTime endTime) {
+    public void createAuction(Item item, int id, LocalDateTime startTime, LocalDateTime endTime) {
         if (managedAuctions == null) {
             managedAuctions = new ArrayList<>();
         }
         Auction newAuction = new Auction(id, item, startTime, endTime);
         managedAuctions.add(newAuction);
     }
-    public void removeAuction(String auctionId) {
+    public void removeAuction(int auctionId) {
         if (managedAuctions == null) {
             System.out.println("No auctions to remove.");
             return;
         }
-        if (!managedAuctions.removeIf(auction -> auction.getId().equals("Auction-" + auctionId))) {
+        if (!managedAuctions.removeIf(auction -> auction.getId() == auctionId)) {
             System.out.println("Auction with ID " + auctionId + " not found.");
         }
     }
 
-    public void runAuction(String auctionId) {
+    public void runAuction(int auctionId) {
         if (managedAuctions == null) {
             System.out.println("No auctions to run.");
             return;
         }
         for (Auction auction : managedAuctions) {
-            if (auction.getId().equals("Auction-" + auctionId)) {
+            if (auction.getId() == auctionId) {
                 auction.runAuction();
                 return;
             }

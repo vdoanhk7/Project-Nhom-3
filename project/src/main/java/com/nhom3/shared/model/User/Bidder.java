@@ -9,7 +9,7 @@ public class Bidder extends User {
         super(id, userName, password, name, email, phoneNumber);
     }
 
-    public void createBidTransaction(String id, Auction auction, double amount, String note) {
+    public void createBidTransaction(int id, Auction auction, double amount, String note) {
         if (auction == null) {
             System.out.println("Auction is null. Cannot create bid transaction.");
             return;

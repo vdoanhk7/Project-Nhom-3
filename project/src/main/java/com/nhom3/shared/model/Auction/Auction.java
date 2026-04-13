@@ -1,12 +1,13 @@
 package com.nhom3.shared.model.Auction;
 import java.time.LocalDateTime;
+
+import com.nhom3.shared.model.Entity;
 import com.nhom3.shared.model.Item.Item;
 import com.nhom3.shared.model.User.Bidder;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Auction{
-    private String id;
+public class Auction extends Entity{
     private Item item;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
@@ -14,8 +15,8 @@ public class Auction{
     private StatusOfAuction status;
     private List<BidTransaction> bidHistory;
     
-    public Auction(String id, Item item, LocalDateTime startTime, LocalDateTime endTime) {
-        this.id = id;
+    public Auction(int id, Item item, LocalDateTime startTime, LocalDateTime endTime) {
+        super(id);
         this.item = item;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -24,9 +25,6 @@ public class Auction{
         
     }
 
-    public String getId() {
-        return id;
-    }
     public void addBid(BidTransaction bid) {
         if (status == StatusOfAuction.RUNNING) {
             if (highestBidder == null || bid.getBidAmount() > item.getCurHighest()) {

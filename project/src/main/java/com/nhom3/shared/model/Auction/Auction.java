@@ -1,6 +1,5 @@
 package com.nhom3.shared.model.Auction;
 import java.time.LocalDateTime;
-
 import com.nhom3.shared.model.Entity;
 import com.nhom3.shared.model.Item.Item;
 import com.nhom3.shared.model.User.Bidder;
@@ -25,55 +24,31 @@ public class Auction extends Entity{
         
     }
 
-    public void addBid(BidTransaction bid) {
-        if (status == StatusOfAuction.RUNNING) {
-            if (highestBidder == null || bid.getBidAmount() > item.getCurHighest()) {
-                highestBidder = bid.getBidder();
-                item.setCurHighest(bid.getBidAmount());
-                bidHistory.add(bid);
-                System.out.println("Them thanh cong");
-            } else {
-                System.out.println("Gia dat khong duoc thap hon gia hien tai");
-            }
-        }else {
-            System.out.println("Phiên đấu giá đã kết thúc hoặc chưa bắt đầu.");
-        }
+
+    public void setItem(Item item) {
+        this.item = item;
     }
 
-    public void endAuction() {
-        if (status == StatusOfAuction.RUNNING) {
-            status = StatusOfAuction.FINISHED;
-            System.out.println("Phiên đấu giá đã kết thúc. Người thắng cuộc: " + (highestBidder != null ? highestBidder.getName() : "Không có người thắng"));
-        } else if (status == StatusOfAuction.OPEN) {
-            System.out.println("Phiên đấu giá chưa bắt đầu.");
-        } else if (status == StatusOfAuction.FINISHED || status == StatusOfAuction.PAID) {
-            System.out.println("Phiên đấu giá đã kết thúc.");
-        } else if (status == StatusOfAuction.CANCELLED) {
-            System.out.println("Phiên đấu giá đã bị hủy.");
-        }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
     }
-    public void runAuction() {
-        if (status == StatusOfAuction.OPEN) {
-            status = StatusOfAuction.RUNNING;
-            System.out.println("Phiên đấu giá đã bắt đầu.");
-        } else if (status == StatusOfAuction.RUNNING) {
-            System.out.println("Phiên đấu giá đang chạy.");
-        } else if (status == StatusOfAuction.FINISHED || status == StatusOfAuction.PAID) {
-            System.out.println("Phiên đấu giá đã kết thúc.");
-        } else if (status == StatusOfAuction.CANCELLED) {
-            System.out.println("Phiên đấu giá đã bị hủy.");
-        }
+
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
-    public void cancelAuction() {
-        if (status == StatusOfAuction.OPEN || status == StatusOfAuction.RUNNING) {
-            status = StatusOfAuction.CANCELLED;
-            System.out.println("Phiên đấu giá đã bị hủy.");
-        } else if (status == StatusOfAuction.FINISHED || status == StatusOfAuction.PAID) {
-            System.out.println("Phiên đấu giá đã kết thúc, không thể hủy.");
-        } else if (status == StatusOfAuction.CANCELLED) {
-            System.out.println("Phiên đấu giá đã bị hủy.");
-        }
+
+
+    public void setHighestBidder(Bidder highestBidder) {
+        this.highestBidder = highestBidder;
     }
+
+
+    public void setBidHistory(List<BidTransaction> bidHistory) {
+        this.bidHistory = bidHistory;
+    }
+
 
     public Item getItem() {
         return item;
@@ -93,6 +68,10 @@ public class Auction extends Entity{
 
     public StatusOfAuction getStatus() {
         return status;
+    }
+
+    public void setStatus(StatusOfAuction status) {
+        this.status = status;
     }
 
     public List<BidTransaction> getBidHistory() {

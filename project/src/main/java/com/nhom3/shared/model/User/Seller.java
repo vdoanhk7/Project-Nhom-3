@@ -55,7 +55,7 @@ public class Seller extends User {
         }
         for (Auction auction : managedAuctions) {
             if (auction.getId() == auctionId) {
-                auction.runAuction();
+                auction.Auction();
                 return;
             }
         }

@@ -1,7 +1,7 @@
 package com.nhom3.shared.factory;
 
-import com.nhom3.shared.model.Item.Electronics;
-import com.nhom3.shared.model.Item.Item;
+// import com.nhom3.shared.model.Item.Electronics;
+// import com.nhom3.shared.model.Item.Item;
 
 public class ElectronicsCreator implements ItemCreator {
     @Override
@@ -9,4 +9,4 @@ public class ElectronicsCreator implements ItemCreator {
         return new Electronics(id, name, startPrice);
     }
     
-}
+// // }

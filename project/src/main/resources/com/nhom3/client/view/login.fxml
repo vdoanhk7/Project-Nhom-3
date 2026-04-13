@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="CENTER" prefHeight="500.0" prefWidth="400.0" spacing="15.0" style="-fx-background-color: #ffffff;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.LoginController">
+    <padding>
+        <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
+    </padding>
+   <children>
+       
+       <!-- Tiêu đề -->
+       <Label text=" ĐĂNG NHẬP" textFill="#3c8fe5">
+           <font>
+               <Font name="System Bold" size="24.0" />
+           </font>
+       </Label>
+       <Label text="Chào mừng trở lại hệ thống đấu giá" textFill="#7f8c8d">
+           <VBox.margin>
+               <Insets bottom="20.0" />
+           </VBox.margin>
+       </Label>
+       
+       <!-- Form Tài khoản -->
+       <VBox spacing="5.0">
+           <Label text="Tên đăng nhập:" textFill="#34495e">
+            <font>
+               <Font name="System Bold" size="12.0" />
+            </font></Label>
+           <TextField fx:id="txtUsername" promptText="Nhập tên đăng nhập..." style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7; -fx-border-radius: 5;" />
+       </VBox>
+       
+       <!-- Form Mật khẩu -->
+       <VBox spacing="5.0">
+           <Label text="Mật khẩu:" textFill="#34495e">
+            <font>
+               <Font name="System Bold" size="12.0" />
+            </font></Label>
+           <PasswordField fx:id="txtPassword" promptText="Nhập mật khẩu..." style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7; -fx-border-radius: 5;" />
+       </VBox>
+       
+       <!-- Nút Đăng Nhập -->
+       <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleLogin" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 10; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5;" text="ĐĂNG NHẬP">
+           <VBox.margin>
+               <Insets top="15.0" />
+           </VBox.margin>
+       </Button>
+       
+       <!-- Nút chuyển sang trang Đăng Ký -->
+       <HBox alignment="CENTER" spacing="5.0">
+           <VBox.margin>
+               <Insets top="10.0" />
+           </VBox.margin>
+           <Label text="Chưa có tài khoản?" textFill="#7f8c8d" />
+           <Hyperlink onAction="#goToSignup" style="-fx-font-weight: bold;" text="Đăng ký ngay" textFill="#55e53c" />
+       </HBox>
+   </children>
+</VBox>

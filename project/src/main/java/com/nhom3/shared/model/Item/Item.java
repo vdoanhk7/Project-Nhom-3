@@ -4,15 +4,13 @@ import com.nhom3.shared.model.Entity;
 
 public abstract class Item extends Entity{
 	protected String name;
-	protected String info;
 	protected double startPrice;
 	protected double curHighest;
 	protected String type;
 
-	public Item(int id, String name, String info, double startPrice){
+	public Item(int id, String name, double startPrice){
 		super(id);
 		this.name = name;
-		this.info = info;
 		this.startPrice = startPrice;
 		// curHighest starting price is startPrice
 		this.curHighest = startPrice;
@@ -24,12 +22,6 @@ public abstract class Item extends Entity{
 	}
 	public String getName(){
 		return name;
-	}
-	public void setInfo(String info){
-		this.info = info;
-	}
-	public String getInfo(){
-		return info;
 	}
 	public void setStartPrice(double startPrice){
 		this.startPrice = startPrice;

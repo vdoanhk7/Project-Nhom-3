@@ -1,4 +1,4 @@
-package com.nhom3;
+package com.nhom3.shared.model;
 
 public class App 
 {

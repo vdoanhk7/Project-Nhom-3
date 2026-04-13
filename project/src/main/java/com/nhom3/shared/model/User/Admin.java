@@ -1,4 +1,4 @@
-package com.nhom3.User;
+package com.nhom3.shared.model.User;
 
 public class Admin extends User {
     public Admin(String id, String userName, String password, String name, String email, String phoneNumber) {

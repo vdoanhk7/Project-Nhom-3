@@ -1,7 +1,7 @@
-package com.nhom3;
-import com.nhom3.Item.Vehicle;
-import com.nhom3.User.Bidder;
-import com.nhom3.User.Seller;
+package com.nhom3.shared.model;
+import com.nhom3.shared.model.Item.Vehicle;
+import com.nhom3.shared.model.User.Bidder;
+import com.nhom3.shared.model.User.Seller;
 
 public class Main {
     public static void main( String[] args )

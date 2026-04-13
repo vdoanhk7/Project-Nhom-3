@@ -1,7 +1,8 @@
-package com.nhom3.User;
-import com.nhom3.Auction.Auction;
-import com.nhom3.Auction.BidTransaction;
+package com.nhom3.shared.model.User;
 import java.time.LocalDateTime;
+
+import com.nhom3.shared.model.Auction.Auction;
+import com.nhom3.shared.model.Auction.BidTransaction;
 
 public class Bidder extends User {
     public Bidder(String id, String userName, String password, String name, String email, String phoneNumber) {

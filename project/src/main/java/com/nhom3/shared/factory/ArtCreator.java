@@ -1,7 +1,7 @@
 package com.nhom3.shared.factory;
 
-import com.nhom3.shared.model.Item.Art;
-import com.nhom3.shared.model.Item.Item;
+import com.nhom3.shared.model.item.Art;
+import com.nhom3.shared.model.item.Item;
 
 public class ArtCreator implements ItemCreator {
     @Override

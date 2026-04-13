@@ -1,10 +1,22 @@
 package com.nhom3.sever.service;
 
-import com.nhom3.shared.model.Auction.Auction;
-import com.nhom3.shared.model.Auction.BidTransaction;
-import com.nhom3.shared.model.Auction.StatusOfAuction;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+
+import com.nhom3.shared.model.auction.Auction;
+import com.nhom3.shared.model.auction.BidTransaction;
+import com.nhom3.shared.model.auction.StatusOfAuction;
+import com.nhom3.shared.model.item.Item;
+import com.nhom3.shared.model.user.Seller;
 
 public class AuctionService {
+    public void createAuction(Seller seller, Item item, int id, LocalDateTime startTime, LocalDateTime endTime) {
+        if (seller.getManagedAuctions() == null) {
+            seller.setManagedAuctions(new ArrayList<>());
+        }
+        Auction newAuction = new Auction(id, item, startTime, endTime);
+        seller.getManagedAuctions().add(newAuction);
+    }
     public void startAuction(Auction auction) {
         if (auction.getStatus() == StatusOfAuction.OPEN) {
             auction.setStatus(StatusOfAuction.RUNNING);

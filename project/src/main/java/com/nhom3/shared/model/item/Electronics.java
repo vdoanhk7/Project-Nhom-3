@@ -1,4 +1,4 @@
-package com.nhom3.shared.model.Item;
+package com.nhom3.shared.model.item;
 
 public class Electronics extends Item{
 	public Electronics(int id, String name, double startPrice){

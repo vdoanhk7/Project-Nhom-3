@@ -1,4 +1,4 @@
-package com.nhom3.shared.model.Item;
+package com.nhom3.shared.model.item;
 
 import com.nhom3.shared.model.Entity;
 

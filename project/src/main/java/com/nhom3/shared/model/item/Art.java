@@ -1,4 +1,4 @@
-package com.nhom3.shared.model.Item;
+package com.nhom3.shared.model.item;
 
 public class Art extends Item{
 	public Art(int id, String name, double startPrice){

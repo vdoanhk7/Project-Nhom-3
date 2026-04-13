@@ -1,4 +1,4 @@
-package com.nhom3.shared.model.Auction;
+package com.nhom3.shared.model.auction;
 
 public enum StatusOfAuction {
     OPEN,

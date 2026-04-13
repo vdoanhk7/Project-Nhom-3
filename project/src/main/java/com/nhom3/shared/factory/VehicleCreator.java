@@ -1,7 +1,7 @@
 package com.nhom3.shared.factory;
 
-import com.nhom3.shared.model.Item.Item;
-import com.nhom3.shared.model.Item.Vehicle;
+import com.nhom3.shared.model.item.Item;
+import com.nhom3.shared.model.item.Vehicle;
 
 public class VehicleCreator implements ItemCreator {
     @Override

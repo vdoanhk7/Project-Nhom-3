@@ -1,8 +1,9 @@
-package com.nhom3.shared.model.Auction;
+package com.nhom3.shared.model.auction;
 import java.time.LocalDateTime;
 import com.nhom3.shared.model.Entity;
-import com.nhom3.shared.model.Item.Item;
-import com.nhom3.shared.model.User.Bidder;
+import com.nhom3.shared.model.item.Item;
+import com.nhom3.shared.model.user.Bidder;
+
 import java.util.ArrayList;
 import java.util.List;
 

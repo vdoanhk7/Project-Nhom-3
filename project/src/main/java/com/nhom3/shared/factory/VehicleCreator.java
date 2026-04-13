@@ -5,7 +5,7 @@ import com.nhom3.shared.model.Item.Vehicle;
 
 public class VehicleCreator implements ItemCreator {
     @Override
-    public Item createItem(int id, String name, String info, double startPrice) {
-        return new Vehicle(id, name, info, startPrice);
+    public Item createItem(int id, String name, double startPrice) {
+        return new Vehicle(id, name, startPrice);
     }
 }

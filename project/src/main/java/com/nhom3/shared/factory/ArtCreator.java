@@ -5,7 +5,7 @@ import com.nhom3.shared.model.Item.Item;
 
 public class ArtCreator implements ItemCreator {
     @Override
-    public Item createItem(int id, String name, String info, double startPrice) {
-        return new Art(id, name, info, startPrice);
+    public Item createItem(int id, String name, double startPrice) {
+        return new Art(id, name, startPrice);
     }
 }

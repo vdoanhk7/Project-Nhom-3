@@ -1,14 +1,12 @@
-package com.nhom3.Auction;
+package com.nhom3.shared.model.Auction;
 import java.time.LocalDateTime;
-
-import com.nhom3.Entity;
-import com.nhom3.Item.Item;
-import com.nhom3.User.Bidder;
+import com.nhom3.shared.model.Item.Item;
+import com.nhom3.shared.model.User.Bidder;
 import java.util.ArrayList;
 import java.util.List;
 
-
-public class Auction extends Entity{
+public class Auction{
+    private String id;
     private Item item;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
@@ -17,7 +15,7 @@ public class Auction extends Entity{
     private List<BidTransaction> bidHistory;
     
     public Auction(String id, Item item, LocalDateTime startTime, LocalDateTime endTime) {
-        super("Auction-" + id);
+        this.id = id;
         this.item = item;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -26,13 +24,8 @@ public class Auction extends Entity{
         
     }
 
-    @Override
-    public void displayInfo() {
-        System.out.println("Auction Info:");
-        System.out.println("Item: " + item.getName());
-        System.out.println("Start Time: " + startTime);
-        System.out.println("End Time: " + endTime);
-        System.out.println("Status: " + status);
+    public String getId() {
+        return id;
     }
     public void addBid(BidTransaction bid) {
         if (status == StatusOfAuction.RUNNING) {

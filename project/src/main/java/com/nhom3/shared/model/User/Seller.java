@@ -1,9 +1,10 @@
-package com.nhom3.User;
+package com.nhom3.shared.model.User;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDateTime;
-import com.nhom3.Auction.Auction;
-import com.nhom3.Item.Item;
+
+import com.nhom3.shared.model.Auction.Auction;
+import com.nhom3.shared.model.Item.Item;
 
 public class Seller extends User {
     private List<Item> managedItems;

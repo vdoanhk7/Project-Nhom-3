@@ -1,15 +1,15 @@
-package com.nhom3.Item;
-import com.nhom3.Entity;
+package com.nhom3.shared.model.Item;
 
-public abstract class Item extends Entity{
+public abstract class Item {
 	protected String name;
 	protected String info;
 	protected double startPrice;
 	protected double curHighest;
 	protected String type;
+	protected String id;
 
 	public Item(String id, String name, String info, double startPrice){
-		super(id);
+		this.id = id;
 		this.name = name;
 		this.info = info;
 		this.startPrice = startPrice;
@@ -45,17 +45,16 @@ public abstract class Item extends Entity{
 	public String getType() {
 		return type;
 	}
-	
-	@Override
-	public void displayInfo() {
-		System.out.println("Item Info:");
-		System.out.println("Name: " + name);
-		System.out.println("Info: " + info);
-		System.out.println("Start Price: " + startPrice);
-		System.out.println("Current Highest: " + curHighest);
-		System.out.println("Type: " + type);
+	public void setType(String type) {
+		this.type = type;
 	}
 
-	
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getId() {
+		return id;
+	}
 
 }

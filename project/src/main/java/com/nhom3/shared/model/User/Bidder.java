@@ -5,8 +5,8 @@ import com.nhom3.shared.model.Auction.Auction;
 import com.nhom3.shared.model.Auction.BidTransaction;
 
 public class Bidder extends User {
-    public Bidder(String id, String userName, String password, String name, String email, String phoneNumber) {
-        super("BD-" + id, userName, password, name, email, phoneNumber);
+    public Bidder(int id, String userName, String password, String name, String email, String phoneNumber) {
+        super(id, userName, password, name, email, phoneNumber);
     }
 
     public void createBidTransaction(String id, Auction auction, double amount, String note) {

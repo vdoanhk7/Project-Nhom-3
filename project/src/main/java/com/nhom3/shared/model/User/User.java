@@ -1,14 +1,15 @@
 package com.nhom3.shared.model.User;
 
-public abstract class User {
-    protected String id;
+import com.nhom3.shared.model.Entity;
+
+public abstract class User extends Entity{
     protected String userName;
     protected String password;
     protected String name;
     protected String email;
     protected String phoneNumber;
-    public User(String id, String userName, String password, String name, String email, String phoneNumber) {
-        this.id = id;
+    public User(int id, String userName, String password, String name, String email, String phoneNumber) {
+        super(id);
         this.userName = userName;
         this.password = password;
         this.name = name;
@@ -17,12 +18,6 @@ public abstract class User {
     }
     public String getUserName() {
         return userName;
-    }
-    public String getId() {
-        return id;
-    }
-    public void setId(String id) {
-        this.id = id;
     }
     public void setUserName(String userName) {
         this.userName = userName;

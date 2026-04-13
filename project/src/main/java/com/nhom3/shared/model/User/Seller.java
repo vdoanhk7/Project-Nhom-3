@@ -10,8 +10,8 @@ public class Seller extends User {
     private List<Item> managedItems;
     private List<Auction> managedAuctions;
 
-    public Seller(String id, String userName, String password, String name, String email, String phoneNumber) {
-        super("S-" + id, userName, password, name, email, phoneNumber);
+    public Seller(int id, String userName, String password, String name, String email, String phoneNumber) {
+        super(id, userName, password, name, email, phoneNumber);
         this.managedItems = new ArrayList<>();
     }
     // Các phương thức quản lý item
@@ -21,12 +21,12 @@ public class Seller extends User {
         }
         managedItems.add(newItem);
     }
-    public void removeItem(String itemId) {
+    public void removeItem(int itemId) {
         if (managedItems == null) {
             System.out.println("No items to remove.");
             return;
         }
-        if (!managedItems.removeIf(item -> item.getId().equals(item.getType() +"-" + itemId))) {
+        if (!managedItems.removeIf(item -> item.getId() == itemId)) {
             System.out.println("Item with ID " + itemId + " not found.");
         }
     }

@@ -11,8 +11,9 @@ import com.nhom3.shared.model.user.Seller;
 
 public class AuctionService {
     public void createAuction(Seller seller, Item item, int id, LocalDateTime startTime, LocalDateTime endTime) {
-        if (seller.getManagedAuctions() == null) {
-            seller.setManagedAuctions(new ArrayList<>());
+        if (seller == null || item == null) {
+            System.out.println("Seller hoặc Item không tồn tại.");
+            return;
         }
         Auction newAuction = new Auction(id, item, startTime, endTime);
         seller.getManagedAuctions().add(newAuction);
@@ -34,7 +35,7 @@ public class AuctionService {
         if (auction.getStatus() == StatusOfAuction.RUNNING) {
             auction.setStatus(StatusOfAuction.FINISHED);
             System.out.println("Phiên đấu giá đã kết thúc. Người thắng cuộc: "
-                    + (auction.getHighestBidder() != null ? auction.getHighestBidder().getName()
+                    + (auction.getHighestBidder() != null ? auction.getHighestBidder().getUserInfo().getName()
                             : "Không có người thắng"));
         } else if (auction.getStatus() == StatusOfAuction.OPEN) {
             System.out.println("Phiên đấu giá chưa bắt đầu.");

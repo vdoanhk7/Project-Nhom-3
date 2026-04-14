@@ -7,9 +7,10 @@ import com.nhom3.shared.model.user.Seller;
 
 public class ItemService {
     
-    public void createItem(Seller seller, Item newItem) { // Thêm item mới vào danh sách quản lý
-        if (seller.getManagedItems() == null) {
-            seller.setManagedItems(new ArrayList<>());
+    public void createItem(Seller seller, Item newItem) { // Thêm item mới vào danh sách quản 
+        if (seller == null || newItem == null) {
+            System.out.println("Seller hoặc Item không tồn tại.");
+            return;
         }
         seller.getManagedItems().add(newItem);
     }

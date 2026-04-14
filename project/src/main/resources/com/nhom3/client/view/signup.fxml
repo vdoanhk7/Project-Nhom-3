@@ -5,12 +5,14 @@
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" prefHeight="550.0" prefWidth="400.0" spacing="12.0" style="-fx-background-color: #ffffff;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.SignupController">
+<VBox alignment="CENTER" prefHeight="750.0" prefWidth="400.0" spacing="12.0" style="-fx-background-color: #ffffff;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.SignupController">
     <padding>
         <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
     </padding>
@@ -33,6 +35,22 @@
                <Font name="System Bold" size="12.0" />
             </font></Label>
            <TextField fx:id="txtFullName" promptText="VD: Nguyễn Văn A..." style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
+       </VBox>
+
+       <VBox spacing="5.0">
+           <Label text="Email:" textFill="#34495e">
+            <font>
+               <Font name="System Bold" size="12.0" />
+            </font></Label>
+           <TextField fx:id="txtEmail" promptText="Nhập địa chỉ email..." style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
+       </VBox>
+
+       <VBox spacing="5.0">
+           <Label text="Số điện thoại:" textFill="#34495e">
+            <font>
+               <Font name="System Bold" size="12.0" />
+            </font></Label>
+           <TextField fx:id="txtPhone" promptText="Nhập số điện thoại liên lạc..." style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
        </VBox>
    
        <VBox spacing="5.0">
@@ -57,6 +75,24 @@
                <Font name="System Bold" size="12.0" />
             </font></Label>
            <PasswordField fx:id="txtConfirmPassword" promptText="Nhập lại mật khẩu..." style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
+       </VBox>
+
+       <VBox spacing="5.0">
+           <Label text="Vai trò của bạn:" textFill="#34495e">
+            <font>
+               <Font name="System Bold" size="12.0" />
+            </font></Label>
+           <HBox spacing="20.0">
+               <padding>
+                   <Insets bottom="5.0" top="5.0" />
+               </padding>
+               <RadioButton fx:id="radioBidder" selected="true" text="Người mua (Bidder)" textFill="#34495e">
+                   <toggleGroup>
+                       <ToggleGroup fx:id="roleGroup" />
+                   </toggleGroup>
+               </RadioButton>
+               <RadioButton fx:id="radioSeller" text="Người bán (Seller)" textFill="#34495e" toggleGroup="$roleGroup" />
+           </HBox>
        </VBox>
        
        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSignup" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-padding: 10; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5;" text="ĐĂNG KÝ NGAY">

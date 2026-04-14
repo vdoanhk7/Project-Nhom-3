@@ -51,6 +51,17 @@ public class MainController {
         contentArea.getChildren().add(new Label("Đang hiển thị: VẬT PHẨM CỦA TÔI"));
     }
 
+    //Sự kiện khi bấm nút Thông tin cá nhân
+    @FXML
+    void showProfile(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/profile.fxml"));
+            Parent view = loader.load();
+            contentArea.getChildren().clear();
+            contentArea.getChildren().add(view);
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
     // Sự kiện khi bấm nút Đăng xuất
     @FXML
     void handleLogout(ActionEvent event) {

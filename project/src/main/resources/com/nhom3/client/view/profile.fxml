@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="650.0" prefWidth="750.0" spacing="20.0" style="-fx-background-color: #f4f6f9;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.ProfileController">
+   <padding>
+      <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+   </padding>
+   <children>
+      <Label text="Hồ Sơ Cá Nhân" textFill="#2c3e50">
+         <font><Font name="System Bold" size="24.0" /></font>
+      </Label>
+
+      <HBox spacing="20.0" VBox.vgrow="ALWAYS">
+         <children>
+            <VBox alignment="TOP_CENTER" prefWidth="250.0" spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);">
+               <children>
+                  <Circle fill="#bdc3c7" radius="60.0" stroke="WHITE" strokeType="INSIDE" strokeWidth="3.0" />
+                  <VBox alignment="CENTER" spacing="5.0">
+                     <children>
+                        <Label text="\@admin" textFill="#2c3e50">
+                           <font><Font name="System Bold" size="18.0" /></font>
+                        </Label>
+                        <Label text="Thành viên VIP" textFill="#7f8c8d" />
+                     </children>
+                  </VBox>
+                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" style="-fx-background-color: #ecf0f1; -fx-text-fill: #34495e; -fx-cursor: hand;" text="Đổi ảnh đại diện">
+                     <VBox.margin><Insets top="10.0" /></VBox.margin>
+                     <padding><Insets bottom="8.0" top="8.0" /></padding>
+                  </Button>
+               </children>
+               <padding><Insets bottom="20.0" left="20.0" right="20.0" top="30.0" /></padding>
+            </VBox>
+
+            <VBox spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);" HBox.hgrow="ALWAYS">
+               <children>
+                  <Label text="Thông tin tài khoản" textFill="#34495e">
+                     <font><Font name="System Bold" size="16.0" /></font>
+                     <VBox.margin><Insets bottom="5.0" /></VBox.margin>
+                  </Label>
+
+                  <VBox spacing="5.0">
+                     <Label text="Vai trò hệ thống:" textFill="#7f8c8d">
+                        <font><Font name="System Bold" size="12.0" /></font>
+                     </Label>
+                     <TextField fx:id="txtRole" editable="false" style="-fx-padding: 8; -fx-background-color: #e2e8f0; -fx-border-color: #cbd5e1; -fx-border-radius: 5; -fx-text-fill: #64748b; -fx-font-weight: bold;" text="Admin" />
+                  </VBox>
+
+                  <VBox spacing="5.0">
+                     <Label text="Họ và tên:" textFill="#7f8c8d">
+                        <font><Font name="System Bold" size="12.0" /></font>
+                     </Label>
+                     <TextField fx:id="txtName" editable="false" style="-fx-padding: 8; -fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0; -fx-border-radius: 5;" text="Nguyễn Văn A" />
+                  </VBox>
+
+                  <HBox spacing="15.0">
+                     <children>
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                           <Label text="Email:" textFill="#7f8c8d">
+                              <font><Font name="System Bold" size="12.0" /></font>
+                           </Label>
+                           <TextField fx:id="txtEmail" editable="false" style="-fx-padding: 8; -fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0; -fx-border-radius: 5;" text="admin@gmail.com" />
+                        </VBox>
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                           <Label text="Số điện thoại:" textFill="#7f8c8d">
+                              <font><Font name="System Bold" size="12.0" /></font>
+                           </Label>
+                           <TextField fx:id="txtPhone" editable="false" style="-fx-padding: 8; -fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0; -fx-border-radius: 5;" text="0363363636" />
+                        </VBox>
+                     </children>
+                  </HBox>
+
+                  <HBox alignment="BOTTOM_RIGHT" spacing="10.0" VBox.vgrow="ALWAYS">
+                     <children>
+                        <Button mnemonicParsing="false" style="-fx-background-color: transparent; -fx-text-fill: #e74c3c; -fx-border-color: #e74c3c; -fx-border-radius: 5; -fx-cursor: hand;" text="Đổi mật khẩu">
+                           <padding><Insets bottom="8.0" left="15.0" right="15.0" top="8.0" /></padding>
+                        </Button>
+                        
+                        <HBox alignment="BOTTOM_RIGHT" spacing="10.0" HBox.hgrow="ALWAYS">
+                           <children>
+                              <Button fx:id="btnCancel" mnemonicParsing="false" onAction="#handleCancel" style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5;" text="HỦY BỎ">
+                                 <padding><Insets bottom="8.0" left="20.0" right="20.0" top="8.0" /></padding>
+                              </Button>
+                              <Button fx:id="btnEditSave" mnemonicParsing="false" onAction="#handleEditSave" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5;" text="CHỈNH SỬA THÔNG TIN">
+                                 <padding><Insets bottom="8.0" left="20.0" right="20.0" top="8.0" /></padding>
+                              </Button>
+                           </children>
+                        </HBox>
+                     </children>
+                     <VBox.margin><Insets top="10.0" /></VBox.margin>
+                  </HBox>
+               </children>
+               <padding><Insets bottom="25.0" left="25.0" right="25.0" top="25.0" /></padding>
+            </VBox>
+         </children>
+      </HBox>
+   </children>
+</VBox>

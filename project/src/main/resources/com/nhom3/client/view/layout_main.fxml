@@ -85,6 +85,16 @@
                   <Font size="14.0" />
                </font>
             </Button>
+
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showProfile" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="👤  Thông tin cá nhân">
+               <padding>
+                  <Insets bottom="12.0" left="20.0" top="12.0" />
+               </padding>
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Button>
+
          </children>
          <padding>
             <Insets top="10.0" />

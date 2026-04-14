@@ -1,5 +1,10 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.client.utils.UserSession;
+import com.nhom3.sever.dao.UserDAO;
+import com.nhom3.sever.dao.UserDAOImpl;
+import com.nhom3.sever.service.AuthService;
+import com.nhom3.shared.model.user.User;
 import java.io.IOException;
 
 import javafx.event.ActionEvent;
@@ -15,43 +20,60 @@ import javafx.stage.Stage;
 
 public class LoginController {
 
-    @FXML
-    private TextField txtUsername;
-
-    @FXML
-    private PasswordField txtPassword;
+    @FXML private TextField txtUsername;
+    @FXML private PasswordField txtPassword;
 
     // khi bấm nút "Đăng Nhập"
-    @FXML
+@FXML
     void handleLogin(ActionEvent event) {
-        String username = txtUsername.getText();
+        String username = txtUsername.getText().trim();
         String password = txtPassword.getText();
 
-        // Kiểm tra tài khoản (Sau này sẽ thay bằng code kết nối Database)
-        if ("admin".equals(username) && "12345".equals(password)) {
-            System.out.println("Đăng nhập thành công!");
-            
-            try {
-                // Tải màn hình chính
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/layout_main.fxml"));
-                Parent root = loader.load();
-                
-                // Chuyển cảnh
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                stage.setScene(new Scene(root, 1000, 700)); // Kích thước màn hình chính
-                stage.centerOnScreen();
-                
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            // Hiện thông báo lỗi thay vì chỉ in ra console
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Lỗi đăng nhập");
-            alert.setHeaderText(null);
-            alert.setContentText("Sai tên đăng nhập hoặc mật khẩu. Vui lòng thử lại!");
-            alert.showAndWait();
+        // 1. Kiểm tra trống
+        if (username.isEmpty() || password.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
+            return;
         }
+        // 2. Gọi Server để kiểm tra đăng nhập
+        UserDAO userDAO = new UserDAOImpl();
+        AuthService authService = new AuthService(userDAO);
+        // Trả về đối tượng User (Bidder/Seller/Admin) nếu đúng, trả về null nếu sai
+        User loggedInUser = authService.login(username, password);
+        // 3. Xử lý kết quả
+        if (loggedInUser != null) {
+            // Lưu thông tin người dùng vào Session để dùng cho toàn bộ app
+            UserSession.getInstance().setLoggedInUser(loggedInUser);
+            System.out.println(">> Đăng nhập thành công: " + loggedInUser.getUserInfo().getName());
+            System.out.println(">> Vai trò: " + loggedInUser.getRole());
+            // Chuyển sang màn hình chính
+            goToMainLayout(event);
+        } else {
+            showAlert(Alert.AlertType.ERROR, "Thất bại", "Sai tên đăng nhập hoặc mật khẩu!");
+        }
+    }
+
+    // Hàm chuyển trang sang Layout chính
+    private void goToMainLayout(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/layout_main.fxml"));
+            Parent root = loader.load();
+            
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.centerOnScreen();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Lỗi load file layout_main.fxml");
+        }
+    }
+
+    // Hàm hỗ trợ thông báo
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     // Sự kiện khi bấm nút "Đăng ký ngay"

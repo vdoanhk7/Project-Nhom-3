@@ -8,10 +8,11 @@ public abstract class Item extends Entity{
 	protected double curHighest;
 	protected String type;
 
-	public Item(int id, String name, double startPrice){
+	public Item(int id, String name, double startPrice, String type) {
 		super(id);
 		this.name = name;
 		this.startPrice = startPrice;
+		this.type = type;
 		// curHighest starting price is startPrice
 		this.curHighest = startPrice;
 
@@ -38,9 +39,5 @@ public abstract class Item extends Entity{
 	public String getType() {
 		return type;
 	}
-	public void setType(String type) {
-		this.type = type;
-	}
-
 
 }

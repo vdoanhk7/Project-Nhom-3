@@ -2,6 +2,8 @@ package com.nhom3.sever.service;
 
 import java.time.LocalDateTime;
 
+import com.nhom3.sever.dao.AuctionDAO;
+import com.nhom3.sever.dao.AuctionDAOImpl;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.model.auction.StatusOfAuction;
@@ -9,6 +11,10 @@ import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Seller;
 
 public class AuctionService {
+    private final AuctionDAO auctionDAO;
+    public AuctionService() {
+        this.auctionDAO = new AuctionDAOImpl();
+    }
     public void createAuction(Seller seller, Item item, int id, LocalDateTime startTime, LocalDateTime endTime) {
         if (seller == null || item == null) {
             System.out.println("Seller hoặc Item không tồn tại.");
@@ -57,15 +63,28 @@ public class AuctionService {
     }
 
     public synchronized boolean placeBid(Auction auction, BidTransaction bid) {
-        if (auction.getStatus() == StatusOfAuction.RUNNING) {
-            if (auction.getHighestBidder() == null || bid.getBidAmount() > auction.getItem().getCurHighest()) {
-                auction.setHighestBidder(bid.getBidder());
-                auction.getItem().setCurHighest(bid.getBidAmount());
-                auction.getBidHistory().add(bid);
-                return true;
-            } else {
-                return false;
-            }
-        } else return false;
+        boolean isSuccess = auctionDAO.updateHighestBid(auction.getId(), bid.getBidder().getId(), bid.getAmount());
+        if (isSuccess) {
+            auctionDAO.saveBidTransaction(bid, auction.getId());
+            
+            auction.getItem().setCurHighest(bid.getAmount());
+            auction.setHighestBidder(bid.getBidder());
+            auction.getBidHistory().add(bid);
+            System.out.println("Server: Đặt giá thành công: " + bid.getAmount() + " bởi " + bid.getBidder().getUserInfo().getName());
+            return true;
+        } else {
+            System.out.println("Server: Đặt giá thất bại: " + bid.getAmount() + " bởi " + bid.getBidder().getUserInfo().getName());
+            return false;
+        }
+        // if (auction.getStatus() == StatusOfAuction.RUNNING) {
+        //     if (auction.getHighestBidder() == null || bid.getAmount() > auction.getItem().getCurHighest()) {
+        //         auction.setHighestBidder(bid.getBidder());
+        //         auction.getItem().setCurHighest(bid.getAmount());
+        //         auction.getBidHistory().add(bid);
+        //         return true;
+        //     } else {
+        //         return false;
+        //     }
+        // } else return false;
     }
 }

@@ -1,13 +1,14 @@
 package com.nhom3.sever.service;
 
 import com.nhom3.sever.dao.UserDAO;
+import com.nhom3.sever.dao.UserDAOImpl;
 import com.nhom3.shared.model.user.User;
 
 public class AuthService {
     private final UserDAO userDAO;
 
-    public AuthService(UserDAO userDAOimpl) {
-        this.userDAO = userDAOimpl;
+    public AuthService() {
+        this.userDAO = new UserDAOImpl();
     }
 
     public User login(String username, String password) {

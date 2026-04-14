@@ -17,7 +17,6 @@ public class ServerMain {
         UserContact userContact = new UserContact("6ySdM@example.com", "1234567890");
         User user = new Admin(0, userInfo, userContact);
         authService.register(user);
-
         authService.login("testuser", "password123");
     }
 }

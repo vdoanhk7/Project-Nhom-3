@@ -1,7 +1,5 @@
 package com.nhom3.sever.service;
 
-import java.util.ArrayList;
-
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Seller;
 

@@ -5,5 +5,5 @@ import com.nhom3.shared.model.user.User;
 public interface UserDAO {
     User login(String username, String password);
     
-    boolean register(User user, String role);
+    boolean register(User user);
 }

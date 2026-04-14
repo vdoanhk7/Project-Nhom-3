@@ -1,7 +1,6 @@
 package com.nhom3.sever.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;

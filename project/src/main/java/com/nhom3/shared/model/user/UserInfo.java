@@ -4,7 +4,8 @@ public class UserInfo {
     private String userName;
     private String password;
     private String name;
-    public UserInfo(String userName, String password, String name, String email, String phoneNumber) {
+    
+    public UserInfo(String userName, String password, String name) {
         this.userName = userName;
         this.password = password;
         this.name = name;

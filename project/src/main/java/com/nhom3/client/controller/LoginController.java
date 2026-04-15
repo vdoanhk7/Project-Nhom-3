@@ -22,7 +22,7 @@ public class LoginController {
     @FXML private PasswordField txtPassword;
 
     // khi bấm nút "Đăng Nhập"
-@FXML
+    @FXML
     void handleLogin(ActionEvent event) {
         String username = txtUsername.getText().trim();
         String password = txtPassword.getText();

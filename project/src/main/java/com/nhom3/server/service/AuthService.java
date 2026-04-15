@@ -28,6 +28,7 @@ public class AuthService {
             System.out.println("Server: Đăng ký thất bại. Tài khoản có thể đã tồn tại.");
         }
         return success;
+        
     }
     public boolean updateUser(User user) {
         return userDAO.updateUser(user);

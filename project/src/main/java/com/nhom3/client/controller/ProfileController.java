@@ -12,6 +12,12 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Label;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import java.io.IOException;
 public class ProfileController {
 
     // Khai báo các thành phần đã gắn fx:id bên FXML
@@ -93,6 +99,34 @@ public class ProfileController {
             txtPhone.setText(currentUser.getUserContact().getPhoneNumber());
         }
         System.out.println("Đã huỷ bỏ chỉnh sửa thông tin cá nhân");
+    }
+
+    @FXML
+    void handleChangePassword(ActionEvent event) {
+        try {
+            // 1. Chỉ định đường dẫn tới file FXML của cửa sổ đổi mật khẩu
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/change_password.fxml"));
+            Parent root = loader.load();
+            // 2. Tạo một cửa sổ (Stage) mới cho Pop-up
+            Stage popupStage = new Stage();
+            popupStage.setTitle("Thay đổi mật khẩu bảo mật");    
+            // 3. Thiết lập chế độ MODAL cho cửa sổ này (Ngăn không cho tương tác với cửa sổ chính khi Pop-up đang mở)
+            popupStage.initModality(Modality.APPLICATION_MODAL);          
+            // 4. Hiển thị cửa sổ
+            popupStage.setScene(new Scene(root));
+            popupStage.setResizable(false); // Không cho phép phóng to cửa sổ
+            popupStage.showAndWait(); // Đợi cho đến khi cửa sổ này đóng lại mới thực hiện tiếp
+        
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Lỗi: Không tìm thấy file change_password.fxml tại đường dẫn đã chỉ định.");
+            
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Lỗi hệ thống");
+            alert.setHeaderText(null);
+            alert.setContentText("Không thể mở cửa sổ đổi mật khẩu. Vui lòng thử lại sau!");
+            alert.showAndWait();
+        }
     }
 
     // --- CÁC HÀM HỖ TRỢ ---

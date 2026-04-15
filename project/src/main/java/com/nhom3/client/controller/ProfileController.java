@@ -1,11 +1,19 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.client.utils.UserSession;
+import com.nhom3.shared.model.user.User;
+import com.nhom3.shared.model.user.Admin;
+import com.nhom3.shared.model.user.Seller;
+import com.nhom3.sever.dao.UserDAO;
+import com.nhom3.sever.dao.UserDAOImpl;
+import com.nhom3.sever.service.AuthService;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-
+import javafx.scene.control.Label;
 public class ProfileController {
 
     // Khai báo các thành phần đã gắn fx:id bên FXML
@@ -15,16 +23,34 @@ public class ProfileController {
     @FXML private TextField txtRole;
     @FXML private Button btnEditSave;
     @FXML private Button btnCancel;
+    @FXML private Label lblUsername;
 
     // Biến lưu trạng thái hiện tại (Đang xem hay đang sửa)
     private boolean isEditMode = false;
 
+    // Hàm chạy ngay khi giao diện vừa load lên
     @FXML
     public void initialize() {
-        // Hàm này chạy ngay khi màn hình Profile vừa được load lên
-        // Ấn nút "Hủy" và làm nó biến mất hoàn toàn khỏi bố cục
+        // 1. Lấy dữ liệu người dùng từ "Ví" UserSession
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        if (currentUser != null) {
+            // 2. Đổ dữ liệu vào các ô TextField
+            txtName.setText(currentUser.getUserInfo().getName());
+            txtEmail.setText(currentUser.getUserContact().getEmail());
+            txtPhone.setText(currentUser.getUserContact().getPhoneNumber());
+            lblUsername.setText("@" + currentUser.getUserInfo().getUserName());
+            // Đổ dữ liệu vai trò (Sử dụng instanceof để hiển thị tiếng Việt cho đẹp)
+            if (currentUser instanceof Admin) {
+                txtRole.setText("Quản trị viên (Admin)");
+            } else if (currentUser instanceof Seller) {
+                txtRole.setText("Người bán (Seller)");
+            } else {
+                txtRole.setText("Người mua (Bidder)");
+            }
+        }
+        // 3. Thiết lập trạng thái ban đầu cho các nút
         btnCancel.setVisible(false);
-        btnCancel.setManaged(false); 
+        btnCancel.setManaged(false);
     }
 
     @FXML
@@ -53,7 +79,7 @@ public class ProfileController {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Thành công");
             alert.setHeaderText(null);
-            alert.setContentText("Đã cập nhật thông tin cá nhân!");
+            alert.setContentText("Cập nhật thông tin cá nhân thành công!");
             alert.showAndWait();
         }
     }
@@ -62,8 +88,13 @@ public class ProfileController {
     void handleCancel(ActionEvent event) {
         // Nếu đang sửa mà đổi ý, bấm Hủy sẽ quay về như cũ
         resetToViewMode();
-        // (Ghi chú: Nơi đây sau này sẽ viết code để nạp lại dữ liệu cũ từ Database 
-        // để xóa đi những chữ mà người dùng vừa gõ nháp)
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        if (currentUser != null) {
+            txtName.setText(currentUser.getUserInfo().getName());
+            txtEmail.setText(currentUser.getUserContact().getEmail());
+            txtPhone.setText(currentUser.getUserContact().getPhoneNumber());
+        }
+        System.out.println("Đã huỷ bỏ chỉnh sửa thông tin cá nhân");
     }
 
     // --- CÁC HÀM HỖ TRỢ ---
@@ -85,8 +116,7 @@ public class ProfileController {
 
     private void resetToViewMode() {
         setFieldsEditable(false);
-        
-        // Đổi lại giao diện nút bấm thành màu xanh dương (Sửa)
+
         btnEditSave.setText("CHỈNH SỬA THÔNG TIN");
         btnEditSave.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;");
         
@@ -98,8 +128,31 @@ public class ProfileController {
     }
 
     private void saveDataToDatabase() {
-        System.out.println("Đang lưu tên mới: " + txtName.getText());
-        System.out.println("Đang lưu sđt mới: " + txtPhone.getText());
-        // Sau này gọi Server/Database ở đây
+        // 1. Lấy đối tượng người dùng hiện tại từ Session
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+
+        if (currentUser != null) {
+            // 2. Lấy dữ liệu mới từ giao diện (các ô TextField)
+            String newName = txtName.getText().trim();
+            String newEmail = txtEmail.getText().trim();
+            String newPhone = txtPhone.getText().trim();
+
+            // 3. Cập nhật thông tin vào đối tượng currentUser
+            currentUser.getUserInfo().setName(newName);
+            currentUser.getUserContact().setEmail(newEmail);
+            currentUser.getUserContact().setPhoneNumber(newPhone);
+
+            // 4. Gọi Service để đẩy dữ liệu xuống Database
+            UserDAO userDAO = new UserDAOImpl();
+            AuthService authService = new AuthService(userDAO);
+            
+            boolean success = authService.updateUser(currentUser);
+
+            if (success) {
+                System.out.println("Lưu Database thành công!");
+            } else {
+                System.out.println("Lưu Database thất bại!");
+            }
+        }
     }
 }

@@ -66,4 +66,20 @@ public class UserDAOImpl implements UserDAO {
         }
         return false;
     }
+
+    @Override
+    public boolean updateUser(User user) {
+        String sql = "UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?";
+        try (Connection conn = DbConnection.getInstance();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, user.getUserInfo().getName());
+            stmt.setString(2, user.getUserContact().getEmail());
+            stmt.setString(3, user.getUserContact().getPhoneNumber());
+            stmt.setInt(4, user.getId());
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

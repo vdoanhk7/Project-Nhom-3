@@ -29,4 +29,7 @@ public class AuthService {
         }
         return success;
     }
+    public boolean updateUser(User user) {
+        return userDAO.updateUser(user);
+    }
 }

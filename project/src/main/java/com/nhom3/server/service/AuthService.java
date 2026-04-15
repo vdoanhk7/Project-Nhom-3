@@ -1,7 +1,7 @@
-package com.nhom3.sever.service;
+package com.nhom3.server.service;
 
-import com.nhom3.sever.dao.UserDAO;
-import com.nhom3.sever.dao.UserDAOImpl;
+import com.nhom3.server.dao.UserDAO;
+import com.nhom3.server.dao.UserDAOImpl;
 import com.nhom3.shared.model.user.User;
 
 public class AuthService {

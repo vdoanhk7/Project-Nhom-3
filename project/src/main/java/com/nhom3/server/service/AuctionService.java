@@ -1,9 +1,9 @@
-package com.nhom3.sever.service;
+package com.nhom3.server.service;
 
 import java.time.LocalDateTime;
 
-import com.nhom3.sever.dao.AuctionDAO;
-import com.nhom3.sever.dao.AuctionDAOImpl;
+import com.nhom3.server.dao.AuctionDAO;
+import com.nhom3.server.dao.AuctionDAOImpl;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.model.auction.StatusOfAuction;

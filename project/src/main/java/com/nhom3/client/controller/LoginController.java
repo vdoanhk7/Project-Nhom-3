@@ -1,8 +1,7 @@
 package com.nhom3.client.controller;
 
 import com.nhom3.client.utils.UserSession;
-
-import com.nhom3.sever.service.AuthService;
+import com.nhom3.server.service.AuthService;
 import com.nhom3.shared.model.user.User;
 import java.io.IOException;
 

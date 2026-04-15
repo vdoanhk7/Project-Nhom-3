@@ -1,4 +1,4 @@
-package com.nhom3.sever.dao;
+package com.nhom3.server.dao;
 
 import com.nhom3.shared.model.item.Item;
 

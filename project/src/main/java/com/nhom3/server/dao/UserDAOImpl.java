@@ -1,11 +1,11 @@
-package com.nhom3.sever.dao;
+package com.nhom3.server.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import com.nhom3.sever.db.DbConnection;
+import com.nhom3.server.db.DbConnection;
 import com.nhom3.shared.model.user.Admin;
 import com.nhom3.shared.model.user.Bidder;
 import com.nhom3.shared.model.user.Seller;

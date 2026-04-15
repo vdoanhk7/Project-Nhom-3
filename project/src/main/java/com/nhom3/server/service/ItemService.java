@@ -1,4 +1,4 @@
-package com.nhom3.sever.service;
+package com.nhom3.server.service;
 
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Seller;

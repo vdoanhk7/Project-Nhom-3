@@ -1,6 +1,6 @@
-package com.nhom3.sever.dao;
+package com.nhom3.server.dao;
 
-import com.nhom3.sever.db.DbConnection;
+import com.nhom3.server.db.DbConnection;
 import com.nhom3.shared.model.auction.BidTransaction;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

@@ -1,4 +1,4 @@
-package com.nhom3.sever.db;
+package com.nhom3.server.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

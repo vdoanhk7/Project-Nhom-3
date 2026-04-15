@@ -4,8 +4,6 @@ import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.user.User;
 import com.nhom3.shared.model.user.Admin;
 import com.nhom3.shared.model.user.Seller;
-import com.nhom3.sever.dao.UserDAO;
-import com.nhom3.sever.dao.UserDAOImpl;
 import com.nhom3.sever.service.AuthService;
 
 import javafx.event.ActionEvent;
@@ -143,8 +141,7 @@ public class ProfileController {
             currentUser.getUserContact().setPhoneNumber(newPhone);
 
             // 4. Gọi Service để đẩy dữ liệu xuống Database
-            UserDAO userDAO = new UserDAOImpl();
-            AuthService authService = new AuthService(userDAO);
+            AuthService authService = new AuthService();
             
             boolean success = authService.updateUser(currentUser);
 

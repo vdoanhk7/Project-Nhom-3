@@ -1,8 +1,7 @@
 package com.nhom3.client.controller;
 
 import com.nhom3.client.utils.UserSession;
-import com.nhom3.sever.dao.UserDAO;
-import com.nhom3.sever.dao.UserDAOImpl;
+
 import com.nhom3.sever.service.AuthService;
 import com.nhom3.shared.model.user.User;
 import java.io.IOException;
@@ -35,8 +34,7 @@ public class LoginController {
             return;
         }
         // 2. Gọi Server để kiểm tra đăng nhập
-        UserDAO userDAO = new UserDAOImpl();
-        AuthService authService = new AuthService(userDAO);
+        AuthService authService = new AuthService();
         // Trả về đối tượng User (Bidder/Seller/Admin) nếu đúng, trả về null nếu sai
         User loggedInUser = authService.login(username, password);
         // 3. Xử lý kết quả

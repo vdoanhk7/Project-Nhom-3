@@ -1,7 +1,4 @@
 package com.nhom3.client.controller;
-
-import com.nhom3.sever.dao.UserDAO;
-import com.nhom3.sever.dao.UserDAOImpl;
 import com.nhom3.sever.service.AuthService;
 import com.nhom3.shared.model.user.Bidder;
 import com.nhom3.shared.model.user.Seller;
@@ -63,8 +60,7 @@ public class SignupController {
         } else {
             newUser = new Bidder(0, info, contact);
         }
-        UserDAO userDAO = new UserDAOImpl();
-        AuthService authService = new AuthService(userDAO);
+        AuthService authService = new AuthService();
         // Gọi Server để lưu
         boolean isSuccess = authService.register(newUser);
         

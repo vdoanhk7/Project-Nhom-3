@@ -7,4 +7,5 @@ public interface UserDAO {
     
     boolean register(User user);
     boolean updateUser(User user);
+    boolean updatePassword(int userId, String newPassword);
 }

@@ -4,6 +4,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.layout.StackPane;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Alert;
 import javafx.scene.Node;
@@ -12,17 +13,44 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import javafx.scene.control.Button; // Thêm import Button
+import com.nhom3.client.utils.UserSession;
+import com.nhom3.shared.model.user.User;
+import com.nhom3.shared.model.user.Admin;
+import com.nhom3.shared.model.user.Seller;
 public class MainController {
 
-    // Ánh xạ tới vùng Center của BorderPane trong file FXML
-    @FXML
-    private StackPane contentArea;
+    @FXML private StackPane contentArea;
+    @FXML private Label lblUserName;
+    @FXML private Button btnPurchaseHistory;
+    @FXML private Button btnManageItem;
+    @FXML private Button btnAdminPanel;
 
-    // Hàm chạy ngay khi giao diện vừa load lên
     @FXML
     public void initialize() {
         System.out.println("Giao diện chính đã tải thành công!");
-        // Thường người ta sẽ gọi showDashboard() ở đây để load trang chủ mặc định
+        
+        // 2. ẨN TẤT CẢ CÁC NÚT ĐỘNG (setManaged = false để nó co lại, không để lại khoảng trống)
+        btnPurchaseHistory.setVisible(false); btnPurchaseHistory.setManaged(false);
+        btnManageItem.setVisible(false); btnManageItem.setManaged(false);
+        btnAdminPanel.setVisible(false); btnAdminPanel.setManaged(false);
+
+        // 3. LẤY THÔNG TIN USER VÀ PHÂN QUYỀN HIỂN THỊ
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        
+        if (currentUser != null) {
+            lblUserName.setText("Xin chào, " + currentUser.getUserInfo().getName());
+
+            // Bật nút theo đúng vai trò
+            if (currentUser instanceof Admin) {
+                btnAdminPanel.setVisible(true); btnAdminPanel.setManaged(true);
+            } else if (currentUser instanceof Seller) {
+                btnManageItem.setVisible(true); btnManageItem.setManaged(true);
+            } else {
+                // Mặc định là Bidder
+                btnPurchaseHistory.setVisible(true); btnPurchaseHistory.setManaged(true);
+            }
+        }
     }
 
     // Sự kiện khi bấm nút Tổng quan
@@ -44,11 +72,55 @@ public class MainController {
         System.out.println("Chuyển sang màn hình Chợ Đấu Giá");
     }
 
-    // Sự kiện khi bấm nút Vật phẩm của tôi
+    // Sự kiện khi bấm nút Lịch sử đấu giá
     @FXML
-    void showMyItems(ActionEvent event) {
+    void showPurchaseHistory(ActionEvent event) {
         contentArea.getChildren().clear();
-        contentArea.getChildren().add(new Label("Đang hiển thị: VẬT PHẨM CỦA TÔI"));
+        contentArea.getChildren().add(new Label("Đang hiển thị: LỊCH SỬ ĐẤU GIÁ (BIDDER)"));
+    }
+
+    // Sự kiện khi bấm nút Quản lí sản phẩm
+    @FXML
+    void showManageItem(ActionEvent event) {
+        // 1. Tạo vòng xoay Loading
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.setMaxSize(50, 50);
+        spinner.setLayoutX(contentArea.getWidth() / 2 - 25);
+        spinner.setLayoutY(contentArea.getHeight() / 2 - 25);
+        // Hiển thị vòng xoay ngay lên màn hình
+        contentArea.getChildren().clear();
+        contentArea.getChildren().add(spinner);
+        // 2. Mở một luồng ngầm (Background Thread) 
+        Thread loadThread = new Thread(() -> {
+            try {
+                // Đọc file FXML ở luồng ngầm 
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/manage_item.fxml"));
+                Parent view = loader.load();
+                // 3. Khi tải xong, phải dùng Platform.runLater để đẩy kết quả lên UI Thread
+                javafx.application.Platform.runLater(() -> {
+                    contentArea.getChildren().clear();
+                    contentArea.getChildren().add(view);
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                // Nếu lỗi, báo cho người dùng biết 
+                javafx.application.Platform.runLater(() -> {
+                    contentArea.getChildren().clear();
+                    System.err.println("Lỗi tải giao diện Manage Item!");
+                });
+            }
+        });
+
+        // Set Daemon để Thread tự chết nếu người dùng tắt app giữa chừng
+        loadThread.setDaemon(true); 
+        loadThread.start();
+    }
+
+    // Sự kiện khi bấm nút Quản trị hệ thống
+    @FXML
+    void showAdminPanel(ActionEvent event) {
+        contentArea.getChildren().clear();
+        contentArea.getChildren().add(new Label("Đang hiển thị: QUẢN TRỊ HỆ THỐNG (ADMIN)"));
     }
 
     //Sự kiện khi bấm nút Thông tin cá nhân

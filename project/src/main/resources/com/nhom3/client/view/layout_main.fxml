@@ -29,7 +29,7 @@
             <Region HBox.hgrow="ALWAYS" />
             
             <!-- Thông tin User và Nút Đăng xuất -->
-            <Label text="Xin chào, User" textFill="#555555">
+            <Label fx:id="lblUserName" text="Xin chào, User" textFill="#555555">
                <font>
                   <Font size="14.0" />
                </font>
@@ -77,13 +77,25 @@
                </font>
             </Button>
             
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showMyItems" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="📦  Vật Phẩm Của Tôi">
+            <Button fx:id="btnPurchaseHistory" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showPurchaseHistory" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="📦  Lịch sử đấu giá">
                <padding>
                   <Insets bottom="12.0" left="20.0" top="12.0" />
                </padding>
-               <font>
-                  <Font size="14.0" />
-               </font>
+               <font><Font size="14.0" /></font>
+            </Button>
+
+            <Button fx:id="btnManageItem" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showManageItem" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="🏪  Quản lý sản phẩm">
+               <padding>
+                  <Insets bottom="12.0" left="20.0" top="12.0" />
+               </padding>
+               <font><Font size="14.0" /></font>
+            </Button>
+
+            <Button fx:id="btnAdminPanel" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showAdminPanel" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="⚙️  Quản trị hệ thống">
+               <padding>
+                  <Insets bottom="12.0" left="20.0" top="12.0" />
+               </padding>
+               <font><Font size="14.0" /></font>
             </Button>
 
             <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showProfile" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="👤  Thông tin cá nhân">

@@ -1,29 +1,45 @@
 # Project-Nhom-3
 ### 📋 Theo Dõi Tiến Độ Dự Án
 
-#### 👤 Phúc Anh (Backend & Concurrency)
-- [x] Thiết lập Server Socket/API cơ bản
-- [ ] Logic đặt giá (Bidding logic)
-- [ ] Xử lý đấu giá đồng thời (Thread-safe)
-- [ ] Tính năng Auto-Bidding
+# 📑 TIẾN ĐỘ THỰC HIỆN BÀI TẬP LỚN: HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN
 
-#### 👤 Doanh (Database & Core Logic)
-- [ ] Thiết kế Database & viết DAO
-- [ ] Quản lý Sản phẩm (CRUD)
-- [ ] Logic kết thúc phiên & chuyển trạng thái
-- [ ] Tính năng Anti-sniping
+### 👨‍💻 1. Phúc Anh
+- [ ] **Kiến trúc hệ thống:** Thiết lập mô hình Client-Server
+- [ ] **Giao tiếp dữ liệu:** Thiết kế cấu trúc gói tin JSON để trao đổi giữa Client và Server.
+- [ ] **Logic Đấu giá:** Viết hàm xử lý đặt giá.
+- [ ] **Realtime Update:** Triển khai mô hình Observer để Server đẩy thông báo giá mới cho tất cả Client ngay lập tức.
+- [ ] **Auto-Bidding:** Lập trình thuật toán tự động đặt giá.
 
-#### 👤 Dũng (DevOps & User Mng)
-- [ ] Quản lý Người dùng & Phân quyền
-- [ ] Vẽ biểu đồ Bid History Visualization
-- [ ] Thiết lập CI/CD (GitHub Actions)
-- [ ] Viết Unit Test cho Logic quan trọng
+### 👨‍💼 2. Doanh 
+- [ ] **Thiết kế CSDL:** Tạo cấu trúc lưu trữ cho Người dùng, Sản phẩm, Phiên đấu giá, Lịch sử đặt giá.
+- [ ] **Tầng Dữ liệu (DAO):** Viết các lớp DAO để truy xuất và cập nhật cơ sở dữ liệu.
+- [ ] **Xử lý đồng thời:**
+- [ ] **Quản lý sản phẩm:** Viết Logic nghiệp vụ cho các chức năng Thêm/Sửa/Xóa sản phẩm.
+- [ ] **Quản lý phiên đấu giá:** Xử lý logic tự động đóng phiên khi hết thời gian và chuyển trạng thái.
+- [ ] **Thiết kế hướng đối tượng:** Xây dựng cây kế thừa + design pattern(factory)
+- [ ] **Anti-sniping:** Viết thuật toán tự động gia hạn thêm Y giây khi có người đặt giá ở X giây cuối.
+- [ ] **Setup Dự án/Refactor code:** Cấu hình Build tool (Maven) và Coding convention
+### 👨‍🔬 3. Dũng 
+- [ ] **Quản lý người dùng:** Viết logic Đăng ký/Đăng nhập và phân quyền.
+- [ ] **CI/CD:** Thiết lập GitHub Actions để tự động chạy test khi có commit mới.
+- [ ] **Unit Test:** Viết các bộ kiểm thử JUnit cho các hàm logic đặt giá và tính toán tiền.
+- [ ] **Price Curve:** Viết logic xử lý dữ liệu để vẽ biểu đồ đường diễn biến giá theo thời gian thực.
+- [ ] **Màn hình Admin:** 
+- [ ] **Màn hình biểu đồ**
+### 🎨 4. Quang Anh 
+- [ ] **Thiết kế Layout chính:** Sử dụng FXML để dựng khung cho toàn bộ ứng dụng.
+- [ ] **Màn hình đăng nhập/đăng ký:** UI cho User mng.
+- [ ] **Màn hình Dashboard:** Hiển thị danh sách các phiên đấu giá đang diễn ra
+- [ ] **Màn hình đấu giá trực tiếp:** UI hiển thị chi tiết sản phẩm, đồng hồ đếm ngược và khu vực đặt giá.
+- [ ] **Màn hình Seller:** Giao diện quản lý dành riêng cho người bán.
+- [ ] **Màn hình Bidder:** Giao diện quản lý dành riêng cho người mua.
+- [ ] **Tích hợp Client:** Gọi các hàm từ phía Client-side để gửi dữ liệu lên Server và nhận phản hồi từ Phúc Anh.
 
-#### 👤 Quang Anh (Frontend JavaFX)
-- [ ] Thiết kế Layout chính (FXML)
-- [ ] Màn hình Login & Danh sách sản phẩm
-- [ ] Màn hình Đấu giá trực tiếp
-- [ ] Tích hợp API/Socket từ 
+### 👥 5. Nhiệm vụ chung (Cả nhóm)
+- [ ] **Xử lý lỗi & Ngoại lệ:** Bắt các lỗi kết nối, dữ liệu sai, đặt giá thấp hơn giá hiện tại...
+- [ ] **Code Review:** Kiểm tra mã nguồn của nhau để đảm bảo tất cả thành viên đều hiểu code
+- [ ] **Hoàn thiện Báo cáo:** Viết tài liệu hướng dẫn cài đặt và mô tả kiến trúc hệ thống.
+- [ ] **Kiểm thử cuối cùng:** Chạy demo giả lập nhiều người dùng đặt giá cùng lúc để kiểm tra độ ổn định.
 
 
 

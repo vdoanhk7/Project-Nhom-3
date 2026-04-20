@@ -3,12 +3,14 @@
 
 ## 📋 Bảng Phân Công và Tiến Độ Chi Tiết
 
-| Thành Viên | Nhiệm Vụ Được Giao | Đã Hoàn Thành | Đang Thực Hiện |
-| :--- | :--- | :--- | :--- |
-| **Phúc Anh** | - Auto-Bidding (Tự động đặt giá)<br>- Realtime update (Cập nhật thời gian thực)<br>- Network (Mạng lưới) | - | - Thiết lập cơ chế Observer/Socket<br>- Xử lý kết nối mạng |
-| **Doanh** | - Gia hạn phiên đấu giá (Auction Extension)<br>- Refactor (Tái cấu trúc mã nguồn)<br>- Network (Mạng lưới) | - | - Logic gia hạn thời gian<br>- Tối ưu cấu trúc code hiện tại |
-| **Dũng** | - Bid History Visualization <br>- Unit Test, CI/CD | - | - Vẽ biểu đồ đường giá realtime<br>- Viết test case cho các module |
-| **Quang Anh** | - JavaFX <br>- Tính năng phụ | - | - Thiết kế giao diện chính<br>- Code các tính năng bổ trợ |
-| **Cả Nhóm** |  Xử lý lỗi | - Tuần 7: Hiểu code để chuẩn bị tích hợp liên kết| - Fix bug phát sinh |
+# Bảng Phân Công Công Việc & Theo Dõi Tiến Độ
+
+| Thành Viên | Vai Trò Chính | Nhiệm Vụ Cụ Thể (Bám sát Rubric) | Đã Hoàn Thành | Đang Thực Hiện |
+| :--- | :--- | :--- | :--- | :--- |
+| **Phúc Anh** | **Backend & Concurrency** | - **Core:** Logic đặt giá (Bidding logic).<br>- **Bắt buộc (1đ):** Xử lý đấu giá đồng thời (Concurrency, Thread-safe).<br>- **Nâng cao:** Auto-Bidding (PriorityQueue).<br>- **Mạng:** Setup Socket/REST API Server, Realtime Update (Observer). | | |
+| **Doanh** | **Database & Core Logic** | - **Core:** Thiết kế Database & viết các lớp DAO.<br>- **Core:** Quản lý Sản phẩm (CRUD) & Quản lý Phiên đấu giá (Tự động đóng, chuyển trạng thái).<br>- **Nâng cao:** Gia hạn phiên (Anti-sniping).<br>- **OOP:** Áp dụng Design Patterns (Singleton, Factory). | | |
+| **Dũng** | **DevOps, Test & User Mng** | - **Core:** Quản lý Người dùng (Đăng ký/Đăng nhập, Phân quyền).<br>- **Nâng cao:** Bid History Visualization (Vẽ biểu đồ JavaFX).<br>- **Chất lượng mã:** Setup CI/CD (GitHub Actions), viết Unit Test (JUnit).<br>- Quản lý Git convention. | | |
+| **Quang Anh**| **Frontend (JavaFX Client)** | - **Kiến trúc:** Thiết kế toàn bộ UI bằng JavaFX + FXML (MVC Client).<br>- **Màn hình:** Login, Danh sách phiên, Chi tiết SP, Màn hình đấu giá trực tiếp, Dashboard Admin/Seller.<br>- Tích hợp API/Socket từ Server lên UI. | | |
+| **Cả Nhóm** | **Tích hợp & Hoàn thiện** | - Ghép nối Client - Server.<br>- Xử lý ngoại lệ (Exception Handling - 1đ).<br>- Code Review chéo để **tất cả đều hiểu code**.<br>- Viết báo cáo/Slide thuyết trình. | | |
 
 ![Class UML Diagram](images/diagram.png)

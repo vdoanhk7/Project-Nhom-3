@@ -17,8 +17,12 @@ public class DbConnection {
         try {
             if (instance == null || instance.isClosed()) {
                 Class.forName("com.mysql.cj.jdbc.Driver");
-                instance = DriverManager.getConnection(URL, USER, PASS);
-                System.out.println("[Server] Đã kết nối thành công tới MySQL Cloud!");
+                synchronized (DbConnection.class) {
+                    if (instance == null || instance.isClosed()) {
+                        instance = DriverManager.getConnection(URL, USER, PASS);
+                        System.out.println("[Server] Kết nối Database thành công.");
+                    }
+                }
             }
         } catch (ClassNotFoundException | SQLException e) {
             System.err.println("[Server] Lỗi kết nối Database: " + e.getMessage());

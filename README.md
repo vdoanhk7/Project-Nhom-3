@@ -1,5 +1,4 @@
-# Project-Nhom-3
-### 📋 Theo Dõi Tiến Độ Dự Án
+# Project Nhom 3
 
 # 📑 TIẾN ĐỘ THỰC HIỆN BÀI TẬP LỚN: HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN
 

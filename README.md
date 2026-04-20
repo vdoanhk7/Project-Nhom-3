@@ -1,16 +1,30 @@
 # Project-Nhom-3
- 
+### 📋 Theo Dõi Tiến Độ Dự Án
 
-## 📋 Bảng Phân Công và Tiến Độ Chi Tiết
+#### 👤 Phúc Anh (Backend & Concurrency)
+- [x] Thiết lập Server Socket/API cơ bản
+- [ ] Logic đặt giá (Bidding logic)
+- [ ] Xử lý đấu giá đồng thời (Thread-safe)
+- [ ] Tính năng Auto-Bidding
 
-# Bảng Phân Công Công Việc & Theo Dõi Tiến Độ
+#### 👤 Doanh (Database & Core Logic)
+- [ ] Thiết kế Database & viết DAO
+- [ ] Quản lý Sản phẩm (CRUD)
+- [ ] Logic kết thúc phiên & chuyển trạng thái
+- [ ] Tính năng Anti-sniping
 
-| Thành Viên | Vai Trò Chính | Nhiệm Vụ Cụ Thể (Bám sát Rubric) | Đã Hoàn Thành | Đang Thực Hiện |
-| :--- | :--- | :--- | :--- | :--- |
-| **Phúc Anh** | **Backend & Concurrency** | - **Core:** Logic đặt giá (Bidding logic).<br>- **Bắt buộc (1đ):** Xử lý đấu giá đồng thời (Concurrency, Thread-safe).<br>- **Nâng cao:** Auto-Bidding (PriorityQueue).<br>- **Mạng:** Setup Socket/REST API Server, Realtime Update (Observer). | | |
-| **Doanh** | **Database & Core Logic** | - **Core:** Thiết kế Database & viết các lớp DAO.<br>- **Core:** Quản lý Sản phẩm (CRUD) & Quản lý Phiên đấu giá (Tự động đóng, chuyển trạng thái).<br>- **Nâng cao:** Gia hạn phiên (Anti-sniping).<br>- **OOP:** Áp dụng Design Patterns (Singleton, Factory). | | |
-| **Dũng** | **DevOps, Test & User Mng** | - **Core:** Quản lý Người dùng (Đăng ký/Đăng nhập, Phân quyền).<br>- **Nâng cao:** Bid History Visualization (Vẽ biểu đồ JavaFX).<br>- **Chất lượng mã:** Setup CI/CD (GitHub Actions), viết Unit Test (JUnit).<br>- Quản lý Git convention. | | |
-| **Quang Anh**| **Frontend (JavaFX Client)** | - **Kiến trúc:** Thiết kế toàn bộ UI bằng JavaFX + FXML (MVC Client).<br>- **Màn hình:** Login, Danh sách phiên, Chi tiết SP, Màn hình đấu giá trực tiếp, Dashboard Admin/Seller.<br>- Tích hợp API/Socket từ Server lên UI. | | |
-| **Cả Nhóm** | **Tích hợp & Hoàn thiện** | - Ghép nối Client - Server.<br>- Xử lý ngoại lệ (Exception Handling - 1đ).<br>- Code Review chéo để **tất cả đều hiểu code**.<br>- Viết báo cáo/Slide thuyết trình. | | |
+#### 👤 Dũng (DevOps & User Mng)
+- [ ] Quản lý Người dùng & Phân quyền
+- [ ] Vẽ biểu đồ Bid History Visualization
+- [ ] Thiết lập CI/CD (GitHub Actions)
+- [ ] Viết Unit Test cho Logic quan trọng
+
+#### 👤 Quang Anh (Frontend JavaFX)
+- [ ] Thiết kế Layout chính (FXML)
+- [ ] Màn hình Login & Danh sách sản phẩm
+- [ ] Màn hình Đấu giá trực tiếp
+- [ ] Tích hợp API/Socket từ 
+
+
 
 ![Class UML Diagram](images/diagram.png)

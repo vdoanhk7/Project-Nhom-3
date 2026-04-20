@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="380.0" prefWidth="400.0" spacing="15.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.AddItemController">
+<VBox prefHeight="380.0" prefWidth="400.0" spacing="15.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.AddItemController">
    <padding>
       <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
    </padding>
@@ -24,21 +24,21 @@
       </Label>
 
       <VBox spacing="5.0">
-         <Label text="Tên sản phẩm:" textFill="#7f8c8d">
+         <Label text="Tên sản phẩm :" textFill="#7f8c8d">
             <font><Font name="System Bold" size="12.0" /></font>
          </Label>
          <TextField fx:id="txtName" promptText="Nhập tên sản phẩm..." style="-fx-padding: 8; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
       </VBox>
 
       <VBox spacing="5.0">
-         <Label text="Phân loại (Category):" textFill="#7f8c8d">
+         <Label text="Phân loại :" textFill="#7f8c8d">
             <font><Font name="System Bold" size="12.0" /></font>
          </Label>
          <ComboBox fx:id="cbType" maxWidth="1.7976931348623157E308" promptText="-- Chọn loại sản phẩm --" style="-fx-background-color: white; -fx-border-color: #bdc3c7; -fx-border-radius: 5; -fx-padding: 3;" />
       </VBox>
 
       <VBox spacing="5.0">
-         <Label text="Giá khởi điểm (VNĐ):" textFill="#7f8c8d">
+         <Label text="Giá khởi điểm (VNĐ) :" textFill="#7f8c8d">
             <font><Font name="System Bold" size="12.0" /></font>
          </Label>
          <TextField fx:id="txtStartPrice" promptText="VD: 50000" style="-fx-padding: 8; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />

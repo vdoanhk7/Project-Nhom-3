@@ -41,6 +41,5 @@
 - [ ] **Hoàn thiện Báo cáo:** Viết tài liệu hướng dẫn cài đặt và mô tả kiến trúc hệ thống.
 - [ ] **Kiểm thử cuối cùng:** Chạy demo giả lập nhiều người dùng đặt giá cùng lúc để kiểm tra độ ổn định.
 
-
-
+##  Tổng quan hệ thống đấu giá
 ![Class UML Diagram](images/diagram.png)

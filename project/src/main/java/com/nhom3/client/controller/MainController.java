@@ -13,11 +13,12 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import javafx.scene.control.Button; // Thêm import Button
+import javafx.scene.control.Button; 
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.user.User;
 import com.nhom3.shared.model.user.Admin;
 import com.nhom3.shared.model.user.Seller;
+
 public class MainController {
 
     @FXML private StackPane contentArea;
@@ -26,11 +27,13 @@ public class MainController {
     @FXML private Button btnManageItem;
     @FXML private Button btnAdminPanel;
 
+    private long currentNavigationId = 0; // Biến để theo dõi ID của lần điều hướng hiện tại
+
     @FXML
     public void initialize() {
         System.out.println("Giao diện chính đã tải thành công!");
         
-        // 2. ẨN TẤT CẢ CÁC NÚT ĐỘNG (setManaged = false để nó co lại, không để lại khoảng trống)
+        // 2. ẨN TẤT CẢ CÁC NÚT ĐỘNG
         btnPurchaseHistory.setVisible(false); btnPurchaseHistory.setManaged(false);
         btnManageItem.setVisible(false); btnManageItem.setManaged(false);
         btnAdminPanel.setVisible(false); btnAdminPanel.setManaged(false);
@@ -41,110 +44,102 @@ public class MainController {
         if (currentUser != null) {
             lblUserName.setText("Xin chào, " + currentUser.getUserInfo().getName());
 
-            // Bật nút theo đúng vai trò
             if (currentUser instanceof Admin) {
                 btnAdminPanel.setVisible(true); btnAdminPanel.setManaged(true);
             } else if (currentUser instanceof Seller) {
                 btnManageItem.setVisible(true); btnManageItem.setManaged(true);
             } else {
-                // Mặc định là Bidder
                 btnPurchaseHistory.setVisible(true); btnPurchaseHistory.setManaged(true);
             }
         }
     }
 
-    // Sự kiện khi bấm nút Tổng quan
-    @FXML
-    void showDashboard(ActionEvent event) {
-        // Trong thực tế, bạn sẽ dùng FXMLLoader để load file view_dashboard.fxml
-        // Demo tạm bằng cách thay đổi text:
-        contentArea.getChildren().clear();
-        contentArea.getChildren().add(new Label("Đang hiển thị: TỔNG QUAN"));
-        System.out.println("Chuyển sang màn hình Tổng quan");
-    }
-
-    // Sự kiện khi bấm nút Chợ Đấu Giá
-    @FXML
-    void showMarket(ActionEvent event) {
-        // Tương lai: FXMLLoader.load(getClass().getResource("/com/nhom3/view_market.fxml"));
-        contentArea.getChildren().clear();
-        contentArea.getChildren().add(new Label("Đang hiển thị: CHỢ ĐẤU GIÁ"));
-        System.out.println("Chuyển sang màn hình Chợ Đấu Giá");
-    }
-
-    // Sự kiện khi bấm nút Lịch sử đấu giá
-    @FXML
-    void showPurchaseHistory(ActionEvent event) {
-        contentArea.getChildren().clear();
-        contentArea.getChildren().add(new Label("Đang hiển thị: LỊCH SỬ ĐẤU GIÁ (BIDDER)"));
-    }
-
-    // Sự kiện khi bấm nút Quản lí sản phẩm
-    @FXML
-    void showManageItem(ActionEvent event) {
-        // 1. Tạo vòng xoay Loading
+    // HÀM TIỆN ÍCH DÙNG CHUNG: Vòng xoay loading & Chống nghẽn luồng
+    public void loadPage(String fxmlPath) {
+        // 1. Tạo ID mới mỗi lần bấm nút
+        currentNavigationId = System.currentTimeMillis();
+        final long thisLoadId = currentNavigationId;
+        // 2. Hiện vòng xoay
         ProgressIndicator spinner = new ProgressIndicator();
         spinner.setMaxSize(50, 50);
-        spinner.setLayoutX(contentArea.getWidth() / 2 - 25);
-        spinner.setLayoutY(contentArea.getHeight() / 2 - 25);
-        // Hiển thị vòng xoay ngay lên màn hình
         contentArea.getChildren().clear();
         contentArea.getChildren().add(spinner);
-        // 2. Mở một luồng ngầm (Background Thread) 
+        // 3. Tải ngầm FXML
         Thread loadThread = new Thread(() -> {
             try {
-                // Đọc file FXML ở luồng ngầm 
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/manage_item.fxml"));
-                Parent view = loader.load();
-                // 3. Khi tải xong, phải dùng Platform.runLater để đẩy kết quả lên UI Thread
+                FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+                Parent view = loader.load();               
+                // 4. Cập nhật UI nếu ID vẫn khớp (Nghĩa là user chưa bấm nút khác)
                 javafx.application.Platform.runLater(() -> {
-                    contentArea.getChildren().clear();
-                    contentArea.getChildren().add(view);
+                    if (thisLoadId == currentNavigationId) {
+                        contentArea.getChildren().clear();
+                        contentArea.getChildren().add(view);
+                    }
                 });
             } catch (Exception e) {
                 e.printStackTrace();
-                // Nếu lỗi, báo cho người dùng biết 
                 javafx.application.Platform.runLater(() -> {
-                    contentArea.getChildren().clear();
-                    System.err.println("Lỗi tải giao diện Manage Item!");
+                    if (thisLoadId == currentNavigationId) {
+                        contentArea.getChildren().clear();
+                        Label lblError = new Label("Lỗi: Không thể tải giao diện!");
+                        lblError.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                        contentArea.getChildren().add(lblError);
+                    }
                 });
             }
         });
 
-        // Set Daemon để Thread tự chết nếu người dùng tắt app giữa chừng
         loadThread.setDaemon(true); 
         loadThread.start();
     }
+    
+    // CÁC SỰ KIỆN CHUYỂN TRANG (ĐÃ ĐƯỢC RÚT GỌN SIÊU SẠCH)
+    @FXML
+    void showDashboard(ActionEvent event) {
+        currentNavigationId = System.currentTimeMillis(); // Cập nhật ID để hủy các vòng xoay khác
+        contentArea.getChildren().clear();
+        contentArea.getChildren().add(new Label("Đang hiển thị: TỔNG QUAN"));
+    }
 
-    // Sự kiện khi bấm nút Quản trị hệ thống
+    @FXML
+    void showMarket(ActionEvent event) {
+        loadPage("/com/nhom3/client/view/market.fxml");
+    }
+
+    @FXML
+    void showPurchaseHistory(ActionEvent event) {
+        loadPage("/com/nhom3/client/view/purchase_history.fxml");
+    }
+
+    @FXML
+    void showManageItem(ActionEvent event) {
+        loadPage("/com/nhom3/client/view/manage_item.fxml");
+    }
+
     @FXML
     void showAdminPanel(ActionEvent event) {
+        currentNavigationId = System.currentTimeMillis(); // Cập nhật ID
         contentArea.getChildren().clear();
         contentArea.getChildren().add(new Label("Đang hiển thị: QUẢN TRỊ HỆ THỐNG (ADMIN)"));
     }
 
-    //Sự kiện khi bấm nút Thông tin cá nhân
     @FXML
     void showProfile(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/profile.fxml"));
-            Parent view = loader.load();
-            contentArea.getChildren().clear();
-            contentArea.getChildren().add(view);
-        } catch (Exception e) { e.printStackTrace(); }
+        loadPage("/com/nhom3/client/view/profile.fxml");
     }
 
-    // Sự kiện khi bấm nút Đăng xuất
+    // ĐĂNG XUẤT
     @FXML
     void handleLogout(ActionEvent event) {
-        // 1. Tạo hộp thoại xác nhận (CONFIRMATION)
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Xác nhận");
         alert.setHeaderText(null);
         alert.setContentText("Bạn thực sự muốn đăng xuất?");
 
-        // 2. Bắt sự kiện khi người dùng bấm nút trên thông báo
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+            // Xóa session người dùng hiện tại (nếu bạn có hàm này trong UserSession)
+            // UserSession.getInstance().clearSession(); 
+
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/login.fxml"));
                 Parent root = loader.load();
@@ -156,6 +151,5 @@ public class MainController {
                 e.printStackTrace();
             }
         }
-
     }
 }

@@ -57,7 +57,7 @@ public class LoginController {
             
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             // ĐẶT KÍCH THƯỚC CHO CỬA SỔ CHÍNH
-            stage.setScene(new Scene(root, 1200, 800));
+            stage.setScene(new Scene(root, 1300,800));
             stage.centerOnScreen();
         } catch (Exception e) {
             e.printStackTrace();

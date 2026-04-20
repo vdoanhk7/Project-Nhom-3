@@ -5,6 +5,7 @@ import com.nhom3.server.dao.AuctionDAO;
 import com.nhom3.server.dao.AuctionDAOImpl;
 import com.nhom3.server.dao.ItemDAO;
 import com.nhom3.server.dao.ItemDAOImpl;
+import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Seller;
 import com.nhom3.shared.model.user.User;
@@ -273,10 +274,7 @@ public class ManageItemController {
     }
 
 
-    // =========================================================
     // CÁC HÀM XỬ LÝ SỰ KIỆN KHI BẤM NÚT TRONG BẢNG
-    // =========================================================
-
     private void handlePublish(Item item) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/publish_auction.fxml"));
@@ -353,9 +351,11 @@ public class ManageItemController {
             // 1. Lấy status từ Map
             String status = getAuctionStatus(item);
             // 2. THÊM 2 DÒNG NÀY: Lấy Auction từ Database
-            com.nhom3.server.dao.AuctionDAO auctionDAO = new com.nhom3.server.dao.AuctionDAOImpl();
-            com.nhom3.shared.model.auction.Auction auction = auctionDAO.getAuctionByItemId(item.getId());
-
+            AuctionDAO auctionDAO = new AuctionDAOImpl();
+            Auction auction = auctionDAO.getAuctionByItemId(item.getId());
+            if (auction != null) {
+                auction.setItem(item); 
+            }
             // 3. SỬA DÒNG BÁO LỖI THÀNH DÒNG NÀY: Truyền đủ 3 tham số
             controller.setItemData(item, auction, status);
 

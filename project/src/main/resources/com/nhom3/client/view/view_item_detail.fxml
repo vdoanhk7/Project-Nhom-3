@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefWidth="550.0" spacing="20.0" style="-fx-background-color: #f4f7f6;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.ViewItemDetailController">
+<VBox prefWidth="650.0" spacing="20.0" style="-fx-background-color: #f4f7f6;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.ViewItemDetailController">
    <padding><Insets bottom="25.0" left="25.0" right="25.0" top="25.0" /></padding>
    <children>
       <HBox alignment="CENTER_LEFT" spacing="15.0">
@@ -52,6 +57,14 @@
          </children>
       </HBox>
 
+      <HBox fx:id="boxBidderActions" alignment="CENTER" spacing="10.0">
+         <children>
+            <TextField fx:id="txtBidAmount" prefHeight="40.0" promptText="Nhập số tiền bạn muốn trả..." style="-fx-font-size: 14px; -fx-background-radius: 5; -fx-border-color: #bdc3c7; -fx-border-radius: 5;" HBox.hgrow="ALWAYS" />
+            <TextField fx:id="txtBidNote" prefHeight="40.0" promptText="Ghi chú (tùy chọn)..." style="-fx-font-size: 14px; -fx-background-radius: 5; -fx-border-color: #bdc3c7; -fx-border-radius: 5;" HBox.hgrow="ALWAYS" />
+            <Button fx:id="btnPlaceBid" onAction="#handlePlaceBid" prefHeight="40.0" prefWidth="120.0" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;" text="ĐẶT GIÁ" />
+         </children>
+      </HBox>
+
       <VBox spacing="10.0" VBox.vgrow="ALWAYS">
          <children>
             <Label text="Lịch sử trả giá mới nhất" textFill="#2c3e50">
@@ -59,9 +72,10 @@
             </Label>
             <TableView fx:id="tableBids" prefHeight="150.0">
                <columns>
-                  <TableColumn fx:id="colBidder" prefWidth="150.0" text="Người đặt" />
-                  <TableColumn fx:id="colBidAmount" prefWidth="150.0" text="Mức giá" />
-                  <TableColumn fx:id="colBidTime" prefWidth="180.0" text="Thời gian" />
+                  <TableColumn fx:id="colBidder" prefWidth="127.0" text="Người đặt" />
+                  <TableColumn fx:id="colBidAmount" prefWidth="131.0" text="Mức giá" />
+                  <TableColumn fx:id="colBidTime" minWidth="0.0" prefWidth="126.0" text="Thời gian" />
+                  <TableColumn fx:id="colBidNote" maxWidth="500.0" prefWidth="215.0" text="Ghi chú" />
                </columns>
             </TableView>
          </children>

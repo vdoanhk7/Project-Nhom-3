@@ -33,7 +33,7 @@
 - [x] **Màn hình Seller:** Giao diện quản lý dành riêng cho người bán.
 - [x] **Màn hình Bidder:** Giao diện quản lý dành riêng cho người mua.
 - [ ] **Tích hợp Client:** Gọi các hàm từ phía Client-side để gửi dữ liệu lên Server và nhận phản hồi từ Phúc Anh.
-
+- [ ] **Chức năng phụ:** Viết thêm chức năng nâng cao phụ
 ### 5. Nhiệm vụ chung (Cả nhóm)
 - [ ] **Xử lý lỗi & Ngoại lệ:** Bắt các lỗi kết nối, dữ liệu sai, đặt giá thấp hơn giá hiện tại...
 - [ ] **Code Review:** Kiểm tra mã nguồn của nhau để đảm bảo tất cả thành viên đều hiểu code

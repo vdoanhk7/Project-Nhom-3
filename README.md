@@ -10,12 +10,12 @@
 - [ ] **Auto-Bidding:** Lập trình thuật toán tự động đặt giá.
 
 ### 2. Doanh 
-- [ ] **Thiết kế CSDL:** Tạo cấu trúc lưu trữ cho Người dùng, Sản phẩm, Phiên đấu giá, Lịch sử đặt giá.
-- [ ] **Tầng Dữ liệu (DAO):** Viết các lớp DAO để truy xuất và cập nhật cơ sở dữ liệu.
+- [x] **Thiết kế CSDL:** Tạo cấu trúc lưu trữ cho Người dùng, Sản phẩm, Phiên đấu giá, Lịch sử đặt giá.
+- [x] **Tầng Dữ liệu (DAO):** Viết các lớp DAO để truy xuất và cập nhật cơ sở dữ liệu.
 - [ ] **Xử lý đồng thời:**
-- [ ] **Quản lý sản phẩm:** Viết Logic nghiệp vụ cho các chức năng Thêm/Sửa/Xóa sản phẩm.
-- [ ] **Quản lý phiên đấu giá:** Xử lý logic tự động đóng phiên khi hết thời gian và chuyển trạng thái.
-- [ ] **Thiết kế hướng đối tượng:** Xây dựng cây kế thừa + design pattern(factory)
+- [x] **Quản lý sản phẩm:** Viết Logic nghiệp vụ cho các chức năng Thêm/Sửa/Xóa sản phẩm.
+- [x] **Quản lý phiên đấu giá:** Xử lý logic tự động đóng phiên khi hết thời gian và chuyển trạng thái.
+- [x] **Thiết kế hướng đối tượng:** Xây dựng cây kế thừa + design pattern(factory)
 - [ ] **Anti-sniping:** Viết thuật toán tự động gia hạn thêm Y giây khi có người đặt giá ở X giây cuối.
 - [ ] **Setup Dự án/Refactor code:** Cấu hình Build tool (Maven) và Coding convention
 ### 3. Dũng 

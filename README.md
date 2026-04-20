@@ -26,12 +26,12 @@
 - [ ] **Màn hình Admin:** 
 - [ ] **Màn hình biểu đồ**
 ### 4. Quang Anh 
-- [ ] **Thiết kế Layout chính:** Sử dụng FXML để dựng khung cho toàn bộ ứng dụng.
-- [ ] **Màn hình đăng nhập/đăng ký:** UI cho User mng.
-- [ ] **Màn hình Dashboard:** Hiển thị danh sách các phiên đấu giá đang diễn ra
-- [ ] **Màn hình đấu giá trực tiếp:** UI hiển thị chi tiết sản phẩm, đồng hồ đếm ngược và khu vực đặt giá.
-- [ ] **Màn hình Seller:** Giao diện quản lý dành riêng cho người bán.
-- [ ] **Màn hình Bidder:** Giao diện quản lý dành riêng cho người mua.
+- [x] **Thiết kế Layout chính:** Sử dụng FXML để dựng khung cho toàn bộ ứng dụng.
+- [x] **Màn hình đăng nhập/đăng ký:** UI cho User mng.
+- [x] **Màn hình Dashboard:** Hiển thị danh sách các phiên đấu giá đang diễn ra
+- [x] **Màn hình đấu giá trực tiếp:** UI hiển thị chi tiết sản phẩm, đồng hồ đếm ngược và khu vực đặt giá.
+- [x] **Màn hình Seller:** Giao diện quản lý dành riêng cho người bán.
+- [x] **Màn hình Bidder:** Giao diện quản lý dành riêng cho người mua.
 - [ ] **Tích hợp Client:** Gọi các hàm từ phía Client-side để gửi dữ liệu lên Server và nhận phản hồi từ Phúc Anh.
 
 ### 5. Nhiệm vụ chung (Cả nhóm)

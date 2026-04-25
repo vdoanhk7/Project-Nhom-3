@@ -296,4 +296,18 @@ public class AuctionDAOImpl implements AuctionDAO {
         return list;
     }
 
+    @Override
+    public boolean extendAuctionTime(int auctionId, int additionalMinutes) {
+        String sql = "UPDATE auctions SET end_time = DATE_ADD(end_time, INTERVAL ? MINUTE) WHERE id = ?";
+        try (Connection conn = DbConnection.getInstance();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, additionalMinutes);
+            stmt.setInt(2, auctionId);
+            return stmt.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
 }

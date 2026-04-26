@@ -17,7 +17,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public User login(String username, String password) {
         String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
             stmt.setString(2, password);
@@ -51,7 +51,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public boolean register(User user) {
         String sql = "INSERT INTO users (username, password, full_name, email, phone, role) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, user.getUserInfo().getUserName());
             stmt.setString(2, user.getUserInfo().getPassword());
@@ -70,7 +70,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public boolean updateUser(User user) {
         String sql = "UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?";
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, user.getUserInfo().getName());
             stmt.setString(2, user.getUserContact().getEmail());
@@ -86,7 +86,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public boolean updatePassword(int userId, String newPassword) {
         String sql = "UPDATE users SET password = ? WHERE id = ?";
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, newPassword);

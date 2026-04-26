@@ -17,7 +17,7 @@ public class ItemDAOImpl implements ItemDAO {
         if (item == null || sellerId <= 0) {
             return false;
         }
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, sellerId);
             stmt.setString(2, item.getName());
@@ -38,7 +38,7 @@ public class ItemDAOImpl implements ItemDAO {
         List<Item> list = new ArrayList<>();
         String sql = "SELECT * FROM items WHERE seller_id = ?";
         
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {     
             stmt.setInt(1, sellerId);
             ResultSet rs = stmt.executeQuery();
@@ -74,7 +74,7 @@ public class ItemDAOImpl implements ItemDAO {
     @Override
     public boolean deleteItem(int itemId) {
         String sql = "DELETE FROM items WHERE id = ?";
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {  
             stmt.setInt(1, itemId);
             int rowsAffected = stmt.executeUpdate();   
@@ -88,7 +88,7 @@ public class ItemDAOImpl implements ItemDAO {
     @Override
     public boolean updateItem(Item item) {
         String sql = "UPDATE items SET name = ?, start_price = ?, cur_highest = ?, item_type = ? WHERE id = ?"; 
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) { 
             stmt.setString(1, item.getName());
             stmt.setDouble(2, item.getStartPrice());

@@ -30,7 +30,7 @@ public class AuctionDAOImpl implements AuctionDAO {
 
         String sqlAuction = "UPDATE auctions SET highest_bidder_id = ? WHERE id = ?";
 
-        try (Connection conn = DbConnection.getInstance()) {
+        try (Connection conn = DbConnection.getConnection()) {
             conn.setAutoCommit(false);
 
             try (PreparedStatement stmt1 = conn.prepareStatement(sql)) {
@@ -61,7 +61,7 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public boolean saveBidTransaction(BidTransaction bid, int auctionId) {
         String sql = "INSERT INTO bid_transactions (auction_id, bidder_id, amount, bid_time, note) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, auctionId);
             stmt.setInt(2, bid.getBidder().getId());
@@ -78,7 +78,7 @@ public class AuctionDAOImpl implements AuctionDAO {
     public void closeExpiredAuctions() {
     String sql = "UPDATE auctions SET status = 'FINISHED' WHERE status = 'RUNNING' AND end_time <= NOW()";
     
-    try (Connection conn = DbConnection.getInstance();
+    try (Connection conn = DbConnection.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
         
         int rowsUpdated = stmt.executeUpdate();
@@ -92,7 +92,7 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public boolean createAuction(Auction auction) {
         String sql = "INSERT INTO auctions (item_id, start_time, end_time, status) VALUES (?, ?, ?, ?)";
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, auction.getItem().getId());
 
@@ -127,7 +127,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                      "FROM auctions a " +
                      "JOIN items i ON a.item_id = i.id " +
                      "WHERE i.seller_id = ?";     
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) { 
             java.sql.Timestamp currentTime = java.sql.Timestamp.valueOf(LocalDateTime.now());
             stmt.setTimestamp(1, currentTime);
@@ -149,7 +149,7 @@ public class AuctionDAOImpl implements AuctionDAO {
         // Lấy phiên đấu giá mới nhất của sản phẩm này
         String sql = "SELECT * FROM auctions WHERE item_id = ? ORDER BY id DESC LIMIT 1";
         
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, itemId);
             ResultSet rs = stmt.executeQuery();      
@@ -169,7 +169,7 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public boolean confirmPayment(int auctionId) {
         String sql = "UPDATE auctions SET status = 'PAID' WHERE id = ?";      
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {  
             stmt.setInt(1, auctionId);
             return stmt.executeUpdate() > 0;
@@ -188,7 +188,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                     "WHERE a.end_time > ? AND a.status != 'CANCELLED' " +
                     "ORDER BY a.end_time ASC";
 
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setTimestamp(1, java.sql.Timestamp.valueOf(LocalDateTime.now()));     
             try (ResultSet rs = stmt.executeQuery()) {
@@ -231,7 +231,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                      "WHERE b.auction_id = ? " +
                      "ORDER BY b.bid_time DESC";
                      
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
              
             stmt.setInt(1, auctionId);
@@ -275,7 +275,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                      "JOIN items i ON a.item_id = i.id " +
                      "WHERE b.bidder_id = ? " +
                      "ORDER BY b.bid_time DESC";
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {         
             stmt.setInt(1, bidderId);
             ResultSet rs = stmt.executeQuery();
@@ -305,7 +305,7 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public boolean extendAuctionTime(int auctionId, int additionalMinutes) {
         String sql = "UPDATE auctions SET end_time = DATE_ADD(end_time, INTERVAL ? MINUTE) WHERE id = ?";
-        try (Connection conn = DbConnection.getInstance();
+        try (Connection conn = DbConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, additionalMinutes);
             stmt.setInt(2, auctionId);

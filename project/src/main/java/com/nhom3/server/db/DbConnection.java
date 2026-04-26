@@ -1,32 +1,49 @@
 package com.nhom3.server.db;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DbConnection {
-    private static final String URL = "jdbc:mysql://auctiondb.c0vco82umoac.us-east-1.rds.amazonaws.com:3306/auction_db";
-    private static final String USER = "admin";
-    private static final String PASS = "hoathanhque";
+    //Use connection pool (HikariCP) instead of single connection for better performance and scalability
+    private static HikariDataSource dataSource;
 
-    private static Connection instance;
+    static {
+        try {
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl("jdbc:mysql://auctiondb.c0vco82umoac.us-east-1.rds.amazonaws.com:3306/auction_db");
+            config.setUsername("admin");
+            config.setPassword("hoathanhque");
+            config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+
+            config.setMaximumPoolSize(20); 
+            config.setMinimumIdle(5); 
+            config.setConnectionTimeout(30000); 
+            config.setIdleTimeout(600000);             
+            config.setMaxLifetime(1800000); 
+
+            dataSource = new HikariDataSource(config);
+            System.out.println("[Server] Khởi tạo Connection Pool thành công.");
+            
+        } catch (Exception e) {
+            System.err.println("[Server] Lỗi khởi tạo Connection Pool: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
 
     private DbConnection() {}
 
-    public static Connection getInstance() {
-        try {
-            if (instance == null || instance.isClosed()) {
-                Class.forName("com.mysql.cj.jdbc.Driver");
-                synchronized (DbConnection.class) {
-                    if (instance == null || instance.isClosed()) {
-                        instance = DriverManager.getConnection(URL, USER, PASS);
-                        System.out.println("[Server] Kết nối Database thành công.");
-                    }
-                }
-            }
-        } catch (ClassNotFoundException | SQLException e) {
-            System.err.println("[Server] Lỗi kết nối Database: " + e.getMessage());
+
+    public static Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
+    }
+    
+    public static void closePool() {
+        if (dataSource != null && !dataSource.isClosed()) {
+            dataSource.close();
+            System.out.println("[Server] Đã đóng Connection Pool.");
         }
-        return instance;
     }
 }

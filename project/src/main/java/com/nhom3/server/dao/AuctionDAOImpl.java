@@ -21,7 +21,13 @@ public class AuctionDAOImpl implements AuctionDAO {
 
     @Override
     public boolean updateHighestBid(int auctionId, int bidderId, double newAmount) {
-        String sql = "UPDATE items SET cur_highest = ? WHERE id = (SELECT item_id FROM auctions WHERE id = ?) AND cur_highest < ?";
+        String sql = "UPDATE items i " +
+                    "JOIN auctions a ON i.id = a.item_id " +
+                    "SET i.cur_highest = ? " +
+                    "WHERE a.id = ? " +
+                    "AND i.cur_highest < ? " +
+                    "AND NOW() BETWEEN a.start_time AND a.end_time";
+
         String sqlAuction = "UPDATE auctions SET highest_bidder_id = ? WHERE id = ?";
 
         try (Connection conn = DbConnection.getInstance()) {

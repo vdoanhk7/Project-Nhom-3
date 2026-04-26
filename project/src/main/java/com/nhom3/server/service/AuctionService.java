@@ -67,15 +67,28 @@ public class AuctionService {
     }
 
     public synchronized boolean placeBid(Auction auction, BidTransaction bid) {
-         boolean isSuccess = auctionDAO.updateHighestBid(auction.getId(), bid.getBidder().getId(), bid.getAmount());
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(auction.getStartTime())) {
+            throw new IllegalStateException("Phiên đấu giá chưa bắt đầu! Không thể đặt giá.");
+        }
+        if (now.isAfter(auction.getEndTime())) {
+            throw new IllegalStateException("Phiên đấu giá đã kết thúc! Yêu cầu đặt giá bị từ chối.");
+        }
+        if (auction.getStatus() == StatusOfAuction.CANCELLED) {
+            throw new IllegalStateException("Phiên đấu giá bị hủy! Yêu cầu đặt giá bị từ chối.");
+        }
+        if (bid.getBidder().getId() == auction.getHighestBidderId()) {
+            throw new IllegalStateException("Bạn đã là người đặt giá cao nhất! Không thể đặt giá tiếp.");
+        }
+
+
+        boolean isSuccess = auctionDAO.updateHighestBid(auction.getId(), bid.getBidder().getId(), bid.getAmount());
         
         if (isSuccess) {
             auctionDAO.saveBidTransaction(bid, auction.getId());
-            
-            LocalDateTime now = LocalDateTime.now();
+            //Anti-Snipe
             // Tính khoảng cách giữa hiện tại và lúc kết thúc (theo giây)
             long secondsLeft = ChronoUnit.SECONDS.between(now, auction.getEndTime());
-            
             if (secondsLeft > 0 && secondsLeft <= SNIPE_THRESHOLD_SECONDS) {
                 System.out.println("[Anti-Snipe] Phát hiện đặt giá sát giờ! Gia hạn thêm " + EXTENSION_MINUTES + " phút.");
                 auctionDAO.extendAuctionTime(auction.getId(), EXTENSION_MINUTES);                

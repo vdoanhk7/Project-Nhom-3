@@ -26,32 +26,39 @@ public class AuctionDAOImpl implements AuctionDAO {
                     "SET i.cur_highest = ? " +
                     "WHERE a.id = ? " +
                     "AND i.cur_highest < ? " +
-                    "AND NOW() BETWEEN a.start_time AND a.end_time";
+                    "AND NOW() BETWEEN a.start_time AND a.end_time" +
+                    "AND a.status = 'RUNNING'";
 
         String sqlAuction = "UPDATE auctions SET highest_bidder_id = ? WHERE id = ?";
 
         try (Connection conn = DbConnection.getConnection()) {
             conn.setAutoCommit(false);
-
-            try (PreparedStatement stmt1 = conn.prepareStatement(sql)) {
-                stmt1.setDouble(1, newAmount);
-                stmt1.setInt(2, auctionId);
-                stmt1.setDouble(3, newAmount);
-                
-                int rowsUpdated = stmt1.executeUpdate();
-                if (rowsUpdated == 0) {
-                    conn.rollback();
-                    return false; 
+            try {
+                try (PreparedStatement stmt1 = conn.prepareStatement(sql)) {
+                    stmt1.setDouble(1, newAmount);
+                    stmt1.setInt(2, auctionId);
+                    stmt1.setDouble(3, newAmount);
+                    
+                    int rowsUpdated = stmt1.executeUpdate();
+                    if (rowsUpdated == 0) {
+                        conn.rollback();
+                        return false; 
+                    }
                 }
-            }
-            try (PreparedStatement stmt2 = conn.prepareStatement(sqlAuction)) {
-                stmt2.setInt(1, bidderId);
-                stmt2.setInt(2, auctionId);
-                stmt2.executeUpdate();
-            }
+                try (PreparedStatement stmt2 = conn.prepareStatement(sqlAuction)) {
+                    stmt2.setInt(1, bidderId);
+                    stmt2.setInt(2, auctionId);
+                    stmt2.executeUpdate();
+                }
 
-            conn.commit();
-            return true;
+                conn.commit();
+                return true;
+                
+            } catch (Exception e) {
+                conn.rollback();
+                e.printStackTrace();
+                return false;
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -315,5 +322,39 @@ public class AuctionDAOImpl implements AuctionDAO {
             return false;
         }
     }
+
+    @Override
+    public boolean cancelAuction(int auctionId) {
+        String sql = "UPDATE auctions SET status = 'CANCELLED' WHERE id = ? AND status IN ('OPEN', 'RUNNING')";
+        
+        try (Connection conn = DbConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, auctionId);
+            return stmt.executeUpdate() > 0;
+            
+        } catch (Exception e) {
+            System.err.println("[DAO] Lỗi khi hủy phiên đấu giá: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public LocalDateTime getEndTime(int auctionId) {
+        String sql = "SELECT end_time FROM auctions WHERE id = ?";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            stmt.setInt(1, auctionId);
+            if (rs.next()) {
+                return rs.getTimestamp("end_time").toLocalDateTime();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
     
 }

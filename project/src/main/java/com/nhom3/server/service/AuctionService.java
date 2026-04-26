@@ -55,14 +55,16 @@ public class AuctionService {
         }
     }
 
-    public void cancelAuction(Auction auction) {
-        if (auction.getStatus() == StatusOfAuction.OPEN || auction.getStatus() == StatusOfAuction.RUNNING) {
-            auction.setStatus(StatusOfAuction.CANCELLED);
-            System.out.println("Phiên đấu giá đã bị hủy.");
-        } else if (auction.getStatus() == StatusOfAuction.FINISHED || auction.getStatus() == StatusOfAuction.PAID) {
-            System.out.println("Phiên đấu giá đã kết thúc, không thể hủy.");
-        } else if (auction.getStatus() == StatusOfAuction.CANCELLED) {
-            System.out.println("Phiên đấu giá đã bị hủy.");
+    public boolean cancelAuction(int auctionId) throws IllegalStateException {
+        
+        boolean isSuccess = auctionDAO.cancelAuction(auctionId);
+
+        if (isSuccess) {
+            System.out.println("[Server] Đã hủy thành công phiên đấu giá ID: " + auctionId);
+            return true;
+        } else {
+            System.out.println("[Server] Hủy thất bại phiên đấu giá ID: " + auctionId);
+            throw new IllegalStateException("Không thể hủy! Phiên đấu giá đã kết thúc hoặc đã bị hủy trước đó.");
         }
     }
 
@@ -81,18 +83,16 @@ public class AuctionService {
             throw new IllegalStateException("Bạn đã là người đặt giá cao nhất! Không thể đặt giá tiếp.");
         }
 
-
         boolean isSuccess = auctionDAO.updateHighestBid(auction.getId(), bid.getBidder().getId(), bid.getAmount());
         
         if (isSuccess) {
             auctionDAO.saveBidTransaction(bid, auction.getId());
-            //Anti-Snipe
-            // Tính khoảng cách giữa hiện tại và lúc kết thúc (theo giây)
-            long secondsLeft = ChronoUnit.SECONDS.between(now, auction.getEndTime());
+            // Tránh lỗi thêm thời gian nhiều lần khi có nhiều người đặt giá cùng lúc
+            LocalDateTime realEndTime = auctionDAO.getEndTime(auction.getId());
+            if (realEndTime == null) return false;
+            long secondsLeft = ChronoUnit.SECONDS.between(now, realEndTime);
             if (secondsLeft > 0 && secondsLeft <= SNIPE_THRESHOLD_SECONDS) {
-                System.out.println("[Anti-Snipe] Phát hiện đặt giá sát giờ! Gia hạn thêm " + EXTENSION_MINUTES + " phút.");
-                auctionDAO.extendAuctionTime(auction.getId(), EXTENSION_MINUTES);                
-                auction.setEndTime(auction.getEndTime().plusMinutes(EXTENSION_MINUTES));
+                auctionDAO.extendAuctionTime(auction.getId(), EXTENSION_MINUTES);
             }
             return true;
         }

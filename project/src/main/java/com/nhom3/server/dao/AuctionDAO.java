@@ -1,6 +1,7 @@
 package com.nhom3.server.dao;
 import com.nhom3.shared.model.auction.BidTransaction;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -18,4 +19,6 @@ public interface AuctionDAO {
     List<BidTransaction> getBidHistory(int auctionId);
     List<Auction> getMyBidHistory(int bidderId);
     boolean extendAuctionTime(int auctionId, int additionalMinutes);
+    boolean cancelAuction(int auctionId);
+    LocalDateTime getEndTime(int auctionId);
 }

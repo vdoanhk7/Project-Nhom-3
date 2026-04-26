@@ -2,7 +2,8 @@ package com.nhom3.server.service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.nhom3.server.dao.AuctionDAO;
 import com.nhom3.server.dao.AuctionDAOImpl;
 import com.nhom3.shared.model.auction.Auction;
@@ -15,13 +16,14 @@ public class AuctionService {
     private final AuctionDAO auctionDAO;
     private static final int SNIPE_THRESHOLD_SECONDS = 30;
     private static final int EXTENSION_MINUTES = 2;
+    private static final Logger log = LoggerFactory.getLogger(AuctionService.class);
 
     public AuctionService() {
         this.auctionDAO = new AuctionDAOImpl();
     }
     public void createAuction(Seller seller, Item item, int id, LocalDateTime startTime, LocalDateTime endTime) {
         if (seller == null || item == null) {
-            System.out.println("Seller hoặc Item không tồn tại.");
+            log.error("Seller hoặc Item không tồn tại.");
             return;
         }
         Auction newAuction = new Auction(id, item, startTime, endTime);
@@ -30,28 +32,28 @@ public class AuctionService {
     public void startAuction(Auction auction) {
         if (auction.getStatus() == StatusOfAuction.OPEN) {
             auction.setStatus(StatusOfAuction.RUNNING);
-            System.out.println("Phiên đấu giá đã bắt đầu.");
+            log.info("Phiên đấu giá đã bắt đầu.");
         } else if (auction.getStatus() == StatusOfAuction.RUNNING) {
-            System.out.println("Phiên đấu giá đang chạy.");
+            log.info("Phiên đấu giá đang chạy.");
         } else if (auction.getStatus() == StatusOfAuction.FINISHED || auction.getStatus() == StatusOfAuction.PAID) {
-            System.out.println("Phiên đấu giá đã kết thúc.");
+            log.info("Phiên đấu giá đã kết thúc.");
         } else if (auction.getStatus() == StatusOfAuction.CANCELLED) {
-            System.out.println("Phiên đấu giá đã bị hủy.");
+            log.info("Phiên đấu giá đã bị hủy.");
         }
     }
 
     public void endAuction(Auction auction) {
         if (auction.getStatus() == StatusOfAuction.RUNNING) {
             auction.setStatus(StatusOfAuction.FINISHED);
-            System.out.println("Phiên đấu giá đã kết thúc. Người thắng cuộc: "
+            log.info("Phiên đấu giá đã kết thúc. Người thắng cuộc: "
                     + (auction.getHighestBidder() != null ? auction.getHighestBidder().getUserInfo().getName()
                             : "Không có người thắng"));
         } else if (auction.getStatus() == StatusOfAuction.OPEN) {
-            System.out.println("Phiên đấu giá chưa bắt đầu.");
+            log.info("Phiên đấu giá chưa bắt đầu.");
         } else if (auction.getStatus() == StatusOfAuction.FINISHED || auction.getStatus() == StatusOfAuction.PAID) {
-            System.out.println("Phiên đấu giá đã kết thúc.");
+            log.info("Phiên đấu giá đã kết thúc.");
         } else if (auction.getStatus() == StatusOfAuction.CANCELLED) {
-            System.out.println("Phiên đấu giá đã bị hủy.");
+            log.info("Phiên đấu giá đã bị hủy.");
         }
     }
 
@@ -60,10 +62,10 @@ public class AuctionService {
         boolean isSuccess = auctionDAO.cancelAuction(auctionId);
 
         if (isSuccess) {
-            System.out.println("[Server] Đã hủy thành công phiên đấu giá ID: " + auctionId);
+            log.info("[Server] Đã hủy thành công phiên đấu giá ID: " + auctionId);
             return true;
         } else {
-            System.out.println("[Server] Hủy thất bại phiên đấu giá ID: " + auctionId);
+            log.info("[Server] Hủy thất bại phiên đấu giá ID: " + auctionId);
             throw new IllegalStateException("Không thể hủy! Phiên đấu giá đã kết thúc hoặc đã bị hủy trước đó.");
         }
     }

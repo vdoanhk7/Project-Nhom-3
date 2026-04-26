@@ -8,7 +8,7 @@ import com.nhom3.shared.model.user.User;
 
 public class AuthService {
     private final UserDAO userDAO;
-    private static final Logger log = LoggerFactory.getLogger(AuctionService.class);
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     public AuthService() {
         this.userDAO = new UserDAOImpl();

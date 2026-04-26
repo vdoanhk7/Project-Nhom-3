@@ -6,7 +6,7 @@ import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Seller;
 
 public class ItemService {
-    private static final Logger log = LoggerFactory.getLogger(AuctionService.class);
+    private static final Logger log = LoggerFactory.getLogger(ItemService.class);
     
     public void createItem(Seller seller, Item newItem) { 
         if (seller == null || newItem == null) {

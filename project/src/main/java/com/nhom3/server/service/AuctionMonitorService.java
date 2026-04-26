@@ -11,7 +11,7 @@ import com.nhom3.server.dao.AuctionDAOImpl;
 public class AuctionMonitorService {
     private final AuctionDAO auctionDAO;
     private final ScheduledExecutorService scheduler;
-    private static final Logger log = LoggerFactory.getLogger(AuctionService.class);
+    private static final Logger log = LoggerFactory.getLogger(AuctionMonitorService.class);
 
     public AuctionMonitorService() {
         this.auctionDAO = new AuctionDAOImpl();

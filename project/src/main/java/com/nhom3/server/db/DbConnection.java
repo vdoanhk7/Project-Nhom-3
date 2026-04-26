@@ -2,13 +2,15 @@ package com.nhom3.server.db;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import java.sql.Connection;
 import java.sql.SQLException;
 
 public class DbConnection {
     //Use connection pool (HikariCP) instead of single connection for better performance and scalability
     private static HikariDataSource dataSource;
+    private static final Logger log = LoggerFactory.getLogger(DbConnection.class);
 
     static {
         try {
@@ -25,10 +27,10 @@ public class DbConnection {
             config.setMaxLifetime(1800000); 
 
             dataSource = new HikariDataSource(config);
-            System.out.println("[Server] Khởi tạo Connection Pool thành công.");
+            log.info("[Server] Khởi tạo Connection Pool thành công.");
             
         } catch (Exception e) {
-            System.err.println("[Server] Lỗi khởi tạo Connection Pool: " + e.getMessage());
+            log.error("[Server] Lỗi khởi tạo Connection Pool: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -43,7 +45,7 @@ public class DbConnection {
     public static void closePool() {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();
-            System.out.println("[Server] Đã đóng Connection Pool.");
+            log.info("[Server] Đã đóng Connection Pool.");
         }
     }
 }

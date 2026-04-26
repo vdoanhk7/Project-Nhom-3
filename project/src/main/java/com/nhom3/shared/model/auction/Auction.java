@@ -78,6 +78,8 @@ public class Auction extends Entity{
     public List<BidTransaction> getBidHistory() {
         return bidHistory;
     }
-
+    public int getHighestBidderId() {
+        return highestBidder != null ? highestBidder.getId() : -1;
+    }
     
 }

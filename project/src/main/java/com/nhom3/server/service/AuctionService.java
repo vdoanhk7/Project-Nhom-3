@@ -1,6 +1,7 @@
 package com.nhom3.server.service;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import com.nhom3.server.dao.AuctionDAO;
 import com.nhom3.server.dao.AuctionDAOImpl;
@@ -12,6 +13,9 @@ import com.nhom3.shared.model.user.Seller;
 
 public class AuctionService {
     private final AuctionDAO auctionDAO;
+    private static final int SNIPE_THRESHOLD_SECONDS = 30;
+    private static final int EXTENSION_MINUTES = 2;
+
     public AuctionService() {
         this.auctionDAO = new AuctionDAOImpl();
     }
@@ -63,28 +67,36 @@ public class AuctionService {
     }
 
     public synchronized boolean placeBid(Auction auction, BidTransaction bid) {
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(auction.getStartTime())) {
+            throw new IllegalStateException("Phiên đấu giá chưa bắt đầu! Không thể đặt giá.");
+        }
+        if (now.isAfter(auction.getEndTime())) {
+            throw new IllegalStateException("Phiên đấu giá đã kết thúc! Yêu cầu đặt giá bị từ chối.");
+        }
+        if (auction.getStatus() == StatusOfAuction.CANCELLED) {
+            throw new IllegalStateException("Phiên đấu giá bị hủy! Yêu cầu đặt giá bị từ chối.");
+        }
+        if (bid.getBidder().getId() == auction.getHighestBidderId()) {
+            throw new IllegalStateException("Bạn đã là người đặt giá cao nhất! Không thể đặt giá tiếp.");
+        }
+
+
         boolean isSuccess = auctionDAO.updateHighestBid(auction.getId(), bid.getBidder().getId(), bid.getAmount());
+        
         if (isSuccess) {
             auctionDAO.saveBidTransaction(bid, auction.getId());
-            
-            auction.getItem().setCurHighest(bid.getAmount());
-            auction.setHighestBidder(bid.getBidder());
-            auction.getBidHistory().add(bid);
-            System.out.println("Server: Đặt giá thành công: " + bid.getAmount() + " bởi " + bid.getBidder().getUserInfo().getName());
+            //Anti-Snipe
+            // Tính khoảng cách giữa hiện tại và lúc kết thúc (theo giây)
+            long secondsLeft = ChronoUnit.SECONDS.between(now, auction.getEndTime());
+            if (secondsLeft > 0 && secondsLeft <= SNIPE_THRESHOLD_SECONDS) {
+                System.out.println("[Anti-Snipe] Phát hiện đặt giá sát giờ! Gia hạn thêm " + EXTENSION_MINUTES + " phút.");
+                auctionDAO.extendAuctionTime(auction.getId(), EXTENSION_MINUTES);                
+                auction.setEndTime(auction.getEndTime().plusMinutes(EXTENSION_MINUTES));
+            }
             return true;
-        } else {
-            System.out.println("Server: Đặt giá thất bại: " + bid.getAmount() + " bởi " + bid.getBidder().getUserInfo().getName());
-            return false;
         }
-        // if (auction.getStatus() == StatusOfAuction.RUNNING) {
-        //     if (auction.getHighestBidder() == null || bid.getAmount() > auction.getItem().getCurHighest()) {
-        //         auction.setHighestBidder(bid.getBidder());
-        //         auction.getItem().setCurHighest(bid.getAmount());
-        //         auction.getBidHistory().add(bid);
-        //         return true;
-        //     } else {
-        //         return false;
-        //     }
-        // } else return false;
+        return false;
     }
+
 }

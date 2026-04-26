@@ -17,4 +17,5 @@ public interface AuctionDAO {
     List<Auction> getActiveAuctions();
     List<BidTransaction> getBidHistory(int auctionId);
     List<Auction> getMyBidHistory(int bidderId);
+    boolean extendAuctionTime(int auctionId, int additionalMinutes);
 }

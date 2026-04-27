@@ -16,7 +16,8 @@
 - [x] **Quản lý sản phẩm:** Viết Logic nghiệp vụ cho các chức năng Thêm/Sửa/Xóa sản phẩm.
 - [x] **Quản lý phiên đấu giá:** Xử lý logic tự động đóng phiên khi hết thời gian và chuyển trạng thái.
 - [x] **Thiết kế hướng đối tượng:** Xây dựng cây kế thừa + design pattern(factory)
-- [ ] **Anti-sniping:** Viết thuật toán tự động gia hạn thêm Y giây khi có người đặt giá ở X giây cuối.
+- [x] **Anti-sniping:** Viết thuật toán tự động gia hạn thêm 120 giây khi có người đặt giá ở 30 giây cuối.
+- [ ] **Network:** Viết network cơ bản của server và shared
 - [ ] **Setup Dự án/Refactor code:** Cấu hình Build tool (Maven) và Coding convention
 ### 3. Dũng 
 - [ ] **Quản lý người dùng:** Viết logic Đăng ký/Đăng nhập và phân quyền.

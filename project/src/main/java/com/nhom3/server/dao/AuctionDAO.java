@@ -21,4 +21,6 @@ public interface AuctionDAO {
     boolean extendAuctionTime(int auctionId, int additionalMinutes);
     boolean cancelAuction(int auctionId);
     LocalDateTime getEndTime(int auctionId);
+    boolean endAuction(int auctionId);
+    boolean startAuction(int auctionId);
 }

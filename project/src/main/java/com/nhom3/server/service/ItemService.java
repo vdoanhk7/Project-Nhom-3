@@ -2,26 +2,69 @@ package com.nhom3.server.service;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import com.nhom3.server.dao.AuctionDAO;
+import com.nhom3.server.dao.AuctionDAOImpl;
+import com.nhom3.server.dao.ItemDAO;
+import com.nhom3.server.dao.ItemDAOImpl;
+import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Seller;
 
 public class ItemService {
     private static final Logger log = LoggerFactory.getLogger(ItemService.class);
-    
-    public void createItem(Seller seller, Item newItem) { 
-        if (seller == null || newItem == null) {
-            log.info("Seller hoặc Item không tồn tại.");
-            return;
-        }
-        seller.getManagedItems().add(newItem);
+    private final ItemDAO itemDAO;
+    private final AuctionDAO auctionDAO;
+
+    public ItemService(){
+        this.itemDAO = new ItemDAOImpl();
+        this.auctionDAO = new AuctionDAOImpl();
     }
-    public void removeItem(Seller seller, int itemId) {
-        if (seller.getManagedItems() == null) {
-            log.info("No items to remove.");
-            return;
+    public boolean createItem(Seller seller, Item newItem) throws IllegalArgumentException {
+        log.info("Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: {}", seller != null ? seller.getId() : "null");
+
+        if (seller == null || seller.getId() <= 0) {
+            log.warn("Thêm sản phẩm thất bại: Thông tin Seller không hợp lệ.");
+            throw new IllegalArgumentException("Lỗi xác thực: Không tìm thấy thông tin người bán!");
         }
-        if (!seller.getManagedItems().removeIf(item -> item.getId() == itemId)) {
-            log.info("Item with ID " + itemId + " not found.");
+        if (newItem == null || newItem.getName() == null || newItem.getName().trim().isEmpty()) {
+            log.warn("Thêm sản phẩm thất bại: Tên sản phẩm trống.");
+            throw new IllegalArgumentException("Tên sản phẩm không được để trống!");
+        }
+        if (newItem.getStartPrice() < 0) {
+            log.warn("Thêm sản phẩm thất bại: Giá khởi điểm âm ({}).", newItem.getStartPrice());
+            throw new IllegalArgumentException("Giá khởi điểm không hợp lệ!");
+        }
+
+        boolean isSuccess = itemDAO.saveItem(newItem, seller.getId());
+
+        if (isSuccess) {
+            log.info("Đã lưu thành công sản phẩm '{}' cho Seller ID: {}", newItem.getName(), seller.getId());
+            return true;
+        } else {
+            log.error("Lỗi Database khi lưu sản phẩm '{}'", newItem.getName());
+            return false;
+        }
+    }
+
+    public boolean removeItem(int sellerId, int itemId) throws IllegalStateException {
+        log.info("Bắt đầu xử lý yêu cầu xóa sản phẩm ID: {} từ Seller ID: {}", itemId, sellerId);
+
+        // Nếu đã có phiên đấu giá (dù là đang chạy hay đã kết thúc), TUYỆT ĐỐI KHÔNG ĐƯỢC XÓA
+        // vì sẽ làm mất lịch sử giao dịch và gây lỗi Khóa ngoại trong DB.
+        Auction existingAuction = auctionDAO.getAuctionByItemId(itemId);
+        if (existingAuction != null) {
+            log.warn("Từ chối xóa: Sản phẩm ID {} đã được liên kết với phiên đấu giá ID {}.", itemId, existingAuction.getId());
+            throw new IllegalStateException("Không thể xóa! Sản phẩm này đã được đưa lên sàn đấu giá. Vui lòng chỉ ẩn hoặc hủy phiên đấu giá.");
+        }
+
+        boolean isSuccess = itemDAO.deleteItem(itemId, sellerId);
+
+        if (isSuccess) {
+            log.info("Đã xóa vĩnh viễn sản phẩm ID: {}", itemId);
+            return true;
+        } else {
+            log.warn("Xóa thất bại: Sản phẩm ID {} không tồn tại hoặc Seller ID {} không có quyền sở hữu.", itemId, sellerId);
+            throw new IllegalStateException("Xóa thất bại! Sản phẩm không tồn tại hoặc bạn không có quyền xóa sản phẩm này.");
         }
     }
 }

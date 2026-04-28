@@ -26,6 +26,16 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
+        ServerConnection serverPointer = ServerConnection.getInstance();
+        boolean isConnected = false;
+        while (!isConnected) {
+            try {
+                serverPointer.connect();
+                isConnected = true; // Kết nối thành công, thoát vòng lặp
+            } catch (Exception e) {
+                System.out.println("Không thể kết nối đến server. Đang thử lại...");
+            }
+        }
         launch(args);
     }
 }

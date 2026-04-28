@@ -2,10 +2,12 @@ package com.nhom3.server.network;
 
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.CopyOnWriteArrayList;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.nhom3.shared.network.Response;
 
 public class AuctionServer {
@@ -16,7 +18,6 @@ public class AuctionServer {
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             log.info("Server đang chạy ở port {}", PORT);
-            
             while (true) {
                 Socket socket = serverSocket.accept();
                 log.info("Client connected: {}:{}", socket.getInetAddress(), socket.getPort());

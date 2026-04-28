@@ -1,11 +1,11 @@
 package com.nhom3.server.network;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.nhom3.server.service.AuthService;
+import com.nhom3.shared.model.user.User;
 import com.nhom3.shared.network.Request;
 import com.nhom3.shared.network.Response;
-import com.nhom3.shared.model.user.User;
-import com.google.gson.JsonObject;
 
 public class RequestRouter {
     private Gson gson = new Gson();
@@ -14,7 +14,9 @@ public class RequestRouter {
     public Response route(Request request) {
         switch (request.getAction()) {
             case "LOGIN":
-                return handleLogin(request.getPayload());
+                return new Response("SUCCESS", "Đăng nhập thành công", null);
+            case "STH":
+                return new Response("ERROR", "STH thất bại", null);
             // Thêm các case khác: "REGISTER", "PLACE_BID", "GET_MARKET"...
             default:
                 return new Response("ERROR", "Action không hợp lệ", null);

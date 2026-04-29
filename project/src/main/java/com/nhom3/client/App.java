@@ -1,5 +1,7 @@
 package com.nhom3.client;
 
+import com.nhom3.client.network.ServerHandler;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -7,6 +9,8 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class App extends Application {
+    // Nhận và xử lý phản hồi từ server trong thread riêng
+    public static ServerHandler serverHandler = new ServerHandler();
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -26,16 +30,17 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
-        ServerConnection serverPointer = ServerConnection.getInstance();
         boolean isConnected = false;
         while (!isConnected) {
             try {
-                serverPointer.connect();
+                serverHandler.getServerConnection().connect();
                 isConnected = true; // Kết nối thành công, thoát vòng lặp
             } catch (Exception e) {
                 System.out.println("Không thể kết nối đến server. Đang thử lại...");
             }
         }
+        Thread serverThread = new Thread(serverHandler);
+        serverThread.start();
         launch(args);
     }
 }

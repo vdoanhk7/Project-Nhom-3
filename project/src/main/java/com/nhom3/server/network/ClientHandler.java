@@ -1,66 +1,75 @@
 package com.nhom3.server.network;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.Socket;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.google.gson.Gson;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
 import com.nhom3.shared.network.payload.LoginPayload;
 import com.nhom3.shared.network.payload.ResultPayload;
+import com.nhom3.server.service.AuthService;
+import com.nhom3.shared.model.user.User;
 
 public class ClientHandler extends Thread {
     private final Socket clientSocket;
+    private final AuthService authService; // Khởi tạo Service xử lý DB
 
     public ClientHandler(Socket socket) {
         this.clientSocket = socket;
+        this.authService = new AuthService(); 
     }
 
     @Override
     public void run() {
         Logger logger = LoggerFactory.getLogger(ClientHandler.class);
         try {
-            // Thiết lập luồng đọc/ghi với client
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
             String line;
-            while ((line = in.readLine()) != null) {
-                // Nhận gói tin từ client và xử lý
-                Packet request = new Gson().fromJson(line, Packet.class);
-                // Xử lý gói tin dựa trên loại gói tin
-                switch (request.getType()) {
-                    // Add thêm các case khác LOGIN, BID,...
-                    case LOGIN:
-                        // Cast payload về đúng kiểu dữ liệu
-                        // Sau dùng generic
-                        String tempJson = new Gson().toJson(request.getPayload()); 
-                        LoginPayload login = new Gson().fromJson(tempJson, LoginPayload.class);
+            Gson gson = new Gson();
 
-                        logger.info("Đăng nhập từ: " + login.getUsername());
-                        // Gửi phản hồi về client
-                        ResultPayload resultPayload = new ResultPayload(true);
-                        Packet response = new Packet(PacketType.RESULT, resultPayload);
-                        out.write(new Gson().toJson(response));
+            while ((line = in.readLine()) != null) {
+                Packet request = gson.fromJson(line, Packet.class);
+                
+                switch (request.getType()) {
+                    case LOGIN:
+                        String tempJson = gson.toJson(request.getPayload()); 
+                        LoginPayload login = gson.fromJson(tempJson, LoginPayload.class);
+
+                        logger.info("Yêu cầu đăng nhập từ: " + login.getUsername());
+                        
+                        // 1. GỌI DATABASE THẬT SỰ Ở ĐÂY
+                        User user = authService.login(login.getUsername(), login.getPassword());
+                        
+                        // 2. ĐÓNG GÓI KẾT QUẢ
+                        ResultPayload resultPayload;
+                        if (user != null) {
+                            // Trích xuất thông tin để gửi đi tránh lỗi Gson
+                            resultPayload = new ResultPayload(
+                                true, "Đăng nhập thành công", 
+                                user.getId(), 
+                                user.getUserInfo().getUserName(), 
+                                user.getUserInfo().getName(), 
+                                user.getRole().name()
+                            );
+                        } else {
+                            resultPayload = new ResultPayload(false, "Sai tài khoản hoặc mật khẩu", -1, "", "", "");
+                        }
+                        
+                        // 3. GỬI LẠI CLIENT (Lưu ý: set type là LOGIN để Client Handler dễ phân loại)
+                        Packet response = new Packet(PacketType.LOGIN, resultPayload);
+                        out.write(gson.toJson(response));
                         out.newLine();
                         out.flush();
                         break;
-                    default:
-                        logger.warn("Loại gói tin không xác định: " + request.getType());
+                        
+                    // Thêm các case REGISTER, PLACE_BID... tại đây
                 }
             }
         } catch (IOException e) {
-            logger.error("Lỗi I/O trong ClientHandler", e);
-            e.printStackTrace();
-        } catch (Exception e) {
-            logger.error("Lỗi không xác định trong ClientHandler", e);
-            e.printStackTrace();
+            logger.error("Client ngắt kết nối");
         }
     }
 }

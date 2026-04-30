@@ -318,16 +318,26 @@ public class ManageItemController {
     }
 
     private void handleDelete(Item item) {
-        // 1. Hiển thị hộp thoại xác nhận (Cực kỳ quan trọng để tránh xóa nhầm)
+        // Lấy thông tin người dùng đang đăng nhập
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        // Kiểm tra chắc chắn người dùng là Seller
+        if (!(currentUser instanceof Seller)) {
+             Alert alert = new Alert(Alert.AlertType.ERROR, "Bạn không có quyền thực hiện thao tác này!");
+             alert.showAndWait();
+             return;
+        }
+        int sellerId = currentUser.getId();
+        // 1. Hiển thị hộp thoại xác nhận 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Xác nhận xóa");
         alert.setHeaderText(null);
         alert.setContentText("Bạn có chắc chắn muốn xóa vĩnh viễn sản phẩm: " + item.getName() + "?");
+        
         // 2. Chờ người dùng bấm nút
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-            // 3. Gọi DAO để xóa dưới Database
+            // 3. Gọi DAO để xóa dưới Database, truyền cả itemId và sellerId
             ItemDAO itemDAO = new ItemDAOImpl();
-            boolean isSuccess = itemDAO.deleteItem(item.getId());
+            boolean isSuccess = itemDAO.deleteItem(item.getId(), sellerId); 
             if (isSuccess) {
                 // 4. Xóa ngay trên giao diện 
                 itemList.remove(item);
@@ -389,11 +399,6 @@ public class ManageItemController {
         }
     }
 
-    // =========================================================
-    // CÁC HÀM KIỂM TRA TRẠNG THÁI AUCTION (TẠM THỜI MOCK DATA)
-    // Vì chúng ta chưa code bảng Auction, mình sẽ để mặc định 
-    // là "Chưa có phiên" để giao diện hiện đủ nút Đăng/Sửa/Xóa.
-    // =========================================================
 
     private boolean checkHasAuction(Item item) {
         // Nếu ID của item này có trong Map, nghĩa là nó đã được đăng bán

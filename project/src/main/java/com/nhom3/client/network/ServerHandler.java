@@ -9,6 +9,10 @@ import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.payload.ResultPayload;
 import com.nhom3.client.controller.LoginController;
 import javafx.application.Platform;
+import com.nhom3.shared.model.user.UserInfo;
+import com.nhom3.shared.model.user.Bidder;
+import com.nhom3.shared.model.user.Seller;
+import com.nhom3.shared.model.user.Admin;
 
 public class ServerHandler extends Thread {
     private ServerConnection serverConnection;
@@ -45,14 +49,14 @@ public class ServerHandler extends Thread {
                                         // Nếu đăng nhập thành công, tái tạo lại Object User
                                         User loggedInUser = null;
                                         if (loginResult.getResult()) {
-                                            com.nhom3.shared.model.user.UserInfo info = new com.nhom3.shared.model.user.UserInfo(loginResult.getUsername(), "", loginResult.getFullName());
+                                            UserInfo info = new UserInfo(loginResult.getUsername(), "", loginResult.getFullName());
                                             // Tái tạo dựa trên Role
                                             if ("BIDDER".equals(loginResult.getRole())) {
-                                                loggedInUser = new com.nhom3.shared.model.user.Bidder(loginResult.getUserId(), info, null);
+                                                loggedInUser = new Bidder(loginResult.getUserId(), info, null);
                                             } else if ("SELLER".equals(loginResult.getRole())) {
-                                                loggedInUser = new com.nhom3.shared.model.user.Seller(loginResult.getUserId(), info, null);
+                                                loggedInUser = new Seller(loginResult.getUserId(), info, null);
                                             } else {
-                                                loggedInUser = new com.nhom3.shared.model.user.Admin(loginResult.getUserId(), info, null);
+                                                loggedInUser = new Admin(loginResult.getUserId(), info, null);
                                             }
                                         }
                                         

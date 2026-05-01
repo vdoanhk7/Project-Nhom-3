@@ -1,4 +1,5 @@
 package com.nhom3;
+<<<<<<< HEAD
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -149,4 +150,7 @@ class AuctionServiceTest {
     }
 }    
 
+=======
+public class AuctionServiceTest {
+>>>>>>> 3c805010ca5d364c348c4c8060518aefb2b2bf43
 

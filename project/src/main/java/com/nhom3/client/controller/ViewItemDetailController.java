@@ -1,29 +1,26 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.shared.network.payload.BidHistoryResponsePayload;
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Bidder;
 import com.nhom3.shared.model.user.Seller;
 import com.nhom3.shared.model.user.User;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
-import com.nhom3.server.dao.AuctionDAO;
-import com.nhom3.server.dao.AuctionDAOImpl;
 import com.nhom3.shared.model.auction.BidTransaction;
-import com.nhom3.shared.model.auction.StatusOfAuction;
-
+import com.nhom3.shared.network.packet.Packet;
+import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.shared.network.payload.BidPayload;
+import com.nhom3.client.network.ServerConnection;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import javafx.application.Platform;
-import java.util.concurrent.CompletableFuture;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -50,6 +47,8 @@ public class ViewItemDetailController {
     private Timeline pollingTimeline;
     private Auction currentAuction;
     private int currentBidCount = -1;
+    private static ViewItemDetailController instance;
+    private double pendingBidAmount = 0; // Lưu tạm số tiền đang định đặt
     //Tự động cập nhật thời gian
     private void refreshState() {
         if (currentAuction == null) return;
@@ -65,9 +64,13 @@ public class ViewItemDetailController {
             setupFinishedState(currentAuction);
         }
     }
+    public static ViewItemDetailController getInstance() {
+        return instance;
+    }
 
     @FXML
     public void initialize() {
+        instance = this; 
         // 1. Cột Người đặt
         colBidder.setCellValueFactory(cellData -> {
             try {
@@ -128,6 +131,14 @@ public class ViewItemDetailController {
         setupDynamicUI();
         loadBidHistory();
         startPollingData(); 
+        javafx.application.Platform.runLater(() -> {
+            if (lblItemName.getScene() != null && lblItemName.getScene().getWindow() != null) {
+                javafx.stage.Stage stage = (javafx.stage.Stage) lblItemName.getScene().getWindow();
+                stage.setOnCloseRequest(event -> {
+                    if (pollingTimeline != null) pollingTimeline.stop();
+                });
+            }
+        });
     }
 
     private void setupOpenState(Auction auction) {
@@ -231,27 +242,24 @@ public class ViewItemDetailController {
 
     @FXML
     private void handlePlaceBid() {
-        //KHÔNG PHẢI BIDDER KHÔNG THỂ ĐẤU GIÁ
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (!(currentUser instanceof Bidder)) {
             showAlert(Alert.AlertType.ERROR, "Lỗi phân quyền", "Chỉ có Người mua (Bidder) mới được phép tham gia trả giá!");
             return;
         }
-        // 1. Kiểm tra xem người dùng đã nhập gì chưa
+        
         String input = txtBidAmount.getText().trim();
         if (input.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng nhập số tiền bạn muốn trả!");
             return;
         }
+        
         try {
-            // 2. Chuyển đổi chuỗi thành số (Loại bỏ dấu phẩy nếu người dùng nhập kiểu 1,000,000)
             double bidAmount = Double.parseDouble(input.replace(",", ""));      
-            // 3. Lấy giá cao nhất hiện tại
             double currentHighest = currentAuction.getItem().getCurHighest();  
-            // Giả sử bước giá tối thiểu (Minimum Step) là 50,000 VNĐ
             double minStep = 50000; 
             double validMinPrice = currentHighest + minStep;
-            // 4. Kiểm tra logic giá
+            
             if (bidAmount < validMinPrice) {
                 showAlert(Alert.AlertType.ERROR, "Giá không hợp lệ", 
                     "Số tiền trả giá phải lớn hơn hoặc bằng " + String.format("%,.0f VNĐ", validMinPrice) + 
@@ -259,55 +267,59 @@ public class ViewItemDetailController {
                 return;
             }
 
-            // 5. Nếu giá hợp lệ -> Bắt đầu ghi vào Database
-            Bidder bidder = (Bidder) currentUser; 
-        
-            AuctionDAO auctionDAO = new AuctionDAOImpl();
-            boolean isUpdateSuccess = auctionDAO.updateHighestBid(currentAuction.getId(), bidder.getId(), bidAmount);
+            // --- BẮT ĐẦU PHẦN GỌI MẠNG (THAY THẾ CODE GỌI DB CŨ) ---
+            this.pendingBidAmount = bidAmount; // Lưu tạm để nếu thành công thì update UI
+            
+            // 1. Tạo Gói hàng BidPayload
+            BidPayload payload = new BidPayload(
+                currentUser.getId(), 
+                bidAmount, 
+                currentAuction.getId()
+            );
+            
+            // 2. Bọc vào Packet và gửi đi
+            Packet packet = new Packet(PacketType.PLACE_BID, payload);
+            ServerConnection.getInstance().sendMessage(packet);
+            
+            System.out.println("[Client] Đã gửi yêu cầu đặt giá: " + bidAmount);
 
-            if (isUpdateSuccess) {
-                // Tạo đối tượng Lịch sử và Lưu
-                String userNote = txtBidNote.getText().trim();
-                if (userNote.isEmpty()) {
-                    userNote = "Đặt giá qua giao diện";
-                }
-                BidTransaction newBid = new BidTransaction(0, bidder, bidAmount, LocalDateTime.now(), userNote);
-                // Lưu vào DB
-                auctionDAO.saveBidTransaction(newBid, currentAuction.getId());
-                // Cập nhật Giao diện ngay lập tức
-                showAlert(Alert.AlertType.INFORMATION, "Thành công", "Bạn đã đặt giá " + String.format("%,.0f VNĐ", bidAmount) + " thành công!");
-                currentAuction.getItem().setCurHighest(bidAmount);
-                lblCurrentPrice.setText(String.format("%,.0f VNĐ", bidAmount));
-                txtBidAmount.clear();    
-                txtBidNote.clear();
-                txtBidAmount.requestFocus();
-                loadBidHistory();
-                
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Thất bại", "Có người khác đã trả giá cao hơn bạn! Vui lòng tải lại trang.");
-            }
         } catch (NumberFormatException e) {
             showAlert(Alert.AlertType.ERROR, "Lỗi nhập liệu", "Vui lòng chỉ nhập các con số (VD: 5500000)");
+        } catch (Exception e) {
+            e.printStackTrace(); 
+            showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi yêu cầu đặt giá.");
         }
+    }
+
+    public void handleBidResult(boolean isSuccess, String message) {
+        if (isSuccess) {
+            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Bạn đã đặt giá " + String.format("%,.0f VNĐ", pendingBidAmount) + " thành công!");
+            // Cập nhật giao diện lập tức
+            currentAuction.getItem().setCurHighest(pendingBidAmount);
+            lblCurrentPrice.setText(String.format("%,.0f VNĐ", pendingBidAmount));
+            txtBidAmount.clear();    
+            txtBidNote.clear();
+            txtBidAmount.requestFocus();
+        } else {
+            showAlert(Alert.AlertType.ERROR, "Thất bại", message);
+        }
+        
     }
 
     private void loadBidHistory() {
         if (currentAuction == null) return;
-
-        AuctionDAO auctionDAO = new AuctionDAOImpl();
-        List<BidTransaction> historyList = auctionDAO.getBidHistory(currentAuction.getId());
-
-        if (historyList != null) {
-            currentBidCount = historyList.size(); // Lưu lại số lượng
-            
-            ObservableList<BidTransaction> observableList = FXCollections.observableArrayList(historyList);
-            tableBids.setItems(observableList);
-            
-            if (!historyList.isEmpty()) {
-                double realHighest = historyList.get(0).getAmount();
-                currentAuction.getItem().setCurHighest(realHighest);
-                lblCurrentPrice.setText(String.format("%,.0f VNĐ", realHighest));
-            }
+        
+        com.nhom3.shared.network.payload.AuctionIdPayload payload = new com.nhom3.shared.network.payload.AuctionIdPayload(currentAuction.getId());
+        
+        // CHẮC CHẮN PACKET TYPE Ở ĐÂY LÀ LOAD_BID_HISTORY
+        com.nhom3.shared.network.packet.Packet packet = new com.nhom3.shared.network.packet.Packet(com.nhom3.shared.network.packet.PacketType.LOAD_BID_HISTORY, payload);
+        
+        try {
+            com.nhom3.client.network.ServerConnection.getInstance().sendMessage(packet);
+            // THÊM DÒNG NÀY ĐỂ XEM CLIENT CÓ THỰC SỰ GỬI LỜI YÊU CẦU ĐI KHÔNG
+            System.out.println("[Client] Đã gửi gói tin xin Lịch sử của Auction: " + currentAuction.getId()); 
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -328,30 +340,59 @@ public class ViewItemDetailController {
         if (pollingTimeline != null) pollingTimeline.stop();
 
         pollingTimeline = new Timeline(new KeyFrame(Duration.seconds(3), event -> {
-            if (currentAuction != null && currentAuction.getStatus() == StatusOfAuction.RUNNING) {
-                // 1. DÙNG COMPLETABLE FUTURE ĐỂ TẠO LUỒNG CHẠY NGẦM KHÔNG GÂY LAG UI
-                CompletableFuture.supplyAsync(() -> {
-                    AuctionDAO auctionDAO = new AuctionDAOImpl();
-                    // Gọi DB ngầm, giao diện lúc này vẫn gõ phím mượt mà bình thường
-                    return auctionDAO.getBidHistory(currentAuction.getId());
-                }).thenAccept(historyList -> {
-                    // 2. KHI DB TRẢ KẾT QUẢ VỀ -> ĐẨY VÀO LUỒNG UI ĐỂ CẬP NHẬT
-                    Platform.runLater(() -> {
-                        if (historyList != null && historyList.size() != currentBidCount) {
-                            currentBidCount = historyList.size();
-                            // Cập nhật Bảng lịch sử
-                            ObservableList<BidTransaction> observableList = FXCollections.observableArrayList(historyList);
-                            tableBids.setItems(observableList);
-                            // Cập nhật giá mới nhất lên Label
-                            double realHighest = historyList.get(0).getAmount();
-                            currentAuction.getItem().setCurHighest(realHighest);
-                            lblCurrentPrice.setText(String.format("%,.0f VNĐ", realHighest));
-                        }
-                    });
-                });
+            if (currentAuction != null) {
+                // Gửi mạng xin lịch sử liên tục mỗi 3 giây, bất chấp trạng thái là gì
+                loadBidHistory(); 
             }
         }));
         pollingTimeline.setCycleCount(Animation.INDEFINITE);
         pollingTimeline.play();
+    }
+
+    public void handleLoadHistoryResult(int responseAuctionId,List<BidHistoryResponsePayload.SimpleBid> simpleList) {
+        if (simpleList == null || currentAuction == null) return;
+        if (currentAuction.getId() != responseAuctionId) {
+            return; 
+        }
+
+        // In ra Terminal để kiểm tra xem Server gửi về mấy dòng
+        System.out.println("[UI] Nhận được " + simpleList.size() + " dòng lịch sử từ Server");
+
+        // 1. Tái tạo danh sách
+        List<BidTransaction> realList = new java.util.ArrayList<>();
+        for (com.nhom3.shared.network.payload.BidHistoryResponsePayload.SimpleBid sb : simpleList) {
+            com.nhom3.shared.model.user.UserInfo info = new com.nhom3.shared.model.user.UserInfo("", "", sb.bidderName != null ? sb.bidderName : "Ẩn danh");
+            com.nhom3.shared.model.user.Bidder fakeBidder = new com.nhom3.shared.model.user.Bidder(0, info, null);
+            
+            java.time.LocalDateTime realTime;
+            try {
+                realTime = java.time.LocalDateTime.parse(sb.timeStr);
+            } catch (Exception e) {
+                realTime = java.time.LocalDateTime.now();
+            }
+            
+            String safeNote = sb.note != null ? sb.note : "";
+            BidTransaction bid = new BidTransaction(0, fakeBidder, sb.amount, realTime, safeNote);
+            realList.add(bid);
+        }
+
+        // 2. ÉP BẢNG PHẢI VẼ LẠI TRÊN LUỒNG GIAO DIỆN
+        javafx.application.Platform.runLater(() -> {
+            // Khởi tạo ObservableList mới tinh
+            javafx.collections.ObservableList<BidTransaction> oList = javafx.collections.FXCollections.observableArrayList(realList);
+            
+            // Gắn vào bảng và ép làm mới
+            tableBids.setItems(oList);
+            tableBids.refresh(); 
+
+            // 3. Cập nhật Giá cao nhất trên đỉnh màn hình
+            if (!realList.isEmpty()) {
+                double realHighest = realList.get(0).getAmount();
+                if (realHighest > currentAuction.getItem().getCurHighest()) {
+                    currentAuction.getItem().setCurHighest(realHighest);
+                    lblCurrentPrice.setText(String.format("%,.0f VNĐ", realHighest));
+                }
+            }
+        });
     }
 }

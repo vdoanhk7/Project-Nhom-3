@@ -10,13 +10,13 @@
 - [ ] **Auto-Bidding:** Lập trình thuật toán tự động đặt giá.
 
 ### 2. Doanh 
-- [x] **Thiết kế CSDL:** Tạo cấu trúc lưu trữ cho Người dùng, Sản phẩm, Phiên đấu giá, Lịch sử đặt giá.
 - [x] **Tầng Dữ liệu (DAO):** Viết các lớp DAO để truy xuất và cập nhật cơ sở dữ liệu.
 - [x] **Xử lý đồng thời:**
-- [x] **Quản lý sản phẩm:** Viết Logic nghiệp vụ cho các chức năng Thêm/Sửa/Xóa sản phẩm.
+- [x] **Quản lý sản phẩm:** Viết Logic nghiệp vụ cho các chức năng Thêm/Xóa sản phẩm.
 - [x] **Quản lý phiên đấu giá:** Xử lý logic tự động đóng phiên khi hết thời gian và chuyển trạng thái.
 - [x] **Thiết kế hướng đối tượng:** Xây dựng cây kế thừa + design pattern(factory)
-- [ ] **Anti-sniping:** Viết thuật toán tự động gia hạn thêm Y giây khi có người đặt giá ở X giây cuối.
+- [x] **Anti-sniping:** Viết thuật toán tự động gia hạn thêm 120 giây khi có người đặt giá ở 30 giây cuối.
+- [ ] **Network:** Viết network cơ bản của server và shared
 - [ ] **Setup Dự án/Refactor code:** Cấu hình Build tool (Maven) và Coding convention
 ### 3. Dũng 
 - [ ] **Quản lý người dùng:** Viết logic Đăng ký/Đăng nhập và phân quyền.
@@ -35,10 +35,14 @@
 - [ ] **Tích hợp Client:** Gọi các hàm từ phía Client-side để gửi dữ liệu lên Server và nhận phản hồi từ Phúc Anh.
 - [ ] **Chức năng phụ:** Viết thêm chức năng nâng cao phụ
 ### 5. Nhiệm vụ chung (Cả nhóm)
+- [x] **Thiết kế CSDL:** Tạo cấu trúc lưu trữ cho Người dùng, Sản phẩm, Phiên đấu giá, Lịch sử đặt giá.
 - [ ] **Xử lý lỗi & Ngoại lệ:** Bắt các lỗi kết nối, dữ liệu sai, đặt giá thấp hơn giá hiện tại...
 - [ ] **Code Review:** Kiểm tra mã nguồn của nhau để đảm bảo tất cả thành viên đều hiểu code
 - [ ] **Hoàn thiện Báo cáo:** Viết tài liệu hướng dẫn cài đặt và mô tả kiến trúc hệ thống.
 - [ ] **Kiểm thử cuối cùng:** Chạy demo giả lập nhiều người dùng đặt giá cùng lúc để kiểm tra độ ổn định.
+### 6. Các công nghệ sử dụng thêm
+- HikariCP connection pool: nhiều kết nối tới database
+- SLF4J logging: ghi log chi tiết
 
 ##  Shared
 ![Class UML Diagram package Shared](images/diagram_shared.png)

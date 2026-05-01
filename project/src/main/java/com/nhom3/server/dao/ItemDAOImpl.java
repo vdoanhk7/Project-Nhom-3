@@ -72,11 +72,12 @@ public class ItemDAOImpl implements ItemDAO {
     }
 
     @Override
-    public boolean deleteItem(int itemId) {
-        String sql = "DELETE FROM items WHERE id = ?";
+    public boolean deleteItem(int itemId, int sellerId) {
+        String sql = "DELETE FROM items WHERE id = ? AND seller_id = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {  
             stmt.setInt(1, itemId);
+            stmt.setInt(2, sellerId);
             int rowsAffected = stmt.executeUpdate();   
             return rowsAffected > 0;          
         } catch (Exception e) {

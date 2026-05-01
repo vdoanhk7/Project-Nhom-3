@@ -5,7 +5,10 @@ public enum PacketType {
     REGISTER("register"),
     PLACE_BID("placebid"),
     RESULT("result"),   
-    PLACE_AUTO_BID("place auto bid");
+    PLACE_AUTO_BID("place auto bid"),
+    LOAD_SELLER_ITEMS("load seller items"),
+    PUBLISH_AUCTION("publish auction"),
+    LOAD_BID_HISTORY("load bid history");
 
 
     private String message;

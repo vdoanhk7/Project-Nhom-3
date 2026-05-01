@@ -9,7 +9,10 @@ import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Seller;
 import com.nhom3.shared.model.user.User;
-
+import com.nhom3.client.network.ServerConnection;
+import com.nhom3.shared.network.packet.Packet;
+import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.shared.network.payload.SellerIdPayload;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -43,8 +46,13 @@ public class ManageItemController {
 
     private ObservableList<Item> itemList = FXCollections.observableArrayList();
     private Map<Integer, String> itemStatusMap = new HashMap<>();
+    private static ManageItemController instance;
+    public static ManageItemController getInstance() {
+        return instance;
+    }
     @FXML
     public void initialize() {
+        instance = this;
         // 1. Khởi tạo dữ liệu cho ComboBox Lọc
         cbCategory.setItems(FXCollections.observableArrayList("Tất cả", "ART", "ELECTRONICS", "VEHICLE"));
 
@@ -129,22 +137,18 @@ public class ManageItemController {
         return matchesCategory && matchesSearch;
     }
 
-    private void loadSellerItems() {
+    public void loadSellerItems() { // Đổi thành public để các Pop-up gọi lại được
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (currentUser instanceof Seller) {
-            Seller seller = (Seller) currentUser;
+            // GÓI HÀNG GỬI QUA MẠNG
+            SellerIdPayload payload = new SellerIdPayload(currentUser.getId());
+            Packet packet = new Packet(PacketType.LOAD_SELLER_ITEMS, payload);
             
-            ItemDAO itemDAO = new ItemDAOImpl();
-            // Hàm mới bạn vừa tạo ở Bước 1 (Nhớ tạo interface hoặc ép kiểu)
-            AuctionDAO auctionDAO = new AuctionDAOImpl(); 
-            
-            // Lấy danh sách sản phẩm (Item thuần túy, sạch sẽ 100%)
-            List<Item> itemsFromDb = itemDAO.getItemsBySellerId(seller.getId());
-            
-            // 👉 Lấy bảng tra cứu trạng thái
-            itemStatusMap = auctionDAO.getAuctionStatusBySeller(seller.getId()); 
-            
-            itemList.setAll(itemsFromDb);
+            try {
+                ServerConnection.getInstance().sendMessage(packet);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -397,6 +401,35 @@ public class ManageItemController {
                 }
             }
         }
+    }
+    public void handleLoadItemsResult(List<com.nhom3.shared.network.payload.SellerItemsResponsePayload.SellerItemDTO> dtoList) {
+        if (dtoList == null) return;
+
+        List<Item> realItems = new java.util.ArrayList<>();
+        itemStatusMap.clear();
+
+        for (com.nhom3.shared.network.payload.SellerItemsResponsePayload.SellerItemDTO dto : dtoList) {
+            // 1. Tái tạo lại Object Item tùy theo Type
+            Item item = null;
+            switch (dto.type) {
+                case "ART": item = new com.nhom3.shared.factory.ArtCreator().createItem(dto.id, dto.name, dto.startPrice); break;
+                case "ELECTRONICS": item = new com.nhom3.shared.factory.ElectronicsCreator().createItem(dto.id, dto.name, dto.startPrice); break;
+                case "VEHICLE": item = new com.nhom3.shared.factory.VehicleCreator().createItem(dto.id, dto.name, dto.startPrice); break;
+            }
+            if (item != null) {
+                item.setCurHighest(dto.curHighest);
+                realItems.add(item);
+            }
+
+            // 2. Nạp lại Map trạng thái
+            if (dto.status != null && !dto.status.isEmpty()) {
+                itemStatusMap.put(dto.id, dto.status);
+            }
+        }
+
+        // Cập nhật giao diện
+        itemList.setAll(realItems);
+        tableItems.refresh();
     }
 
 

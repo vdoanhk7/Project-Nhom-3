@@ -1,9 +1,6 @@
 package com.nhom3.client.controller;
 
-import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.item.Item;
-import com.nhom3.server.dao.AuctionDAO;
-import com.nhom3.server.dao.AuctionDAOImpl;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -17,6 +14,9 @@ public class PublishAuctionController {
     @FXML private TextField txtStartTime, txtEndTime;
 
     private Item currentItem;
+    private static PublishAuctionController instance;
+    @FXML public void initialize() { instance = this; }
+    public static PublishAuctionController getInstance() { return instance; }
 
     public void setItem(Item item) {
         this.currentItem = item;
@@ -28,10 +28,9 @@ public class PublishAuctionController {
     @FXML
     void handleConfirm() {
         try {
-            // 1. Chuyển đổi dữ liệu nhập liệu thành LocalDateTime
             LocalDateTime start = LocalDateTime.of(dpStartDate.getValue(), LocalTime.parse(txtStartTime.getText()));
             LocalDateTime end = LocalDateTime.of(dpEndDate.getValue(), LocalTime.parse(txtEndTime.getText()));
-            // 2. Kiểm tra logic thời gian
+            
             if (start.isBefore(LocalDateTime.now())) {
                 showAlert("Lỗi", "Thời gian bắt đầu không được ở trong quá khứ!");
                 return;
@@ -40,17 +39,33 @@ public class PublishAuctionController {
                 showAlert("Lỗi", "Thời gian kết thúc phải sau thời gian bắt đầu!");
                 return;
             }
-            // 3. Tạo Auction và lưu vào DB
-            Auction newAuction = new Auction(0, currentItem, start, end);
-            AuctionDAO auctionDAO = new AuctionDAOImpl();    
-            if (auctionDAO.createAuction(newAuction)) {
-                showAlert("Thành công", "Sản phẩm đã được lên lịch đấu giá thành công!");
-                ((Stage) lblItemName.getScene().getWindow()).close();
-            } else {
-                showAlert("Lỗi", "Không thể tạo phiên đấu giá. Vui lòng thử lại!");
-            }
+
+            // --- BẮT ĐẦU GỬI MẠNG ---
+            com.nhom3.shared.network.payload.PublishAuctionPayload payload = new com.nhom3.shared.network.payload.PublishAuctionPayload(
+                currentItem.getId(), start.toString(), end.toString()
+            );
+            com.nhom3.shared.network.packet.Packet packet = new com.nhom3.shared.network.packet.Packet(com.nhom3.shared.network.packet.PacketType.PUBLISH_AUCTION, payload);
+            
+            com.nhom3.client.network.ServerConnection.getInstance().sendMessage(packet);
+            System.out.println("[Client] Đã gửi yêu cầu đăng bán sản phẩm ID: " + currentItem.getId());
+
         } catch (Exception e) {
+            e.printStackTrace();
             showAlert("Lỗi định dạng", "Vui lòng nhập giờ đúng định dạng HH:mm (VD: 08:30)");
+        }
+    }
+
+    public void handlePublishResult(boolean isSuccess, String message) {
+        if (isSuccess) {
+            showAlert("Thành công", "Sản phẩm đã được lên lịch đấu giá thành công!");
+            ((Stage) lblItemName.getScene().getWindow()).close();
+            
+            // Cập nhật lại bảng của Seller ngay lập tức
+            if (com.nhom3.client.controller.ManageItemController.getInstance() != null) {
+                com.nhom3.client.controller.ManageItemController.getInstance().loadSellerItems();
+            }
+        } else {
+            showAlert("Lỗi", message);
         }
     }
 

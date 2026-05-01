@@ -2,15 +2,16 @@ package com.nhom3.server;
 
 import java.io.IOException;
 import java.net.Socket;
-
+import com.nhom3.server.service.AuctionMonitorService;
 import com.nhom3.server.network.ClientHandler;
 
 public class ServerMain {
 
     public static void main(String[] args) {
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         // Khởi động các Service cần thiết (nếu có)
-        // AuctionMonitorService monitor = new AuctionMonitorService();
-        // monitor.startMonitoring();
+        AuctionMonitorService monitor = new AuctionMonitorService();
+        monitor.startMonitoring();
 
         // Khởi tạo Server lắng nghe tại cổng 8080
         // Port 8080 là cổng do người dùng chọn.

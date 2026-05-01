@@ -29,7 +29,6 @@ public class AuctionDAOImpl implements AuctionDAO {
                     "SET i.cur_highest = ? " +
                     "WHERE a.id = ? " +
                     "AND i.cur_highest < ? " +
-                    "AND NOW() BETWEEN a.start_time AND a.end_time" +
                     "AND a.status = 'RUNNING'";
 
         String sqlAuction = "UPDATE auctions SET highest_bidder_id = ? WHERE id = ?";
@@ -70,35 +69,46 @@ public class AuctionDAOImpl implements AuctionDAO {
 
     @Override
     public boolean saveBidTransaction(BidTransaction bid, int auctionId) {
+        // 1. Sửa lại SQL: Đổi NOW() thành dấu chấm hỏi (?)
         String sql = "INSERT INTO bid_transactions (auction_id, bidder_id, amount, bid_time, note) VALUES (?, ?, ?, ?, ?)";
+        
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, auctionId);
             stmt.setInt(2, bid.getBidder().getId());
             stmt.setDouble(3, bid.getAmount());
-            stmt.setTimestamp(4, Timestamp.valueOf(bid.getBidTime()));
+            
+            // 2. Truyền giờ chuẩn Việt Nam của Java xuống (Không sợ AWS đổi giờ nữa)
+            stmt.setTimestamp(4, java.sql.Timestamp.valueOf(bid.getBidTime())); 
+            
             stmt.setString(5, bid.getNote());
             
             return stmt.executeUpdate() > 0;
         } catch (Exception e) {
+            System.err.println("[LỖI SQL] Không thể lưu lịch sử:");
             e.printStackTrace();
             return false;
         }
     }
-    public void closeExpiredAuctions() {
-    String sql = "UPDATE auctions SET status = 'FINISHED' WHERE status = 'RUNNING' AND end_time <= NOW()";
-    
-    try (Connection conn = DbConnection.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
+    @Override
+    public void closeExpiredAuctions(java.sql.Timestamp currentTime) {
+        // Thay vì dùng NOW(), ta dùng dấu ? để truyền giờ Java vào
+        String sql = "UPDATE auctions SET status = 'FINISHED' WHERE status = 'RUNNING' AND end_time <= ?";
         
-        int rowsUpdated = stmt.executeUpdate();
-        if (rowsUpdated > 0) {
-            System.out.println("[Hệ thống] Đã tự động đóng " + rowsUpdated + " phiên đấu giá hết hạn!");
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setTimestamp(1, currentTime); // Đẩy giờ Java xuống Database
+            
+            int rowsUpdated = stmt.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("[Hệ thống] Đã tự động ĐÓNG " + rowsUpdated + " phiên đấu giá hết hạn!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
     }
-}
+
     @Override
     public boolean createAuction(Auction auction) {
         String sql = "INSERT INTO auctions (item_id, start_time, end_time, status) VALUES (?, ?, ?, ?)";
@@ -264,7 +274,7 @@ public class AuctionDAOImpl implements AuctionDAO {
     public List<BidTransaction> getBidHistory(int auctionId) {
         List<BidTransaction> list = new ArrayList<>();
         
-        String sql = "SELECT b.id, b.amount, b.bid_timendAuctione, b.note, b.bidder_id, u.full_name AS bidder_name " +
+        String sql = "SELECT b.id, b.amount, b.bid_time, b.note, b.bidder_id, u.full_name AS bidder_name " +
                      "FROM bid_transactions b " +
                      "LEFT JOIN users u ON b.bidder_id = u.id " +
                      "WHERE b.auction_id = ? " +
@@ -277,7 +287,6 @@ public class AuctionDAOImpl implements AuctionDAO {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) { 
-                // rs.getString("bidder_name") sẽ lấy ra giá trị của cột u.full_name
                 UserInfo userInfo = new UserInfo("","", rs.getString("bidder_name"));
                 Bidder bidder = new Bidder(rs.getInt("bidder_id"), userInfo, null); 
 
@@ -285,13 +294,13 @@ public class AuctionDAOImpl implements AuctionDAO {
                     rs.getInt("id"),
                     bidder,
                     rs.getDouble("amount"),
-                    rs.getTimestamp("bid_time").toLocalDateTime(),
+                    rs.getTimestamp("bid_time").toLocalDateTime(), // rs sẽ đọc đúng tên cột bid_time
                     rs.getString("note")
                 );              
                 list.add(bid);
             }
         } catch (Exception e) {
-            System.err.println("❌ Lỗi khi tải Lịch sử trả giá: ");
+            System.err.println("❌ Lỗi SQL khi tải Lịch sử trả giá:");
             e.printStackTrace(); 
         }
         return list;
@@ -388,5 +397,23 @@ public class AuctionDAOImpl implements AuctionDAO {
         return null;
     }
     
+    @Override
+    public void startScheduledAuctions(java.sql.Timestamp currentTime) {
+        // Thay vì dùng NOW(), ta dùng dấu ? để truyền giờ Java vào
+        String sql = "UPDATE auctions SET status = 'RUNNING' WHERE status = 'OPEN' AND start_time <= ?";
+        
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setTimestamp(1, currentTime); // Đẩy giờ Java xuống Database
+            
+            int rowsUpdated = stmt.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("[Hệ thống] Đã tự động MỞ " + rowsUpdated + " phiên đấu giá đến giờ lên sàn!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     
 }

@@ -1,10 +1,9 @@
 package com.nhom3.client.controller;
-import com.nhom3.server.service.AuthService;
-import com.nhom3.shared.model.user.Bidder;
-import com.nhom3.shared.model.user.Seller;
-import com.nhom3.shared.model.user.User;
-import com.nhom3.shared.model.user.UserContact;
-import com.nhom3.shared.model.user.UserInfo;
+
+import com.nhom3.client.network.ServerConnection;
+import com.nhom3.shared.network.packet.Packet;
+import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.shared.network.payload.RegisterPayload;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -29,7 +28,19 @@ public class SignupController {
     @FXML private RadioButton radioBidder;
     @FXML private RadioButton radioSeller;
 
-    // Sự kiện khi bấm nút "Đăng Ký"
+    // 1. TẠO SINGLETON ĐỂ LUỒNG MẠNG CÓ THỂ GỌI ĐẾN
+    private static SignupController instance;
+    private ActionEvent currentEvent; // Lưu lại sự kiện click để lát chuyển trang
+
+    @FXML
+    public void initialize() {
+        instance = this;
+    }
+
+    public static SignupController getInstance() {
+        return instance;
+    }
+
     @FXML
     void handleSignup(ActionEvent event) {
         String fullName = txtFullName.getText();
@@ -39,10 +50,8 @@ public class SignupController {
         String email = txtEmail.getText().trim();
         String phone = txtPhone.getText().trim();
 
-
-        // 1. Logic kiểm tra dữ liệu đầu vào
-        if (username.isEmpty() || password.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Thiếu thông tin", "Vui lòng nhập đủ tài khoản và mật khẩu!");
+        if (username.isEmpty() || password.isEmpty() || fullName.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Thiếu thông tin", "Vui lòng nhập đầy đủ thông tin!");
             return;
         }
 
@@ -51,39 +60,37 @@ public class SignupController {
             return;
         }
 
-        //2. LOGIC DATABASE 
-        UserInfo info = new UserInfo(username, password, fullName);
-        UserContact contact = new UserContact(email, phone);
-        User newUser;
-        if (radioSeller != null && radioSeller.isSelected()) {
-            newUser = new Seller(0, info, contact);
-        } else {
-            newUser = new Bidder(0, info, contact);
-        }
-        AuthService authService = new AuthService();
-        // Gọi Server để lưu
-        boolean isSuccess = authService.register(newUser);
-        
-        //3. Xử lý kết quả trả về từ Server
-        if (isSuccess) {
-            // Nếu qua được các bước kiểm tra trên -> Thành công
-            System.out.println("Tạo tài khoản thành công cho: " + fullName);
-            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đăng ký tài khoản thành công! Vui lòng đăng nhập.");
-            // Tự động quay lại trang đăng nhập 
-            goToLogin(event);
-        } else {
-            // Nếu thất bại 
-            showAlert(Alert.AlertType.ERROR, "Thất bại", "Tên đăng nhập đã tồn tại hoặc lỗi kết nối. Vui lòng thử lại!");
+        this.currentEvent = event; // Lưu lại event để chuyển trang sau khi đăng ký thành công
+
+        // 2. GÓI DỮ LIỆU VÀO REGISTER PAYLOAD (Thay vì gọi thẳng DB)
+        String roleStr = (radioSeller != null && radioSeller.isSelected()) ? "SELLER" : "BIDDER";
+        RegisterPayload payload = new RegisterPayload(fullName, username, password, email, phone, roleStr);
+        Packet packet = new Packet(PacketType.REGISTER, payload);
+
+        // 3. GỬI GÓI TIN QUA MẠNG
+        try {
+            ServerConnection.getInstance().sendMessage(packet);
+            System.out.println("[Client] Đã gửi yêu cầu đăng ký cho tài khoản: " + username);
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Lỗi kết nối", "Không thể kết nối đến máy chủ.");
         }
     }
 
-    // Sự kiện khi bấm nút "Đã có tài khoản? Đăng nhập"
+    // 4. HÀM NÀY SẼ ĐƯỢC ServerHandler GỌI KHI NHẬN ĐƯỢC KẾT QUẢ TỪ SERVER
+    public void handleSignupResult(boolean isSuccess, String message) {
+        if (isSuccess) {
+            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đăng ký tài khoản thành công! Vui lòng đăng nhập.");
+            goToLogin(currentEvent); // Chuyển về trang đăng nhập
+        } else {
+            showAlert(Alert.AlertType.ERROR, "Đăng ký thất bại", message);
+        }
+    }
+
     @FXML
     void goToLogin(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/login.fxml"));
             Parent root = loader.load();
-            
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
         } catch (Exception e) {
@@ -91,7 +98,6 @@ public class SignupController {
         }
     }
 
-    // Hàm hỗ trợ hiện thông báo cho ngắn gọn code
     private void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);

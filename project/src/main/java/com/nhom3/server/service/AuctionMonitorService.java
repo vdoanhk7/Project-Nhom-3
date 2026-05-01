@@ -23,15 +23,17 @@ public class AuctionMonitorService {
         
         scheduler.scheduleAtFixedRate(() -> {
             try {
-                auctionDAO.closeExpiredAuctions();
+                // LẤY GIỜ CHUẨN CỦA SERVER JAVA
+                java.sql.Timestamp javaNow = java.sql.Timestamp.valueOf(java.time.LocalDateTime.now());
                 
-                // 2. Tương lai (Phần Socket): Thông báo cho các Client đang xem biết là phiên đã kết thúc
-                // notifyClientsAuctionFinished();
+                // Truyền đồng hồ cho Bác bảo vệ
+                auctionDAO.startScheduledAuctions(javaNow); 
+                auctionDAO.closeExpiredAuctions(javaNow);
                 
             } catch (Exception e) {
                 log.error("Lỗi trong lúc tuần tra: " + e.getMessage());
             }
-        }, 0, 5, TimeUnit.SECONDS); // 0 = chạy ngay lập tức, 5 = khoảng cách giữa các lần chạy
+        }, 0, 5, TimeUnit.SECONDS);
     }
 
     public void stopMonitoring() {
@@ -40,4 +42,6 @@ public class AuctionMonitorService {
             log.info("[Monitor] Đã tắt luồng tuần tra.");
         }
     }
+
+    
 }

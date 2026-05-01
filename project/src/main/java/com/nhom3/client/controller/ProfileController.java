@@ -38,12 +38,15 @@ public class ProfileController {
         // 1. Lấy dữ liệu người dùng từ "Ví" UserSession
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (currentUser != null) {
-            // 2. Đổ dữ liệu vào các ô TextField
             txtName.setText(currentUser.getUserInfo().getName());
-            txtEmail.setText(currentUser.getUserContact().getEmail());
-            txtPhone.setText(currentUser.getUserContact().getPhoneNumber());
             lblUsername.setText("@" + currentUser.getUserInfo().getUserName());
-            // Đổ dữ liệu vai trò (Sử dụng instanceof để hiển thị tiếng Việt cho đẹp)
+            if (currentUser.getUserContact() != null) {
+                txtEmail.setText(currentUser.getUserContact().getEmail());
+                txtPhone.setText(currentUser.getUserContact().getPhoneNumber());
+            } else {
+                txtEmail.setText("Chưa cập nhật");
+                txtPhone.setText("Chưa cập nhật");
+            }
             if (currentUser instanceof Admin) {
                 txtRole.setText("Quản trị viên (Admin)");
             } else if (currentUser instanceof Seller) {

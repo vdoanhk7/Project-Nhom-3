@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="700.0" prefWidth="1000.0" spacing="20.0" style="-fx-background-color: #f4f6f7; -fx-padding: 30;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.PurchaseHistoryController">
+   <children>
+      <Label text="🕒 LỊCH SỬ ĐẤU GIÁ CỦA TÔI" textFill="#2c3e50">
+         <font>
+            <Font name="System Bold" size="24.0" />
+         </font>
+      </Label>
+      
+      <Label text="Theo dõi các lượt đặt giá và trạng thái sản phẩm bạn đang tham gia." textFill="#7f8c8d">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+
+      <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 0);">
+         <children>
+            <TextField fx:id="txtSearch" prefWidth="350.0" promptText="🔍 Tìm kiếm theo tên sản phẩm..." style="-fx-padding: 8; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
+            <ComboBox fx:id="cbFilter" prefWidth="180.0" promptText="Lọc kết quả" style="-fx-background-color: #ffffff; -fx-border-color: #bdc3c7; -fx-border-radius: 5;" />
+         </children>
+      </HBox>
+
+      <TableView fx:id="tableHistory" prefHeight="500.0" style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #bdc3c7;" VBox.vgrow="ALWAYS">
+        <columns>
+          <TableColumn fx:id="colItemName" prefWidth="250.0" text="Tên Sản Phẩm" />
+          <TableColumn fx:id="colBidAmount" prefWidth="150.0" style="-fx-alignment: CENTER_RIGHT;" text="Mức giá bạn đặt" />
+          <TableColumn fx:id="colBidTime" prefWidth="180.0" style="-fx-alignment: CENTER;" text="Thời gian đặt" />
+          <TableColumn fx:id="colAuctionStatus" prefWidth="150.0" style="-fx-alignment: CENTER;" text="Trạng thái Phiên" />
+          <TableColumn fx:id="colResult" prefWidth="200.0" style="-fx-alignment: CENTER;" text="Kết quả " />
+        </columns>
+      </TableView>
+   </children>
+</VBox>

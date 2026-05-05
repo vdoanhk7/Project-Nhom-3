@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefWidth="650.0" spacing="20.0" style="-fx-background-color: #f4f7f6;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.ViewItemDetailController">
+   <padding><Insets bottom="25.0" left="25.0" right="25.0" top="25.0" /></padding>
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="15.0">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <Label fx:id="lblItemName" text="Tên Sản Phẩm" textFill="#2c3e50">
+                     <font><Font name="System Bold" size="24.0" /></font>
+                  </Label>
+                  <Label fx:id="lblItemType" text="Phân loại: ART" textFill="#7f8c8d" />
+               </children>
+            </VBox>
+            <Label fx:id="lblStatusBadge" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-padding: 5 15; -fx-background-radius: 20;" text="ĐANG DIỄN RA" />
+         </children>
+      </HBox>
+
+      <HBox spacing="20.0">
+         <children>
+            <VBox alignment="CENTER" prefWidth="240.0" style="-fx-background-color: white; -fx-background-radius: 10; -fx-border-color: #dcdde1; -fx-border-radius: 10;" HBox.hgrow="ALWAYS">
+               <padding><Insets bottom="20.0" top="20.0" /></padding>
+               <children>
+                  <Label text="GIÁ HIỆN TẠI" textFill="#95a5a6">
+                     <font><Font name="System Bold" size="12.0" /></font>
+                  </Label>
+                  <Label fx:id="lblCurrentPrice" text="5,000,000 VNĐ" textFill="#2ecc71">
+                     <font><Font name="System Bold" size="28.0" /></font>
+                  </Label>
+                  <Label fx:id="lblStartPrice" text="Khởi điểm: 1,000,000 VNĐ" textFill="#7f8c8d" />
+               </children>
+            </VBox>
+
+            <VBox alignment="CENTER" prefWidth="240.0" style="-fx-background-color: white; -fx-background-radius: 10; -fx-border-color: #dcdde1; -fx-border-radius: 10;" HBox.hgrow="ALWAYS">
+               <padding><Insets bottom="20.0" top="20.0" /></padding>
+               <children>
+                  <Label fx:id="lblTimeTitle" text="THỜI GIAN CÒN LẠI" textFill="#95a5a6">
+                     <font><Font name="System Bold" size="12.0" /></font>
+                  </Label>
+                  <Label fx:id="lblCountdown" text="01:45:20" textFill="#e67e22">
+                     <font><Font name="System Bold" size="28.0" /></font>
+                  </Label>
+                  <Label fx:id="lblTimeRange" text="Đóng lúc: 22:00" textFill="#7f8c8d" />
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+
+      <HBox fx:id="boxBidderActions" alignment="CENTER" spacing="10.0">
+         <children>
+            <TextField fx:id="txtBidAmount" prefHeight="40.0" promptText="Nhập số tiền bạn muốn trả..." style="-fx-font-size: 14px; -fx-background-radius: 5; -fx-border-color: #bdc3c7; -fx-border-radius: 5;" HBox.hgrow="ALWAYS" />
+            <TextField fx:id="txtBidNote" prefHeight="40.0" promptText="Ghi chú (tùy chọn)..." style="-fx-font-size: 14px; -fx-background-radius: 5; -fx-border-color: #bdc3c7; -fx-border-radius: 5;" HBox.hgrow="ALWAYS" />
+            <Button fx:id="btnPlaceBid" onAction="#handlePlaceBid" prefHeight="40.0" prefWidth="120.0" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;" text="ĐẶT GIÁ" />
+         </children>
+      </HBox>
+
+      <VBox spacing="10.0" VBox.vgrow="ALWAYS">
+         <children>
+            <HBox alignment="CENTER_LEFT">
+               <children>
+                  <Label text="Lịch sử trả giá mới nhất" textFill="#2c3e50" HBox.hgrow="ALWAYS">
+                     <font><Font name="System Bold" size="14.0" /></font>
+                  </Label>
+                  <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
+                     <children>
+                        <Button fx:id="btnShowChart" onAction="#handleToggleChart" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 11px; -fx-background-radius: 15; -fx-cursor: hand;" text="📊 Xem Biểu Đồ Giá" />
+                     </children>
+                  </HBox>
+               </children>
+            </HBox>
+
+            <TableView fx:id="tableBids" prefHeight="150.0">
+               <columns>
+                  <TableColumn fx:id="colBidder" prefWidth="127.0" text="Người đặt" />
+                  <TableColumn fx:id="colBidAmount" prefWidth="131.0" text="Mức giá" />
+                  <TableColumn fx:id="colBidTime" minWidth="0.0" prefWidth="126.0" text="Thời gian" />
+                  <TableColumn fx:id="colBidNote" maxWidth="500.0" prefWidth="215.0" text="Ghi chú" />
+               </columns>
+            </TableView>
+
+            <LineChart fx:id="priceHistoryChart" managed="false" prefHeight="200.0" title="Biến Động Giá" visible="false">
+               <xAxis><CategoryAxis label="Thời gian" side="BOTTOM" /></xAxis>
+               <yAxis><NumberAxis label="Giá (VNĐ)" side="LEFT" /></yAxis>
+            </LineChart>
+         </children>
+      </VBox>
+
+      <Button maxWidth="1.7976931348623157E308" onAction="#handleClose" style="-fx-background-color: #34495e; -fx-text-fill: white; -fx-cursor: hand;" text="ĐÓNG" />
+   </children>
+</VBox>

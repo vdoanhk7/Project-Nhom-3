@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<!-- Root layout sử dụng BorderPane -->
+
+<BorderPane prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.MainController">
+   
+   <!-- PHẦN TOP: Thanh Header -->
+   <top>
+      <HBox alignment="CENTER_LEFT" prefHeight="60.0" style="-fx-background-color: #ffffff; -fx-border-color: #e0e0e0; -fx-border-width: 0 0 1 0;" BorderPane.alignment="CENTER">
+         <children>
+            <!-- Logo hoặc Tiêu đề App -->
+            <Label text="🔥 AUCTION PRO" textFill="#e74c3c">
+               <font>
+                  <Font name="System Bold" size="22.0" />
+               </font>
+            </Label>
+            
+            <!-- Spacer (Region) để đẩy thông tin User sát sang bên phải -->
+            <Region HBox.hgrow="ALWAYS" />
+            
+            <!-- Thông tin User và Nút Đăng xuất -->
+            <Label fx:id="lblUserName" text="Xin chào, User" textFill="#555555">
+               <font>
+                  <Font size="14.0" />
+               </font>
+               <HBox.margin>
+                  <Insets right="15.0" />
+               </HBox.margin>
+            </Label>
+            <Button mnemonicParsing="false" onAction="#handleLogout" style="-fx-background-color: #fce4e4; -fx-text-fill: #cc0000; -fx-cursor: hand;" text="Đăng xuất" />
+         </children>
+         <padding>
+            <Insets left="20.0" right="20.0" />
+         </padding>
+      </HBox>
+   </top>
+
+   <!-- PHẦN LEFT: Thanh Menu Sidebar -->
+   <left>
+      <VBox prefWidth="220.0" spacing="10.0" style="-fx-background-color: #2c3e50;" BorderPane.alignment="CENTER">
+         <children>
+            <Label text="MENU CHÍNH" textFill="#8e9ca8">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+               <VBox.margin>
+                  <Insets bottom="10.0" left="15.0" top="10.0" />
+               </VBox.margin>
+            </Label>
+            
+            <!-- Các nút Menu (Sử dụng MAX_VALUE để rộng tràn viền VBox) -->
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showDashboard" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="📊  Tổng quan (Dashboard)">
+               <padding>
+                  <Insets bottom="12.0" left="20.0" top="12.0" />
+               </padding>
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Button>
+            
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showMarket" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="🛒  Chợ Đấu Giá">
+               <padding>
+                  <Insets bottom="12.0" left="20.0" top="12.0" />
+               </padding>
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Button>
+            
+            <Button fx:id="btnPurchaseHistory" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showPurchaseHistory" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="📦  Lịch sử đấu giá">
+               <padding>
+                  <Insets bottom="12.0" left="20.0" top="12.0" />
+               </padding>
+               <font><Font size="14.0" /></font>
+            </Button>
+
+            <Button fx:id="btnManageItem" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showManageItem" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="🏪  Quản lý sản phẩm">
+               <padding>
+                  <Insets bottom="12.0" left="20.0" top="12.0" />
+               </padding>
+               <font><Font size="14.0" /></font>
+            </Button>
+
+            <Button fx:id="btnAdminPanel" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showAdminPanel" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="⚙️  Quản trị hệ thống">
+               <padding>
+                  <Insets bottom="12.0" left="20.0" top="12.0" />
+               </padding>
+               <font><Font size="14.0" /></font>
+            </Button>
+
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showProfile" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="👤  Thông tin cá nhân">
+               <padding>
+                  <Insets bottom="12.0" left="20.0" top="12.0" />
+               </padding>
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Button>
+
+         </children>
+         <padding>
+            <Insets top="10.0" />
+         </padding>
+      </VBox>
+   </left>
+
+   <!-- PHẦN CENTER: Vùng nội dung thay đổi (Dynamic Content Area) -->
+   <center>
+      <!-- Đặt fx:id cho StackPane để gọi trong file Java -->
+      <StackPane fx:id="contentArea" style="-fx-background-color: #f4f6f9;" BorderPane.alignment="CENTER">
+         <children>
+            <!-- Label giữ chỗ, sau này sẽ bị ghi đè bởi các file FXML khác -->
+            <Label text="Vùng hiển thị nội dung động (Sẽ load FXML khác vào đây)" textFill="#aaaaaa">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+         </children>
+      </StackPane>
+   </center>
+</BorderPane>

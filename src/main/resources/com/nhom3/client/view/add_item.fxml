@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="380.0" prefWidth="400.0" spacing="15.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.AddItemController">
+   <padding>
+      <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+   </padding>
+   <children>
+      <Label text="➕ Thêm Sản Phẩm Mới" textFill="#2c3e50">
+         <font>
+            <Font name="System Bold" size="20.0" />
+         </font>
+         <VBox.margin>
+            <Insets bottom="10.0" />
+         </VBox.margin>
+      </Label>
+
+      <VBox spacing="5.0">
+         <Label text="Tên sản phẩm :" textFill="#7f8c8d">
+            <font><Font name="System Bold" size="12.0" /></font>
+         </Label>
+         <TextField fx:id="txtName" promptText="Nhập tên sản phẩm..." style="-fx-padding: 8; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
+      </VBox>
+
+      <VBox spacing="5.0">
+         <Label text="Phân loại :" textFill="#7f8c8d">
+            <font><Font name="System Bold" size="12.0" /></font>
+         </Label>
+         <ComboBox fx:id="cbType" maxWidth="1.7976931348623157E308" promptText="-- Chọn loại sản phẩm --" style="-fx-background-color: white; -fx-border-color: #bdc3c7; -fx-border-radius: 5; -fx-padding: 3;" />
+      </VBox>
+
+      <VBox spacing="5.0">
+         <Label text="Giá khởi điểm (VNĐ) :" textFill="#7f8c8d">
+            <font><Font name="System Bold" size="12.0" /></font>
+         </Label>
+         <TextField fx:id="txtStartPrice" promptText="VD: 50000" style="-fx-padding: 8; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
+      </VBox>
+
+      <HBox alignment="BOTTOM_RIGHT" spacing="10.0" VBox.vgrow="ALWAYS">
+         <children>
+            <Button mnemonicParsing="false" onAction="#handleCancel" style="-fx-background-color: #ecf0f1; -fx-text-fill: #34495e; -fx-cursor: hand;" text="Hủy bỏ">
+               <padding><Insets bottom="8.0" left="15.0" right="15.0" top="8.0" /></padding>
+            </Button>
+            <Button mnemonicParsing="false" onAction="#handleSave" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="LƯU SẢN PHẨM">
+               <padding><Insets bottom="8.0" left="20.0" right="20.0" top="8.0" /></padding>
+            </Button>
+         </children>
+         <VBox.margin>
+            <Insets top="10.0" />
+         </VBox.margin>
+      </HBox>
+   </children>
+</VBox>

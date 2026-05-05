@@ -1,13 +1,11 @@
 package com.nhom3.shared.network.payload;
 
-import java.time.LocalDateTime; 
-
 public class AutoBidPayload {
     private int userId;
     private int auctionId;
     private double maxAmount;
     private double increment;
-    private LocalDateTime timestamp;
+    private String timestamp; // ĐỔI TỪ LocalDateTime SANG String ĐỂ TRÁNH LỖI GSON
 
     // Constructor
     public AutoBidPayload(int userId, int auctionId, double maxAmount, double increment) {
@@ -15,7 +13,7 @@ public class AutoBidPayload {
         this.auctionId = auctionId;
         this.maxAmount = maxAmount;
         this.increment = increment;
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = java.time.LocalDateTime.now().toString(); // Tự ép thành chuỗi chuẩn ISO
     }
 
     // Getters
@@ -31,7 +29,7 @@ public class AutoBidPayload {
     public double getIncrement() {
         return increment;
     }
-    public LocalDateTime getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
@@ -48,7 +46,7 @@ public class AutoBidPayload {
     public void setIncrement(double increment) {
         this.increment = increment;
     }
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 }

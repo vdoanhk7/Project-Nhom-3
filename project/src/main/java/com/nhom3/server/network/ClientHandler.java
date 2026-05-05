@@ -278,6 +278,41 @@ public class ClientHandler extends Thread {
                         out.newLine();
                         out.flush();
                         break;
+
+                    case PLACE_AUTO_BID:
+                        String autoJson = gson.toJson(request.getPayload());
+                        com.nhom3.shared.network.payload.AutoBidPayload autoData = gson.fromJson(autoJson, com.nhom3.shared.network.payload.AutoBidPayload.class);
+                        
+                        logger.info("Yêu cầu cài Auto-Bid từ User ID " + autoData.getUserId() + " cho Phiên ID " + autoData.getAuctionId());
+
+                        com.nhom3.server.dao.AuctionDAO adao = new com.nhom3.server.dao.AuctionDAOImpl();
+                        boolean autoSuccess = adao.saveAutoBidConfig(autoData);
+
+                        ResultPayload autoResult = new ResultPayload(
+                            autoSuccess, 
+                            autoSuccess ? "Hệ thống đã ghi nhận thiết lập Auto-Bid của bạn!" : "Lỗi Database khi cài đặt Auto-Bid!", 
+                            -1, "", "", "", "", ""
+                        );
+                        
+                        Packet autoPacket = new Packet(PacketType.PLACE_AUTO_BID, autoResult);
+                        out.write(gson.toJson(autoPacket));
+                        out.newLine();
+                        out.flush();
+                        break;
+
+                    case LOAD_DASHBOARD:
+                        logger.info("Nhận yêu cầu tải dữ liệu Dashboard.");
+                        
+                        // Gọi DB 1 lần lấy đủ 5 thông số
+                        com.nhom3.server.dao.AuctionDAO dashDao = new com.nhom3.server.dao.AuctionDAOImpl();
+                        com.nhom3.shared.network.payload.DashboardResponsePayload dashRes = dashDao.getDashboardStats();
+                        
+                        // Gửi về Client
+                        Packet dashPacket = new Packet(PacketType.LOAD_DASHBOARD, dashRes);
+                        out.write(gson.toJson(dashPacket));
+                        out.newLine();
+                        out.flush();
+                        break;
                     // Thêm các case REGISTER, PLACE_BID... tại đây
 
                 }

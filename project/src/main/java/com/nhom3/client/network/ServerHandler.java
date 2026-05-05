@@ -9,6 +9,8 @@ import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.payload.ResultPayload;
 import com.nhom3.client.controller.LoginController;
 import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import com.nhom3.client.controller.DashboardController;
 import com.nhom3.shared.model.user.UserInfo;
 import com.nhom3.shared.model.user.Bidder;
 import com.nhom3.shared.model.user.Seller;
@@ -174,6 +176,34 @@ public class ServerHandler extends Thread {
                                 try {
                                     if (com.nhom3.client.controller.PurchaseHistoryController.getInstance() != null) {
                                         com.nhom3.client.controller.PurchaseHistoryController.getInstance().handleLoadHistoryResult(purHistRes.getHistoryList());
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            });
+                            break;
+
+                        case PLACE_AUTO_BID:
+                            String autoResJson = gson.toJson(response.getPayload());
+                            ResultPayload autoRes = gson.fromJson(autoResJson, ResultPayload.class);
+                            
+                            Platform.runLater(() -> {
+                                Alert alert = new Alert(autoRes.getResult() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
+                                alert.setTitle("Auto-Bid");
+                                alert.setHeaderText(null);
+                                alert.setContentText(autoRes.getMessage());
+                                alert.showAndWait();
+                            });
+                            break;
+
+                        case LOAD_DASHBOARD:
+                            String dashJson = gson.toJson(response.getPayload());
+                            com.nhom3.shared.network.payload.DashboardResponsePayload dashResult = gson.fromJson(dashJson, com.nhom3.shared.network.payload.DashboardResponsePayload.class);
+                            
+                            Platform.runLater(() -> {
+                                try {
+                                    if (DashboardController.getInstance() != null) {
+                                        DashboardController.getInstance().handleDashboardData(dashResult);
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();

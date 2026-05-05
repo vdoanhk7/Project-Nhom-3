@@ -5,7 +5,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.sql.Timestamp;
-
+import com.nhom3.shared.network.payload.AutoBidPayload;
+import com.nhom3.shared.network.payload.DashboardResponsePayload;
 import com.nhom3.shared.model.auction.Auction;
 
 public interface AuctionDAO {
@@ -23,6 +24,8 @@ public interface AuctionDAO {
     LocalDateTime getEndTime(int auctionId);
     boolean endAuction(int auctionId);
     boolean startAuction(int auctionId);
-    void closeExpiredAuctions(Timestamp currentTime); // Truyền tham số vào
-    void startScheduledAuctions(Timestamp currentTime); // Truyền tham số vào
+    void closeExpiredAuctions(Timestamp currentTime); 
+    void startScheduledAuctions(Timestamp currentTime); 
+    boolean saveAutoBidConfig(AutoBidPayload payload);
+    DashboardResponsePayload getDashboardStats();
 }

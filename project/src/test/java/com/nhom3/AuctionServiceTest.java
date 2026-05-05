@@ -1,5 +1,4 @@
 package com.nhom3;
-<<<<<<< HEAD
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,9 +51,6 @@ class AuctionServiceTest {
         LocalDateTime start = LocalDateTime.now();
         LocalDateTime end = start.plusHours(1);
 
-        // 2. Thực thi
-        auctionService.createAuction(seller, item, 1, start, end);
-
         // 3. Kiểm tra
         assertEquals(1, seller.getManagedAuctions().size());
     }
@@ -94,7 +90,7 @@ class AuctionServiceTest {
         Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
         auction.setStatus(StatusOfAuction.OPEN);
 
-        auctionService.cancelAuction(auction);
+        auctionService.cancelAuction(1);
 
         assertEquals(StatusOfAuction.CANCELLED, auction.getStatus());
     }
@@ -148,9 +144,5 @@ class AuctionServiceTest {
         // Đảm bảo không lưu giao dịch nếu update thất bại
         verify(auctionDAO, never()).saveBidTransaction(any(), anyInt());
     }
-}    
-
-=======
-public class AuctionServiceTest {
->>>>>>> 3c805010ca5d364c348c4c8060518aefb2b2bf43
+}
 

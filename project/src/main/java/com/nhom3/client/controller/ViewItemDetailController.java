@@ -1,5 +1,7 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.server.dao.AuctionDAO;
+import com.nhom3.server.dao.AuctionDAOImpl;
 import com.nhom3.shared.network.payload.BidHistoryResponsePayload;
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Bidder;
@@ -16,7 +18,10 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
@@ -35,6 +40,10 @@ public class ViewItemDetailController {
     @FXML private TextField txtBidAmount; // Ô nhập số tiền đặt giá
     @FXML private TextField txtBidNote; // Ô nhập ghi chú
     @FXML private Button btnPlaceBid;     // Nút "Đặt giá"
+
+    @FXML private LineChart<String, Number> priceHistoryChart;
+    @FXML private Button btnShowChart;
+    private XYChart.Series<String, Number> priceSeries; // Biến giữ dữ liệu đường giá
 
     // Giữ lại khai báo bảng để FXML không bị lỗi, nhưng chưa dùng đến
     @FXML private TableView<BidTransaction> tableBids;
@@ -105,6 +114,14 @@ public class ViewItemDetailController {
                 return new SimpleStringProperty("");
             }
         });
+        // Khởi tạo series dữ liệu cho biểu đồ
+        priceSeries = new XYChart.Series<>();
+        priceSeries.setName("Diễn biến giá (VNĐ)");
+        priceHistoryChart.getData().add(priceSeries);
+
+        // Mặc định ẩn biểu đồ để giao diện gọn gàng
+        priceHistoryChart.setVisible(false);
+        priceHistoryChart.setManaged(false);
     }
 
     public void setItemData(Item item, Auction auction, String status) {
@@ -291,6 +308,43 @@ public class ViewItemDetailController {
         }
     }
 
+    // Sử lí ẩn hiện biểu đồ giá
+    @FXML
+    private void handleToggleChart() {
+        boolean isShowing = priceHistoryChart.isVisible();
+        if (isShowing) {
+            priceHistoryChart.setVisible(false);
+            priceHistoryChart.setManaged(false);
+            btnShowChart.setText("📊 Xem Biểu Đồ Giá");
+        } else {
+            priceHistoryChart.setVisible(true);
+            priceHistoryChart.setManaged(true);
+            btnShowChart.setText("❌ Đóng Biểu Đồ");
+
+            // Mỗi lần mở ra, nạp lại lịch sử
+            loadPriceHistoryToChart();
+        }
+    }
+
+    private void loadPriceHistoryToChart() {
+        if (currentAuction == null) return;
+
+        // Xóa dữ liệu cũ trên biểu đồ trước khi nạp mới
+        priceSeries.getData().clear();
+
+        AuctionDAO dao = new AuctionDAOImpl();
+        List<BidTransaction> history = dao.getBidHistory(currentAuction.getId());
+
+        if (history != null) {
+            // Duyệt ngược từ cũ đến mới để vẽ đường giá đi lên
+            for (int i = history.size() - 1; i >= 0; i--) {
+                BidTransaction bid = history.get(i);
+                String time = bid.getBidTime().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                priceSeries.getData().add(new XYChart.Data<>(time, bid.getAmount()));
+            }
+        }
+    }
+
     public void handleBidResult(boolean isSuccess, String message) {
         if (isSuccess) {
             showAlert(Alert.AlertType.INFORMATION, "Thành công", "Bạn đã đặt giá " + String.format("%,.0f VNĐ", pendingBidAmount) + " thành công!");
@@ -395,4 +449,5 @@ public class ViewItemDetailController {
             }
         });
     }
+
 }

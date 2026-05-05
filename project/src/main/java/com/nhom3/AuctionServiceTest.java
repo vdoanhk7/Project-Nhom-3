@@ -51,6 +51,9 @@ class AuctionServiceTest {
         LocalDateTime start = LocalDateTime.now();
         LocalDateTime end = start.plusHours(1);
 
+        // 2. Thực thi
+        auctionService.createAuction(seller, item, 1, start, end);
+
         // 3. Kiểm tra
         assertEquals(1, seller.getManagedAuctions().size());
     }
@@ -90,7 +93,7 @@ class AuctionServiceTest {
         Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
         auction.setStatus(StatusOfAuction.OPEN);
 
-        auctionService.cancelAuction(1);
+        auctionService.cancelAuction(auction);
 
         assertEquals(StatusOfAuction.CANCELLED, auction.getStatus());
     }

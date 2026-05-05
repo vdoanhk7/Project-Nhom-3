@@ -248,6 +248,36 @@ public class ClientHandler extends Thread {
                         out.newLine();
                         out.flush();
                         break;
+
+                    case LOAD_PURCHASE_HISTORY:
+                        String purJson = gson.toJson(request.getPayload());
+                        com.nhom3.shared.network.payload.BidderIdPayload bidderReq = gson.fromJson(purJson, com.nhom3.shared.network.payload.BidderIdPayload.class);
+                        
+                        logger.info("Client xin lịch sử đấu giá của Bidder ID: " + bidderReq.getBidderId());
+
+                        com.nhom3.server.dao.AuctionDAO auctionDAOForHist = new com.nhom3.server.dao.AuctionDAOImpl();
+                        java.util.List<com.nhom3.shared.model.auction.Auction> dbHistoryList = auctionDAOForHist.getMyBidHistory(bidderReq.getBidderId());
+                        
+                        java.util.List<com.nhom3.shared.network.payload.PurchaseHistoryResponsePayload.HistoryDTO> purDtoList = new java.util.ArrayList<>();
+                        for (com.nhom3.shared.model.auction.Auction a : dbHistoryList) {
+                            double amount = a.getBidHistory().isEmpty() ? 0 : a.getBidHistory().get(0).getAmount();
+                            String timeStr = a.getBidHistory().isEmpty() ? "" : a.getBidHistory().get(0).getBidTime().toString();
+                            int topBidderId = a.getHighestBidder() != null ? a.getHighestBidder().getId() : -1;
+
+                            // BỌC THÊM CÁC THÔNG SỐ VỀ THỜI GIAN VÀ GIÁ
+                            purDtoList.add(new com.nhom3.shared.network.payload.PurchaseHistoryResponsePayload.HistoryDTO(
+                                a.getId(), a.getItem().getId(), a.getItem().getName(), amount, timeStr, a.getStatus().name(), topBidderId,
+                                a.getItem().getType(), a.getItem().getStartPrice(), a.getItem().getCurHighest(),
+                                a.getStartTime().toString(), a.getEndTime().toString()
+                            ));
+                        }
+
+                        com.nhom3.shared.network.payload.PurchaseHistoryResponsePayload purRes = new com.nhom3.shared.network.payload.PurchaseHistoryResponsePayload(purDtoList);
+                        Packet purPacket = new Packet(PacketType.LOAD_PURCHASE_HISTORY, purRes);
+                        out.write(gson.toJson(purPacket));
+                        out.newLine();
+                        out.flush();
+                        break;
                     // Thêm các case REGISTER, PLACE_BID... tại đây
 
                 }

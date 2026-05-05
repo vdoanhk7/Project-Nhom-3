@@ -166,6 +166,21 @@ public class ServerHandler extends Thread {
                             });
                             break;
 
+                        case LOAD_PURCHASE_HISTORY:
+                            String purHistJson = gson.toJson(response.getPayload());
+                            com.nhom3.shared.network.payload.PurchaseHistoryResponsePayload purHistRes = gson.fromJson(purHistJson, com.nhom3.shared.network.payload.PurchaseHistoryResponsePayload.class);
+                            
+                            Platform.runLater(() -> {
+                                try {
+                                    if (com.nhom3.client.controller.PurchaseHistoryController.getInstance() != null) {
+                                        com.nhom3.client.controller.PurchaseHistoryController.getInstance().handleLoadHistoryResult(purHistRes.getHistoryList());
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            });
+                            break;
+
                         default:
                             logger.warn("Loại gói tin không xác định: {}", response.getType());
                     }

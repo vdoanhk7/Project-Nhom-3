@@ -309,34 +309,45 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public List<Auction> getMyBidHistory(int bidderId) {
         List<Auction> list = new ArrayList<>();
-        String sql = "SELECT a.id AS auction_id, a.highest_bidder_id, a.start_time, a.end_time, " +
-                     "i.id AS item_id, i.name AS item_name, " +
-                     "b.amount, b.bid_time, " +
-                     "CASE " +
-                     "   WHEN a.status IN ('PAID', 'CANCELLED') THEN a.status " +
-                     "   WHEN NOW() >= a.end_time THEN 'FINISHED' " +
-                     "   WHEN NOW() >= a.start_time THEN 'RUNNING' " +
-                     "   ELSE 'OPEN' " +
-                     "END AS real_status " +
+        
+        // 1. SỬA SQL: Loại bỏ hoàn toàn CASE WHEN NOW() của Database, chỉ lấy cột a.status nguyên gốc
+        String sql = "SELECT a.id AS auction_id, a.highest_bidder_id, a.start_time, a.end_time, a.status, " +
+                     "i.id AS item_id, i.name AS item_name, i.item_type, i.start_price, i.cur_highest, " +
+                     "b.amount, b.bid_time " +
                      "FROM bid_transactions b " +
                      "JOIN auctions a ON b.auction_id = a.id " +
                      "JOIN items i ON a.item_id = i.id " +
                      "WHERE b.bidder_id = ? " +
                      "ORDER BY b.bid_time DESC";
+                     
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {         
             stmt.setInt(1, bidderId);
             ResultSet rs = stmt.executeQuery();
+            
+            // Lấy giờ chuẩn của máy chủ Java (Đã được set múi giờ VN ở ServerMain)
+            LocalDateTime javaNow = LocalDateTime.now(); 
+            
             while (rs.next()) {
-                Item item = new Item(rs.getInt("item_id"), rs.getString("item_name"), 0, "") {};
-                java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
-                java.time.LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
+                Item item = new Item(rs.getInt("item_id"), rs.getString("item_name"), rs.getDouble("start_price"), rs.getString("item_type")) {};
+                item.setCurHighest(rs.getDouble("cur_highest"));
+                
+                LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
+                LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
                 Auction auction = new Auction(rs.getInt("auction_id"), item, start, end);
-                try {
-                    auction.setStatus(StatusOfAuction.valueOf(rs.getString("real_status")));
-                } catch (Exception e) {
+                
+                // 2. TÍNH TOÁN LẠI TRẠNG THÁI BẰNG JAVA (Tuyệt đối không bị lệch múi giờ)
+                String dbStatus = rs.getString("status");
+                if ("PAID".equals(dbStatus) || "CANCELLED".equals(dbStatus)) {
+                    auction.setStatus(StatusOfAuction.valueOf(dbStatus));
+                } else if (javaNow.isAfter(end) || javaNow.isEqual(end)) {
+                    auction.setStatus(StatusOfAuction.FINISHED);
+                } else if (javaNow.isAfter(start) || javaNow.isEqual(start)) {
+                    auction.setStatus(StatusOfAuction.RUNNING);
+                } else {
                     auction.setStatus(StatusOfAuction.OPEN);
                 }
+
                 Bidder topBidder = new Bidder(rs.getInt("highest_bidder_id"), null, null);
                 auction.setHighestBidder(topBidder);
                 BidTransaction myBid = new BidTransaction(0, null, rs.getDouble("amount"), rs.getTimestamp("bid_time").toLocalDateTime(), "");

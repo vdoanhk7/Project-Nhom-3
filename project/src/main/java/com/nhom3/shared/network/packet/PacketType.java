@@ -8,7 +8,8 @@ public enum PacketType {
     PLACE_AUTO_BID("place auto bid"),
     LOAD_SELLER_ITEMS("load seller items"),
     PUBLISH_AUCTION("publish auction"),
-    LOAD_BID_HISTORY("load bid history");
+    LOAD_BID_HISTORY("load bid history"),
+    LOAD_PURCHASE_HISTORY("load purchase history");
 
 
     private String message;

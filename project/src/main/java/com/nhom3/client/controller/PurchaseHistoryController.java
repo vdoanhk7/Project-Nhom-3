@@ -1,10 +1,18 @@
 package com.nhom3.client.controller;
 
 import com.nhom3.client.utils.UserSession;
-import com.nhom3.server.dao.AuctionDAO;
-import com.nhom3.server.dao.AuctionDAOImpl;
 import com.nhom3.shared.model.auction.Auction;
+import com.nhom3.shared.model.item.Item;
+import com.nhom3.shared.model.auction.BidTransaction;
+import com.nhom3.shared.model.user.Bidder;
+import com.nhom3.shared.model.auction.StatusOfAuction;
 import com.nhom3.shared.model.user.User;
+import com.nhom3.client.network.ServerConnection;
+import com.nhom3.shared.network.packet.Packet;
+import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.shared.network.payload.BidderIdPayload;
+import com.nhom3.shared.network.payload.PurchaseHistoryResponsePayload;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -20,6 +28,7 @@ import javafx.scene.control.TableCell;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PurchaseHistoryController {
@@ -31,41 +40,39 @@ public class PurchaseHistoryController {
     @FXML private TableColumn<Auction, String> colAuctionStatus;
     @FXML private TableColumn<Auction, String> colResult;
 
-    // THÊM 2 BIẾN GIAO DIỆN MỚI
     @FXML private TextField txtSearch;
     @FXML private ComboBox<String> cbFilter;
 
-    // Danh sách gốc chứa toàn bộ dữ liệu
     private ObservableList<Auction> masterDataList = FXCollections.observableArrayList();
+
+    // ---- THÊM SINGLETON CHO SERVER HANDLER GỌI VỀ ----
+    private static PurchaseHistoryController instance;
+    public static PurchaseHistoryController getInstance() { return instance; }
 
     @FXML
     public void initialize() {
+        instance = this; // Gán instance
         tableHistory.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        // Khởi tạo ComboBox Lọc
         cbFilter.setItems(FXCollections.observableArrayList(
             "Tất cả", "Đang Dẫn Đầu", "Bị Vượt Giá", "CHIẾN THẮNG", "THUA CUỘC"
         ));
         cbFilter.setValue("Tất cả");
 
-        // 1. Lấy Tên sản phẩm
-        colItemName.setCellValueFactory(data -> 
-            new SimpleStringProperty(data.getValue().getItem().getName())
-        );
+        colItemName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getItem().getName()));
 
-        // 2. Lấy Mức giá bạn đặt
         colBidAmount.setCellValueFactory(data -> {
+            if(data.getValue().getBidHistory().isEmpty()) return new SimpleStringProperty("0 VNĐ");
             double amount = data.getValue().getBidHistory().get(0).getAmount();
             return new SimpleStringProperty(String.format("%,.0f VNĐ", amount));
         });
         
-        // 3. Lấy Thời gian đặt
         colBidTime.setCellValueFactory(data -> {
+            if(data.getValue().getBidHistory().isEmpty()) return new SimpleStringProperty("");
             LocalDateTime time = data.getValue().getBidHistory().get(0).getBidTime();
             return new SimpleStringProperty(time.format(DateTimeFormatter.ofPattern("HH:mm - dd/MM/yyyy")));
         });
 
-        // 4. Trạng thái phiên đấu giá
         colAuctionStatus.setCellValueFactory(data -> {
             String status = data.getValue().getStatus().name();
             switch (status) {
@@ -78,12 +85,8 @@ public class PurchaseHistoryController {
             }
         });
 
-        // 5. Kết quả (Gọi hàm dùng chung)
-        colResult.setCellValueFactory(data -> 
-            new SimpleStringProperty(getAuctionResultStatus(data.getValue()))
-        );
+        colResult.setCellValueFactory(data -> new SimpleStringProperty(getAuctionResultStatus(data.getValue())));
 
-        // Tùy chỉnh Nút bấm cho cột Kết quả
         colResult.setCellFactory(column -> {
             return new TableCell<Auction, String>() {
                 private final Button btnAction = new Button();
@@ -107,15 +110,10 @@ public class PurchaseHistoryController {
                     } else {
                         btnAction.setText(item);
                         String baseStyle = "-fx-font-weight: bold; -fx-text-fill: white; -fx-background-radius: 15; ";
-                        if (item.contains("Đang Dẫn Đầu")) {
-                            btnAction.setStyle(baseStyle + "-fx-background-color: #27ae60;"); 
-                        } else if (item.contains("Bị Vượt Giá")) {    
-                            btnAction.setStyle(baseStyle + "-fx-background-color: #e67e22;"); 
-                        } else if (item.contains("CHIẾN THẮNG")) {
-                            btnAction.setStyle(baseStyle + "-fx-background-color: #f1c40f; -fx-text-fill: #2c3e50;"); 
-                        } else {
-                            btnAction.setStyle(baseStyle + "-fx-background-color: #95a5a6;"); 
-                        }
+                        if (item.contains("Đang Dẫn Đầu")) btnAction.setStyle(baseStyle + "-fx-background-color: #27ae60;"); 
+                        else if (item.contains("Bị Vượt Giá")) btnAction.setStyle(baseStyle + "-fx-background-color: #e67e22;"); 
+                        else if (item.contains("CHIẾN THẮNG")) btnAction.setStyle(baseStyle + "-fx-background-color: #f1c40f; -fx-text-fill: #2c3e50;"); 
+                        else btnAction.setStyle(baseStyle + "-fx-background-color: #95a5a6;"); 
                         
                         setGraphic(btnAction);
                         setAlignment(javafx.geometry.Pos.CENTER);
@@ -124,53 +122,38 @@ public class PurchaseHistoryController {
             };
         });
 
-        // Kích hoạt chức năng tìm kiếm và lọc
         setupSearchAndFilter();
-
-        // Tải dữ liệu từ Database
-        loadHistoryData();
+        loadHistoryData(); // Gọi để load dữ liệu qua mạng
     }
 
-    // ==============================================================
-    // LOGIC TÌM KIẾM VÀ LỌC
-    // ==============================================================
     private void setupSearchAndFilter() {
         FilteredList<Auction> filteredData = new FilteredList<>(masterDataList, b -> true);
 
-        // Bắt sự kiện khi gõ vào ô tìm kiếm
         txtSearch.textProperty().addListener((observable, oldValue, newValue) -> {
             filteredData.setPredicate(auction -> checkFilter(auction, newValue, cbFilter.getValue()));
         });
 
-        // Bắt sự kiện khi chọn ComboBox
         cbFilter.valueProperty().addListener((observable, oldValue, newValue) -> {
             filteredData.setPredicate(auction -> checkFilter(auction, txtSearch.getText(), newValue));
         });
 
-        // Bọc vào SortedList để hỗ trợ click vào tiêu đề cột để sắp xếp
         SortedList<Auction> sortedData = new SortedList<>(filteredData);
         sortedData.comparatorProperty().bind(tableHistory.comparatorProperty());
         tableHistory.setItems(sortedData);
     }
 
     private boolean checkFilter(Auction auction, String searchText, String filterStatus) {
-        // Kiểm tra Lọc theo Trạng thái (Kết quả)
         boolean matchesFilter = true;
         if (filterStatus != null && !filterStatus.equals("Tất cả")) {
-            String result = getAuctionResultStatus(auction);
-            matchesFilter = result.equals(filterStatus);
+            matchesFilter = getAuctionResultStatus(auction).equals(filterStatus);
         }
-
-        // Kiểm tra Tìm kiếm theo Tên sản phẩm
         boolean matchesSearch = true;
         if (searchText != null && !searchText.isEmpty()) {
             matchesSearch = auction.getItem().getName().toLowerCase().contains(searchText.toLowerCase());
         }
-
         return matchesFilter && matchesSearch;
     }
 
-    // Hàm dùng chung để tính toán xem người dùng Đang dẫn đầu/Thắng/Thua...
     private String getAuctionResultStatus(Auction a) {
         User me = UserSession.getInstance().getLoggedInUser();
         int top1Id = -1;
@@ -179,26 +162,69 @@ public class PurchaseHistoryController {
         boolean isMeTop1 = (top1Id == me.getId());
         String status = a.getStatus().name();
         
-        if (status.equals("RUNNING") || status.equals("OPEN")) {
-            return isMeTop1 ? "Đang Dẫn Đầu" : "Bị Vượt Giá";
-        } else if (status.equals("FINISHED") || status.equals("PAID")) {
-            return isMeTop1 ? "CHIẾN THẮNG" : "THUA CUỘC";
-        }
+        if (status.equals("RUNNING") || status.equals("OPEN")) return isMeTop1 ? "Đang Dẫn Đầu" : "Bị Vượt Giá";
+        else if (status.equals("FINISHED") || status.equals("PAID")) return isMeTop1 ? "CHIẾN THẮNG" : "THUA CUỘC";
         return "-";
     }
 
-    // ==============================================================
-    // DATA & ĐIỀU HƯỚNG
-    // ==============================================================
-    private void loadHistoryData() {
+    // ==== GỬI YÊU CẦU LÊN SERVER ====
+    public void loadHistoryData() {
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (currentUser == null) return;
 
-        AuctionDAO auctionDAO = new AuctionDAOImpl();
-        List<Auction> historyList = auctionDAO.getMyBidHistory(currentUser.getId());
+        try {
+            BidderIdPayload payload = new BidderIdPayload(currentUser.getId());
+            Packet packet = new Packet(PacketType.LOAD_PURCHASE_HISTORY, payload);
+            ServerConnection.getInstance().sendMessage(packet);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    // ==== NHẬN KẾT QUẢ TỪ SERVER ====
+    public void handleLoadHistoryResult(List<PurchaseHistoryResponsePayload.HistoryDTO> dtoList) {
+        if (dtoList == null) return;
+
+        List<Auction> realList = new ArrayList<>();
         
-        // Đổ dữ liệu vào list gốc, FilteredList phía trên sẽ tự động cập nhật
-        masterDataList.setAll(historyList);
+        for (PurchaseHistoryResponsePayload.HistoryDTO dto : dtoList) {
+            
+            // 1. TÁI TẠO ITEM ĐẦY ĐỦ (Dùng Factory để có đúng class)
+            Item item = null;
+            if ("ART".equals(dto.itemType)) item = new com.nhom3.shared.factory.ArtCreator().createItem(dto.itemId, dto.itemName, dto.startPrice);
+            else if ("ELECTRONICS".equals(dto.itemType)) item = new com.nhom3.shared.factory.ElectronicsCreator().createItem(dto.itemId, dto.itemName, dto.startPrice);
+            else if ("VEHICLE".equals(dto.itemType)) item = new com.nhom3.shared.factory.VehicleCreator().createItem(dto.itemId, dto.itemName, dto.startPrice);
+            else item = new com.nhom3.shared.model.item.Art(dto.itemId, dto.itemName, dto.startPrice); // Fallback
+            item.setCurHighest(dto.curHighest);
+
+            // 2. TÁI TẠO THỜI GIAN ĐẦY ĐỦ
+            LocalDateTime start = LocalDateTime.now();
+            LocalDateTime end = LocalDateTime.now();
+            try {
+                start = LocalDateTime.parse(dto.startTimeStr);
+                end = LocalDateTime.parse(dto.endTimeStr);
+            } catch (Exception e) {}
+
+            Auction auction = new Auction(dto.auctionId, item, start, end); 
+            
+            try { auction.setStatus(StatusOfAuction.valueOf(dto.status)); } 
+            catch (Exception e) { auction.setStatus(StatusOfAuction.OPEN); }
+
+            Bidder topBidder = new Bidder(dto.topBidderId, null, null);
+            auction.setHighestBidder(topBidder);
+
+            LocalDateTime bidTime = LocalDateTime.now();
+            try { bidTime = LocalDateTime.parse(dto.myBidTimeStr); } catch (Exception e) {}
+            
+            BidTransaction myBid = new BidTransaction(0, null, dto.myBidAmount, bidTime, "");
+            auction.getBidHistory().add(myBid);
+
+            realList.add(auction);
+        }
+
+        // Ép vẽ lại trên giao diện
+        masterDataList.setAll(realList);
+        tableHistory.refresh();
     }
 
     private void navigateToDetail(Auction auction) {
@@ -206,7 +232,7 @@ public class PurchaseHistoryController {
         marketController.openItemDetail(
             auction.getItem(), 
             auction, 
-            () -> loadHistoryData() // Refresh lại danh sách sau khi đóng popup
+            () -> loadHistoryData() 
         );
     }
 }

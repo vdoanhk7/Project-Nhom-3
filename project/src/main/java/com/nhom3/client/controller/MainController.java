@@ -52,6 +52,8 @@ public class MainController {
                 btnPurchaseHistory.setVisible(true); btnPurchaseHistory.setManaged(true);
             }
         }
+        System.out.println("Đang tự động tải trang Tổng quan mặc định...");
+        loadPage("/com/nhom3/client/view/dashboard.fxml");
     }
 
     // HÀM TIỆN ÍCH DÙNG CHUNG: Vòng xoay loading & Chống nghẽn luồng
@@ -96,9 +98,8 @@ public class MainController {
     // CÁC SỰ KIỆN CHUYỂN TRANG (ĐÃ ĐƯỢC RÚT GỌN SIÊU SẠCH)
     @FXML
     void showDashboard(ActionEvent event) {
-        currentNavigationId = System.currentTimeMillis(); // Cập nhật ID để hủy các vòng xoay khác
-        contentArea.getChildren().clear();
-        contentArea.getChildren().add(new Label("Đang hiển thị: TỔNG QUAN"));
+        // Tận dụng ngay hàm tiện ích loadPage siêu sạch đã được định nghĩa
+        loadPage("/com/nhom3/client/view/dashboard.fxml");
     }
 
     @FXML

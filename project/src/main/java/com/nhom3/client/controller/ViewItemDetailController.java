@@ -231,6 +231,7 @@ public class ViewItemDetailController {
     private String formatTime(LocalDateTime time) {
         return time.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm - dd/MM"));
     }
+
     // QUYẾT ĐỊNH HIỂN THỊ TUỲ VÀO VAI TRÒ
     private void setupDynamicUI() {
         if (boxBidderActions == null) return;
@@ -244,17 +245,92 @@ public class ViewItemDetailController {
 
         // 2. PHÂN QUYỀN CHẶT CHẼ
         if (currentUser instanceof Seller) {
-            // LÀ SELLER: Không làm gì cả (Giao diện đặt giá đã bị ẩn ở bước 1)
             System.out.println("🔒 Đã khóa giao diện đặt giá của Seller.");
         } 
         else if (currentUser instanceof Bidder) {
-            // LÀ BIDDER: Chỉ mở khóa vùng Đặt giá khi phiên đang RUNNING
             if (currentAuction.getStatus() == com.nhom3.shared.model.auction.StatusOfAuction.RUNNING) {
                 boxBidderActions.setVisible(true);
                 boxBidderActions.setManaged(true);
+                
+                // --- THÊM CODE TẠO NÚT AUTO-BID BẰNG JAVA ---
+                // Kiểm tra xem nút đã được thêm vào chưa để tránh bị đúp nút
+                if (boxBidderActions.getChildren().stream().noneMatch(n -> "btnAutoBid".equals(n.getId()))) {
+                    Button btnAutoBid = new Button("🤖 Auto-Bid");
+                    btnAutoBid.setId("btnAutoBid");
+                    btnAutoBid.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
+                    
+                    // Thêm sự kiện mở Pop-up cài đặt
+                    btnAutoBid.setOnAction(e -> openAutoBidDialog());
+                    
+                    boxBidderActions.getChildren().add(btnAutoBid);
+                }
+                // ----------------------------------------------
+                
                 System.out.println("🔓 Đã mở khóa ô đặt giá cho Bidder.");
             }
         }
+    }
+
+    // Mở cửa sổ nhập thông số Auto-Bid
+    private void openAutoBidDialog() {
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        
+        // Tạo cửa sổ Dialog
+        Dialog<com.nhom3.shared.network.payload.AutoBidPayload> dialog = new Dialog<>();
+        dialog.setTitle("Cài đặt Đấu giá tự động (Auto-Bid)");
+        dialog.setHeaderText("Hệ thống sẽ tự động thay mặt bạn trả giá cao hơn\nngười khác (cộng thêm Bước giá) cho đến khi đạt Mức tối đa.");
+
+        // Nút OK và Cancel
+        ButtonType btnSetup = new ButtonType("Lưu Cài Đặt", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnSetup, ButtonType.CANCEL);
+
+        // Khung nhập liệu
+        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+        grid.setHgap(10); grid.setVgap(10);
+        grid.setPadding(new javafx.geometry.Insets(20, 150, 10, 10));
+
+        TextField txtMaxAmount = new TextField();
+        txtMaxAmount.setPromptText("VD: 20000000");
+        TextField txtIncrement = new TextField();
+        txtIncrement.setText("50000"); // Bước giá mặc định
+
+        grid.add(new Label("Giới hạn giá cao nhất (VNĐ):"), 0, 0);
+        grid.add(txtMaxAmount, 1, 0);
+        grid.add(new Label("Bước giá mỗi lần tự tăng (VNĐ):"), 0, 1);
+        grid.add(txtIncrement, 1, 1);
+
+        dialog.getDialogPane().setContent(grid);
+
+        // Lấy dữ liệu khi bấm OK
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == btnSetup) {
+                try {
+                    double maxAmt = Double.parseDouble(txtMaxAmount.getText().replace(",", ""));
+                    double incAmt = Double.parseDouble(txtIncrement.getText().replace(",", ""));
+                    
+                    if (maxAmt <= currentAuction.getItem().getCurHighest()) {
+                        showAlert(Alert.AlertType.ERROR, "Lỗi", "Giá tối đa phải lớn hơn giá hiện tại!");
+                        return null;
+                    }
+                    return new com.nhom3.shared.network.payload.AutoBidPayload(currentUser.getId(), currentAuction.getId(), maxAmt, incAmt);
+                } catch (Exception e) {
+                    showAlert(Alert.AlertType.ERROR, "Lỗi nhập liệu", "Vui lòng chỉ nhập số!");
+                    return null;
+                }
+            }
+            return null;
+        });
+
+        // Gửi qua mạng nếu có dữ liệu hợp lệ
+        dialog.showAndWait().ifPresent(payload -> {
+            try {
+                Packet packet = new Packet(PacketType.PLACE_AUTO_BID, payload);
+                ServerConnection.getInstance().sendMessage(packet);
+                System.out.println("[Client] Đã gửi yêu cầu Auto-Bid: Max=" + payload.getMaxAmount());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @FXML

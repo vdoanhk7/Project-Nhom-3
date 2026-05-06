@@ -309,34 +309,45 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public List<Auction> getMyBidHistory(int bidderId) {
         List<Auction> list = new ArrayList<>();
-        String sql = "SELECT a.id AS auction_id, a.highest_bidder_id, a.start_time, a.end_time, " +
-                     "i.id AS item_id, i.name AS item_name, " +
-                     "b.amount, b.bid_time, " +
-                     "CASE " +
-                     "   WHEN a.status IN ('PAID', 'CANCELLED') THEN a.status " +
-                     "   WHEN NOW() >= a.end_time THEN 'FINISHED' " +
-                     "   WHEN NOW() >= a.start_time THEN 'RUNNING' " +
-                     "   ELSE 'OPEN' " +
-                     "END AS real_status " +
+        
+        // 1. SỬA SQL: Loại bỏ hoàn toàn CASE WHEN NOW() của Database, chỉ lấy cột a.status nguyên gốc
+        String sql = "SELECT a.id AS auction_id, a.highest_bidder_id, a.start_time, a.end_time, a.status, " +
+                     "i.id AS item_id, i.name AS item_name, i.item_type, i.start_price, i.cur_highest, " +
+                     "b.amount, b.bid_time " +
                      "FROM bid_transactions b " +
                      "JOIN auctions a ON b.auction_id = a.id " +
                      "JOIN items i ON a.item_id = i.id " +
                      "WHERE b.bidder_id = ? " +
                      "ORDER BY b.bid_time DESC";
+                     
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {         
             stmt.setInt(1, bidderId);
             ResultSet rs = stmt.executeQuery();
+            
+            // Lấy giờ chuẩn của máy chủ Java (Đã được set múi giờ VN ở ServerMain)
+            LocalDateTime javaNow = LocalDateTime.now(); 
+            
             while (rs.next()) {
-                Item item = new Item(rs.getInt("item_id"), rs.getString("item_name"), 0, "") {};
-                java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
-                java.time.LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
+                Item item = new Item(rs.getInt("item_id"), rs.getString("item_name"), rs.getDouble("start_price"), rs.getString("item_type")) {};
+                item.setCurHighest(rs.getDouble("cur_highest"));
+                
+                LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
+                LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
                 Auction auction = new Auction(rs.getInt("auction_id"), item, start, end);
-                try {
-                    auction.setStatus(StatusOfAuction.valueOf(rs.getString("real_status")));
-                } catch (Exception e) {
+                
+                // 2. TÍNH TOÁN LẠI TRẠNG THÁI BẰNG JAVA (Tuyệt đối không bị lệch múi giờ)
+                String dbStatus = rs.getString("status");
+                if ("PAID".equals(dbStatus) || "CANCELLED".equals(dbStatus)) {
+                    auction.setStatus(StatusOfAuction.valueOf(dbStatus));
+                } else if (javaNow.isAfter(end) || javaNow.isEqual(end)) {
+                    auction.setStatus(StatusOfAuction.FINISHED);
+                } else if (javaNow.isAfter(start) || javaNow.isEqual(start)) {
+                    auction.setStatus(StatusOfAuction.RUNNING);
+                } else {
                     auction.setStatus(StatusOfAuction.OPEN);
                 }
+
                 Bidder topBidder = new Bidder(rs.getInt("highest_bidder_id"), null, null);
                 auction.setHighestBidder(topBidder);
                 BidTransaction myBid = new BidTransaction(0, null, rs.getDouble("amount"), rs.getTimestamp("bid_time").toLocalDateTime(), "");
@@ -414,6 +425,84 @@ public class AuctionDAOImpl implements AuctionDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public boolean saveAutoBidConfig(com.nhom3.shared.network.payload.AutoBidPayload payload) {
+        // Cập nhật lại cấu hình nếu người dùng đã đặt Auto-Bid trước đó, nếu chưa thì thêm mới
+        String sqlCheck = "SELECT id FROM auto_bids WHERE bidder_id = ? AND auction_id = ?";
+        String sqlUpdate = "UPDATE auto_bids SET max_amount = ?, increment_amount = ? WHERE bidder_id = ? AND auction_id = ?";
+        String sqlInsert = "INSERT INTO auto_bids (bidder_id, auction_id, max_amount, increment_amount) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = DbConnection.getConnection()) {
+            boolean exists = false;
+            try (PreparedStatement checkStmt = conn.prepareStatement(sqlCheck)) {
+                checkStmt.setInt(1, payload.getUserId());
+                checkStmt.setInt(2, payload.getAuctionId());
+                ResultSet rs = checkStmt.executeQuery();
+                exists = rs.next();
+            }
+
+            if (exists) {
+                try (PreparedStatement updateStmt = conn.prepareStatement(sqlUpdate)) {
+                    updateStmt.setDouble(1, payload.getMaxAmount());
+                    updateStmt.setDouble(2, payload.getIncrement());
+                    updateStmt.setInt(3, payload.getUserId());
+                    updateStmt.setInt(4, payload.getAuctionId());
+                    return updateStmt.executeUpdate() > 0;
+                }
+            } else {
+                try (PreparedStatement insertStmt = conn.prepareStatement(sqlInsert)) {
+                    insertStmt.setInt(1, payload.getUserId());
+                    insertStmt.setInt(2, payload.getAuctionId());
+                    insertStmt.setDouble(3, payload.getMaxAmount());
+                    insertStmt.setDouble(4, payload.getIncrement());
+                    return insertStmt.executeUpdate() > 0;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Lỗi khi lưu cấu hình Auto-Bid:");
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public com.nhom3.shared.network.payload.DashboardResponsePayload getDashboardStats() {
+        int totalUsers = 0;
+        int activeItems = 0;
+        double totalRevenue = 0.0;
+        List<com.nhom3.shared.network.payload.DashboardResponsePayload.TopBidderDTO> topBidders = new ArrayList<>();
+        List<com.nhom3.shared.network.payload.DashboardResponsePayload.TopItemDTO> topItems = new ArrayList<>();
+
+        try (Connection conn = DbConnection.getConnection()) {
+            // 1. Đếm người dùng
+            try (PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM users"); ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) totalUsers = rs.getInt(1);
+            }
+            // 2. Đếm sản phẩm đang mở/đang chạy
+            try (PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM auctions WHERE status IN ('OPEN', 'RUNNING')"); ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) activeItems = rs.getInt(1);
+            }
+            // 3. Tính tổng doanh thu (Các đơn đã PAID)
+            try (PreparedStatement stmt = conn.prepareStatement("SELECT SUM(i.cur_highest) FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = 'PAID'"); ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) totalRevenue = rs.getDouble(1);
+            }
+            // 4. Lấy Top 5 Đại gia (Bidder mua nhiều tiền nhất)
+            String sqlTopBidder = "SELECT u.full_name, SUM(i.cur_highest) AS total_spent FROM auctions a JOIN items i ON a.item_id = i.id JOIN users u ON a.highest_bidder_id = u.id WHERE a.status = 'PAID' GROUP BY u.id, u.full_name ORDER BY total_spent DESC LIMIT 5";
+            try (PreparedStatement stmt = conn.prepareStatement(sqlTopBidder); ResultSet rs = stmt.executeQuery()) {
+                int rank = 1;
+                while (rs.next()) topBidders.add(new com.nhom3.shared.network.payload.DashboardResponsePayload.TopBidderDTO(rank++, rs.getString("full_name"), rs.getDouble("total_spent")));
+            }
+            // 5. Lấy Top 5 Sản phẩm đắt nhất (FINISHED hoặc PAID)
+            String sqlTopItem = "SELECT i.name, i.cur_highest FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status IN ('PAID', 'FINISHED') ORDER BY i.cur_highest DESC LIMIT 5";
+            try (PreparedStatement stmt = conn.prepareStatement(sqlTopItem); ResultSet rs = stmt.executeQuery()) {
+                int rank = 1;
+                while (rs.next()) topItems.add(new com.nhom3.shared.network.payload.DashboardResponsePayload.TopItemDTO(rank++, rs.getString("name"), rs.getDouble("cur_highest")));
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+
+        return new com.nhom3.shared.network.payload.DashboardResponsePayload(totalUsers, activeItems, totalRevenue, topBidders, topItems);
     }
     
 }

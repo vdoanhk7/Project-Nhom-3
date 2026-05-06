@@ -1,0 +1,24 @@
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ "main"] # Chạy khi push lên nhánh main
+  pull_request:
+    branches: [ "main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # Sử dụng máy chủ ảo chạy Ubuntu
+
+    steps:
+      - uses: actions/checkout@v4 # Tải code từ GitHub về máy chủ ảo
+
+      - name: Set up JDK 21 # Cài đặt môi trường Java 21 cho dự án
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run Unit Tests with Maven # Lệnh quan trọng nhất để chạy các bài Test
+        run: mvn test

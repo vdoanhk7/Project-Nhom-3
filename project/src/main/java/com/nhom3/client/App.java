@@ -37,6 +37,7 @@ public class App extends Application {
                 isConnected = true; // Kết nối thành công, thoát vòng lặp
             } catch (Exception e) {
                 System.out.println("Không thể kết nối đến server. Đang thử lại...");
+                try { Thread.sleep(2000); } catch (InterruptedException ie) { }
             }
         }
         Thread serverThread = new Thread(serverHandler);

@@ -93,7 +93,7 @@ public class ItemDAOImpl implements ItemDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) { 
             stmt.setString(1, item.getName());
             stmt.setDouble(2, item.getStartPrice());
-            stmt.setDouble(3, item.getStartPrice());  
+            stmt.setDouble(3, item.getCurHighest());  
             stmt.setString(4, item.getType());
             stmt.setInt(5, item.getId()); 
             return stmt.executeUpdate() > 0;     

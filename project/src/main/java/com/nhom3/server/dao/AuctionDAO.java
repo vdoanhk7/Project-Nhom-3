@@ -28,4 +28,5 @@ public interface AuctionDAO {
     void startScheduledAuctions(Timestamp currentTime); 
     boolean saveAutoBidConfig(AutoBidPayload payload);
     DashboardResponsePayload getDashboardStats();
+    Auction getAuctionById(int auctionId);
 }

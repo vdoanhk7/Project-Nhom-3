@@ -504,5 +504,24 @@ public class AuctionDAOImpl implements AuctionDAO {
 
         return new com.nhom3.shared.network.payload.DashboardResponsePayload(totalUsers, activeItems, totalRevenue, topBidders, topItems);
     }
+
+    @Override
+    public Auction getAuctionById(int auctionId) {
+        String sql = "SELECT * FROM auctions WHERE id = ?";
+        try (Connection conn = DbConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, auctionId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
+                java.time.LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
+                Auction auction = new Auction(auctionId, null, start, end);
+                auction.setStatus(StatusOfAuction.valueOf(rs.getString("status")));
+                auction.setHighestBidder(new Bidder(rs.getInt("highest_bidder_id"), null, null));
+                return auction;
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return null;
+    }
     
 }

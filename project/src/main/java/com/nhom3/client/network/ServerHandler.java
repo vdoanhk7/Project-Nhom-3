@@ -49,7 +49,6 @@ public class ServerHandler extends Thread {
                             
                             logger.info("Server phản hồi Đăng nhập: {}", loginResult.getResult());
                             
-                            Platform.runLater(() -> {
                                 try {
                                     if (LoginController.getInstance() != null) {
                                         // Nếu đăng nhập thành công, tái tạo lại Object User
@@ -75,7 +74,6 @@ public class ServerHandler extends Thread {
                                 } catch (Exception e) {
                                     e.printStackTrace(); // In ra lỗi nếu UI bị sập
                                 }
-                            });
                             break;
                         
                         case REGISTER:

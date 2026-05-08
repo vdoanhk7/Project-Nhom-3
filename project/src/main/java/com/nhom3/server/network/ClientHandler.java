@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import com.nhom3.shared.model.user.Seller;
 import java.util.ArrayList;
-import java.time.temporal.ChronoUnit;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.server.service.AuctionService;
 import com.nhom3.shared.network.payload.PublishAuctionPayload;
@@ -302,6 +301,11 @@ public class ClientHandler extends Thread {
                         AuctionDAO adao = new AuctionDAOImpl();
                         boolean autoSuccess = adao.saveAutoBidConfig(autoData);
 
+                        if (autoSuccess) {
+                            // KÍCH HOẠT BỘ MÁY AUTO-BID NGAY LẬP TỨC 
+                            auctionService.triggerAutoBids(autoData.getAuctionId());
+                        }
+
                         ResultPayload autoResult = new ResultPayload(
                             autoSuccess, 
                             autoSuccess ? "Hệ thống đã ghi nhận thiết lập Auto-Bid của bạn!" : "Lỗi Database khi cài đặt Auto-Bid!", 
@@ -310,6 +314,35 @@ public class ClientHandler extends Thread {
                         
                         Packet autoPacket = new Packet(PacketType.PLACE_AUTO_BID, autoResult);
                         out.write(gson.toJson(autoPacket));
+                        out.newLine();
+                        out.flush();
+                        break;
+
+                    case CHECK_AUTO_BID:
+                        AutoBidPayload checkReq = gson.fromJson(request.getPayload(), AutoBidPayload.class);
+                        // Truy vấn DB xem ông này có đang bật Auto-bid không
+                        AutoBidPayload existingConfig = new AuctionDAOImpl().getUserAutoBid(checkReq.getAuctionId(), checkReq.getUserId());
+                        
+                        Packet checkPacket = new Packet(PacketType.CHECK_AUTO_BID, existingConfig); // Nếu chưa bật thì gửi null về
+                        out.write(gson.toJson(checkPacket));
+                        out.newLine();
+                        out.flush();
+                        break;
+
+                    case CANCEL_AUTO_BID:
+                        AutoBidPayload cancelData = gson.fromJson(request.getPayload(), AutoBidPayload.class);
+                        logger.info("Yêu cầu HỦY Auto-Bid từ User ID " + cancelData.getUserId());
+
+                        boolean cancelSuccess = new AuctionDAOImpl().cancelAutoBid(cancelData.getAuctionId(), cancelData.getUserId());
+
+                        ResultPayload cancelResult = new ResultPayload(
+                            cancelSuccess, 
+                            cancelSuccess ? "Đã tắt hệ thống Đấu giá tự động!" : "Lỗi hệ thống khi tắt Auto-Bid!", 
+                            -1, "", "", "", "", ""
+                        );
+                        
+                        Packet cancelPacket = new Packet(PacketType.CANCEL_AUTO_BID, cancelResult);
+                        out.write(gson.toJson(cancelPacket));
                         out.newLine();
                         out.flush();
                         break;

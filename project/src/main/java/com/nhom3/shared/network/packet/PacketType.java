@@ -6,6 +6,8 @@ public enum PacketType {
     PLACE_BID("placebid"),
     RESULT("result"),   
     PLACE_AUTO_BID("place auto bid"),
+    CHECK_AUTO_BID("check auto bid"), 
+    CANCEL_AUTO_BID("cancel auto bid"),
     LOAD_SELLER_ITEMS("load seller items"),
     PUBLISH_AUCTION("publish auction"),
     LOAD_BID_HISTORY("load bid history"),

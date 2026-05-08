@@ -29,4 +29,7 @@ public interface AuctionDAO {
     boolean saveAutoBidConfig(AutoBidPayload payload);
     DashboardResponsePayload getDashboardStats();
     Auction getAuctionById(int auctionId);
+    List<AutoBidPayload> getActiveAutoBids(int auctionId);
+    AutoBidPayload getUserAutoBid(int auctionId, int userId);
+    boolean cancelAutoBid(int auctionId, int userId);
 }

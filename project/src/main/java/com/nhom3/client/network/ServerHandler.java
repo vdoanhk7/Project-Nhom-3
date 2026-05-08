@@ -18,6 +18,7 @@ import com.nhom3.shared.model.user.Admin;
 import com.nhom3.shared.network.payload.BidHistoryResponsePayload;
 import com.nhom3.client.controller.ViewItemDetailController;
 import com.nhom3.shared.model.user.UserContact;
+import com.nhom3.shared.network.payload.AutoBidPayload;
 
 
 public class ServerHandler extends Thread {
@@ -191,6 +192,42 @@ public class ServerHandler extends Thread {
                                 alert.setHeaderText(null);
                                 alert.setContentText(autoRes.getMessage());
                                 alert.showAndWait();
+                                
+                                // NẾU CÀI ĐẶT THÀNH CÔNG, GỌI UI LÀM MỚI ĐỂ ẨN NÚT ĐẶT TAY ĐI
+                                if (autoRes.getResult() && ViewItemDetailController.getInstance() != null) {
+                                    ViewItemDetailController.getInstance().checkAutoBidStatus();
+                                }
+                            });
+                            break;
+
+                        case CHECK_AUTO_BID:
+                            String checkJson = gson.toJson(response.getPayload());
+                            com.nhom3.shared.network.payload.AutoBidPayload config = gson.fromJson(checkJson, com.nhom3.shared.network.payload.AutoBidPayload.class);
+                            
+                            Platform.runLater(() -> {
+                                try {
+                                    if (ViewItemDetailController.getInstance() != null) {
+                                        ViewItemDetailController.getInstance().handleCheckAutoBidResult(config);
+                                    }
+                                } catch (Exception e) { e.printStackTrace(); }
+                            });
+                            break;
+
+                        case CANCEL_AUTO_BID:
+                            String cancelResJson = gson.toJson(response.getPayload());
+                            ResultPayload cancelRes = gson.fromJson(cancelResJson, ResultPayload.class);
+                            
+                            Platform.runLater(() -> {
+                                Alert alert = new Alert(cancelRes.getResult() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
+                                alert.setTitle("Hủy Auto-Bid");
+                                alert.setHeaderText(null);
+                                alert.setContentText(cancelRes.getMessage());
+                                alert.showAndWait();
+                                
+                                // Nếu hủy thành công, Load lại giao diện để bảng màu Tím biến mất, bảng Đặt tay hiện lại
+                                if (cancelRes.getResult() && ViewItemDetailController.getInstance() != null) {
+                                    ViewItemDetailController.getInstance().checkAutoBidStatus();
+                                }
                             });
                             break;
 

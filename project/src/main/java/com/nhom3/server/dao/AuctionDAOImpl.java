@@ -6,6 +6,7 @@ import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.model.auction.StatusOfAuction;
 import com.nhom3.shared.model.user.Bidder;
 import com.nhom3.shared.model.user.UserInfo;
+import com.nhom3.shared.network.payload.AutoBidPayload;
 import com.nhom3.shared.model.item.Item;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -310,22 +311,27 @@ public class AuctionDAOImpl implements AuctionDAO {
     public List<Auction> getMyBidHistory(int bidderId) {
         List<Auction> list = new ArrayList<>();
         
-        // 1. SỬA SQL: Loại bỏ hoàn toàn CASE WHEN NOW() của Database, chỉ lấy cột a.status nguyên gốc
+        // 1. SỬ DỤNG GOM NHÓM (GROUP BY) TRONG SQL ĐỂ TỐI ƯU
+        // Ta tạo một bảng ảo "my_bids" chỉ chứa mức giá CAO NHẤT (MAX) của user này cho từng auction_id
         String sql = "SELECT a.id AS auction_id, a.highest_bidder_id, a.start_time, a.end_time, a.status, " +
                      "i.id AS item_id, i.name AS item_name, i.item_type, i.start_price, i.cur_highest, " +
-                     "b.amount, b.bid_time " +
-                     "FROM bid_transactions b " +
-                     "JOIN auctions a ON b.auction_id = a.id " +
+                     "my_bids.max_amount AS amount, my_bids.last_bid_time AS bid_time " +
+                     "FROM ( " +
+                     "    SELECT auction_id, MAX(amount) AS max_amount, MAX(bid_time) AS last_bid_time " +
+                     "    FROM bid_transactions " +
+                     "    WHERE bidder_id = ? " +
+                     "    GROUP BY auction_id " +
+                     ") my_bids " +
+                     "JOIN auctions a ON my_bids.auction_id = a.id " +
                      "JOIN items i ON a.item_id = i.id " +
-                     "WHERE b.bidder_id = ? " +
-                     "ORDER BY b.bid_time DESC";
+                     "ORDER BY my_bids.last_bid_time DESC";
                      
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {         
             stmt.setInt(1, bidderId);
             ResultSet rs = stmt.executeQuery();
             
-            // Lấy giờ chuẩn của máy chủ Java (Đã được set múi giờ VN ở ServerMain)
+            // Lấy giờ chuẩn của máy chủ Java
             LocalDateTime javaNow = LocalDateTime.now(); 
             
             while (rs.next()) {
@@ -336,7 +342,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
                 Auction auction = new Auction(rs.getInt("auction_id"), item, start, end);
                 
-                // 2. TÍNH TOÁN LẠI TRẠNG THÁI BẰNG JAVA (Tuyệt đối không bị lệch múi giờ)
+                // TÍNH TOÁN LẠI TRẠNG THÁI BẰNG JAVA
                 String dbStatus = rs.getString("status");
                 if ("PAID".equals(dbStatus) || "CANCELLED".equals(dbStatus)) {
                     auction.setStatus(StatusOfAuction.valueOf(dbStatus));
@@ -350,8 +356,11 @@ public class AuctionDAOImpl implements AuctionDAO {
 
                 Bidder topBidder = new Bidder(rs.getInt("highest_bidder_id"), null, null);
                 auction.setHighestBidder(topBidder);
+                
+                // Parse dữ liệu "Giá cao nhất" và "Thời gian cuối cùng" mà user này đặt
                 BidTransaction myBid = new BidTransaction(0, null, rs.getDouble("amount"), rs.getTimestamp("bid_time").toLocalDateTime(), "");
                 auction.getBidHistory().add(myBid);
+                
                 list.add(auction);
             }
         } catch (Exception e) { 
@@ -507,15 +516,21 @@ public class AuctionDAOImpl implements AuctionDAO {
 
     @Override
     public Auction getAuctionById(int auctionId) {
-        String sql = "SELECT * FROM auctions WHERE id = ?";
+        String sql = "SELECT a.*, i.id AS item_id, i.name AS item_name, i.item_type, i.start_price, i.cur_highest " +
+                     "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = ?";
         try (Connection conn = DbConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, auctionId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
+                Item item = new com.nhom3.shared.model.item.Art(
+                    rs.getInt("item_id"), rs.getString("item_name"), rs.getDouble("start_price")
+                );
+                item.setCurHighest(rs.getDouble("cur_highest"));
+                
                 java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                 java.time.LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
-                Auction auction = new Auction(auctionId, null, start, end);
+                Auction auction = new Auction(auctionId, item, start, end);
                 auction.setStatus(StatusOfAuction.valueOf(rs.getString("status")));
                 auction.setHighestBidder(new Bidder(rs.getInt("highest_bidder_id"), null, null));
                 return auction;
@@ -523,5 +538,53 @@ public class AuctionDAOImpl implements AuctionDAO {
         } catch (Exception e) { e.printStackTrace(); }
         return null;
     }
+
+    @Override
+    public List<AutoBidPayload> getActiveAutoBids(int auctionId) {
+        List<AutoBidPayload> list = new ArrayList<>();
+        String sql = "SELECT bidder_id, max_amount, increment_amount FROM auto_bids WHERE auction_id = ? ORDER BY id ASC";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, auctionId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                list.add(new AutoBidPayload(
+                    rs.getInt("bidder_id"), 
+                    auctionId, 
+                    rs.getDouble("max_amount"), 
+                    rs.getDouble("increment_amount")
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    @Override
+    public AutoBidPayload getUserAutoBid(int auctionId, int userId) {
+        String sql = "SELECT max_amount, increment_amount FROM auto_bids WHERE auction_id = ? AND bidder_id = ?";
+        try (Connection conn = DbConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, auctionId); stmt.setInt(2, userId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new AutoBidPayload(userId, auctionId, rs.getDouble("max_amount"), rs.getDouble("increment_amount"));
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return null;
+    }
     
+    @Override
+    public boolean cancelAutoBid(int auctionId, int userId) {
+        String sql = "DELETE FROM auto_bids WHERE auction_id = ? AND bidder_id = ?";
+        try (Connection conn = DbConnection.getConnection(); 
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, auctionId);
+            stmt.setInt(2, userId);
+            return stmt.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

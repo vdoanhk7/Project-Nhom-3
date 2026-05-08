@@ -18,7 +18,6 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
@@ -58,6 +57,7 @@ public class ViewItemDetailController {
     private int currentBidCount = -1;
     private static ViewItemDetailController instance;
     private double pendingBidAmount = 0; // Lưu tạm số tiền đang định đặt
+    private javafx.scene.layout.VBox autoBidInfoBox; // Hộp giao diện hiển thị thông tin Auto-bid
     //Tự động cập nhật thời gian
     private void refreshState() {
         if (currentAuction == null) return;
@@ -235,39 +235,26 @@ public class ViewItemDetailController {
     // QUYẾT ĐỊNH HIỂN THỊ TUỲ VÀO VAI TRÒ
     private void setupDynamicUI() {
         if (boxBidderActions == null) return;
-
-        // 1. LUÔN ẨN VÙNG ĐẶT GIÁ TRƯỚC (Để đề phòng)
-        boxBidderActions.setVisible(false); 
-        boxBidderActions.setManaged(false);
+        boxBidderActions.setVisible(false); boxBidderActions.setManaged(false);
 
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (currentUser == null || currentAuction == null) return;
 
-        // 2. PHÂN QUYỀN CHẶT CHẼ
-        if (currentUser instanceof Seller) {
-            System.out.println("🔒 Đã khóa giao diện đặt giá của Seller.");
-        } 
-        else if (currentUser instanceof Bidder) {
-            if (currentAuction.getStatus() == com.nhom3.shared.model.auction.StatusOfAuction.RUNNING) {
-                boxBidderActions.setVisible(true);
-                boxBidderActions.setManaged(true);
-                
-                // --- THÊM CODE TẠO NÚT AUTO-BID BẰNG JAVA ---
-                // Kiểm tra xem nút đã được thêm vào chưa để tránh bị đúp nút
-                if (boxBidderActions.getChildren().stream().noneMatch(n -> "btnAutoBid".equals(n.getId()))) {
-                    Button btnAutoBid = new Button("🤖 Auto-Bid");
-                    btnAutoBid.setId("btnAutoBid");
-                    btnAutoBid.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
-                    
-                    // Thêm sự kiện mở Pop-up cài đặt
-                    btnAutoBid.setOnAction(e -> openAutoBidDialog());
-                    
-                    boxBidderActions.getChildren().add(btnAutoBid);
-                }
-                // ----------------------------------------------
-                
-                System.out.println("🔓 Đã mở khóa ô đặt giá cho Bidder.");
+        if (currentUser instanceof Bidder && currentAuction.getStatus() == com.nhom3.shared.model.auction.StatusOfAuction.RUNNING) {
+            // Hiển thị tạm box đặt tay, sau đó gọi mạng kiểm tra Auto-Bid
+            boxBidderActions.setVisible(true);
+            boxBidderActions.setManaged(true);
+            
+            if (boxBidderActions.getChildren().stream().noneMatch(n -> "btnAutoBid".equals(n.getId()))) {
+                Button btnAutoBid = new Button("🤖 Cài Đặt Auto-Bid");
+                btnAutoBid.setId("btnAutoBid");
+                btnAutoBid.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
+                btnAutoBid.setOnAction(e -> openAutoBidDialog());
+                boxBidderActions.getChildren().add(btnAutoBid);
             }
+            
+            // Hỏi Server xem có đang bật Auto-Bid không
+            checkAutoBidStatus();
         }
     }
 
@@ -524,6 +511,86 @@ public class ViewItemDetailController {
                 }
             }
         });
+    }
+
+    // Gửi yêu cầu kiểm tra trạng thái
+    public void checkAutoBidStatus() {
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        if (currentUser == null || currentAuction == null) return;
+        
+        com.nhom3.shared.network.payload.AutoBidPayload payload = new com.nhom3.shared.network.payload.AutoBidPayload(currentUser.getId(), currentAuction.getId(), 0, 0);
+        Packet packet = new Packet(PacketType.CHECK_AUTO_BID, payload);
+        try { ServerConnection.getInstance().sendMessage(packet); } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    // Server trả về kết quả
+    public void handleCheckAutoBidResult(com.nhom3.shared.network.payload.AutoBidPayload config) {
+        if (config == null) {
+            // CHƯA BẬT AUTO-BID -> Hiện nút đặt tay, ẩn bảng Info
+            boxBidderActions.setVisible(true); boxBidderActions.setManaged(true);
+            if (autoBidInfoBox != null) { autoBidInfoBox.setVisible(false); autoBidInfoBox.setManaged(false); }
+        } else {
+            // ĐÃ BẬT AUTO-BID -> Ẩn nút đặt tay, tạo bảng Info
+            boxBidderActions.setVisible(false); boxBidderActions.setManaged(false);
+
+            if (autoBidInfoBox == null) {
+                autoBidInfoBox = new javafx.scene.layout.VBox(8);
+                autoBidInfoBox.setStyle("-fx-background-color: #f3e5f5; -fx-padding: 15; -fx-background-radius: 5; -fx-border-color: #9b59b6; -fx-border-width: 2;");
+                
+                Label lblTitle = new Label("🤖 ĐANG BẬT ĐẤU GIÁ TỰ ĐỘNG");
+                lblTitle.setStyle("-fx-font-weight: bold; -fx-text-fill: #8e44ad; -fx-font-size: 14px;");
+                
+                Label lblMax = new Label(); lblMax.setId("lblMax");
+                Label lblInc = new Label(); lblInc.setId("lblInc");
+                
+                // Khung chứa 2 nút nằm ngang
+                javafx.scene.layout.HBox btnBox = new javafx.scene.layout.HBox(10);
+                
+                Button btnEdit = new Button("Thay đổi thiết lập");
+                btnEdit.setStyle("-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-cursor: hand;");
+                btnEdit.setOnAction(e -> openAutoBidDialog()); 
+                
+                Button btnCancelAuto = new Button("Dừng Auto-Bid");
+                btnCancelAuto.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
+                btnCancelAuto.setOnAction(e -> handleCancelAutoBid()); // GỌI HÀM HỦY
+                
+                btnBox.getChildren().addAll(btnEdit, btnCancelAuto);
+                autoBidInfoBox.getChildren().addAll(lblTitle, lblMax, lblInc, btnBox);
+                
+                javafx.scene.layout.Pane parent = (javafx.scene.layout.Pane) boxBidderActions.getParent();
+                parent.getChildren().add(parent.getChildren().indexOf(boxBidderActions), autoBidInfoBox);
+            }
+            
+            // Cập nhật thông số
+            Label lblMax = (Label) autoBidInfoBox.lookup("#lblMax");
+            Label lblInc = (Label) autoBidInfoBox.lookup("#lblInc");
+            lblMax.setText("Giới hạn ví: " + String.format("%,.0f VNĐ", config.getMaxAmount()));
+            lblInc.setText("Bước giá tự động: " + String.format("%,.0f VNĐ", config.getIncrement()));
+            
+            autoBidInfoBox.setVisible(true); autoBidInfoBox.setManaged(true);
+        }
+    }
+
+    // Xử lý khi bấm nút "Dừng Auto-Bid"
+    private void handleCancelAutoBid() {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Bạn có chắc chắn muốn dừng hệ thống đấu giá tự động?\nSau khi dừng, bạn sẽ phải tự đặt giá bằng tay.", ButtonType.YES, ButtonType.NO);
+        confirm.setTitle("Xác nhận dừng");
+        confirm.setHeaderText(null);
+        
+        if (confirm.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
+            User currentUser = UserSession.getInstance().getLoggedInUser();
+            if (currentUser == null || currentAuction == null) return;
+            
+            // Tái sử dụng AutoBidPayload nhưng truyền maxAmount=0, increment=0 để gửi đi
+            com.nhom3.shared.network.payload.AutoBidPayload payload = new com.nhom3.shared.network.payload.AutoBidPayload(currentUser.getId(), currentAuction.getId(), 0, 0);
+            Packet packet = new Packet(PacketType.CANCEL_AUTO_BID, payload);
+            
+            try { 
+                ServerConnection.getInstance().sendMessage(packet); 
+            } catch (Exception e) { 
+                e.printStackTrace(); 
+            }
+        }
     }
 
 }

@@ -16,9 +16,9 @@ public class DbConnection {
     static {
         try {
             HikariConfig config = new HikariConfig();
-            config.setJdbcUrl("jdbc:mysql://auctiondb.c0vco82umoac.us-east-1.rds.amazonaws.com:3306/auction_db");
-            config.setUsername("root");
-            config.setPassword("hoathanhque");
+            config.setJdbcUrl("jdbc:mysql://mysql-1ee2c3cd-project3vn.k.aivencloud.com:19643/defaultdb?sslMode=REQUIRED");
+            config.setUsername("avnadmin");
+            config.setPassword("AVNS_fgz_8u1cKk_gLZIoE_H");
             config.setDriverClassName("com.mysql.cj.jdbc.Driver");
 
             config.setMaximumPoolSize(20);

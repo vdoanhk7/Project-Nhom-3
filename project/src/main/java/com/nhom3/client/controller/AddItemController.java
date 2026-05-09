@@ -4,10 +4,7 @@ import com.nhom3.client.utils.UserSession;
 import com.nhom3.server.dao.ItemDAO;
 import com.nhom3.server.dao.ItemDAOImpl;
 import com.nhom3.server.service.ItemService;
-import com.nhom3.shared.factory.ArtCreator;
-import com.nhom3.shared.factory.ElectronicsCreator;
-import com.nhom3.shared.factory.ItemCreator;
-import com.nhom3.shared.factory.VehicleCreator;
+
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Seller;
 import com.nhom3.shared.model.user.User;
@@ -46,7 +43,7 @@ public class AddItemController {
         // Đổ dữ liệu cũ lên các ô TextField
         txtName.setText(item.getName());
         txtStartPrice.setText(String.format("%.0f", item.getStartPrice()));   
-        cbType.setValue(item.getType());
+        cbType.setValue(item.getType().name());
         // Khóa không cho đổi Loại (Vì đổi loại sẽ phải thay đổi class Creator rất phức tạp)
         cbType.setDisable(true); 
     }
@@ -74,14 +71,9 @@ public class AddItemController {
         // 3. Chia luồng xử lí
         // Chế đọ thêm mới
         if (editingItem == null) {
-            ItemCreator creator = null;
-            switch (type) {
-                case "ART": creator = new ArtCreator(); break;
-                case "ELECTRONICS": creator = new ElectronicsCreator(); break;
-                case "VEHICLE": creator = new VehicleCreator(); break;
-            }
+            com.nhom3.shared.model.item.ItemType typeEnum = com.nhom3.shared.model.item.ItemType.valueOf(type);
             // Tạo Item mới (ID = 0 để DB tự tăng)
-            Item newItem = creator.createItem(0, name, startPrice);
+            Item newItem = typeEnum.createItem(0, name, startPrice);
             boolean isSuccess = itemDAO.saveItem(newItem, seller.getId());
             if (isSuccess) {
                 ItemService itemService = new ItemService();

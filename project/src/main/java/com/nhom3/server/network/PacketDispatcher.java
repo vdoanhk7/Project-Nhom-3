@@ -140,7 +140,7 @@ public class PacketDispatcher {
         List<SellerItemsResponsePayload.SellerItemDTO> dtoList = new ArrayList<>();
         for (Item itm : itemsFromDb) {
             String stt = statusMap.getOrDefault(itm.getId(), "");
-            dtoList.add(new SellerItemsResponsePayload.SellerItemDTO(itm.getId(), itm.getName(), itm.getType(), itm.getStartPrice(), itm.getCurHighest(), stt));
+            dtoList.add(new SellerItemsResponsePayload.SellerItemDTO(itm.getId(), itm.getName(), itm.getType().name(), itm.getStartPrice(), itm.getCurHighest(), stt));
         }
         return new Packet(PacketType.LOAD_SELLER_ITEMS, new SellerItemsResponsePayload(dtoList));
     }
@@ -177,7 +177,7 @@ public class PacketDispatcher {
             int topBidderId = a.getHighestBidder() != null ? a.getHighestBidder().getId() : -1;
             purDtoList.add(new PurchaseHistoryResponsePayload.HistoryDTO(
                 a.getId(), a.getItem().getId(), a.getItem().getName(), amount, timeStr, a.getStatus().name(), topBidderId,
-                a.getItem().getType(), a.getItem().getStartPrice(), a.getItem().getCurHighest(),
+                a.getItem().getType().name(), a.getItem().getStartPrice(), a.getItem().getCurHighest(),
                 a.getStartTime().toString(), a.getEndTime().toString()
             ));
         }

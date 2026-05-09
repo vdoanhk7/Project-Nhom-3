@@ -23,7 +23,7 @@ public class ItemDAOImpl implements ItemDAO {
             stmt.setString(2, item.getName());
             stmt.setDouble(3, item.getStartPrice());
             stmt.setDouble(4, item.getCurHighest());
-            stmt.setString(5, item.getType());
+            stmt.setString(5, item.getType().name());
             stmt.executeUpdate();
             }
             catch (Exception e) {
@@ -49,17 +49,8 @@ public class ItemDAOImpl implements ItemDAO {
                 String type = rs.getString("item_type");
                 double curHighest = rs.getDouble("cur_highest");
                 Item item = null;
-                switch (type) {
-                    case "ART":
-                        item = new com.nhom3.shared.factory.ArtCreator().createItem(id, name, startPrice);
-                        break;
-                    case "ELECTRONICS":
-                        item = new com.nhom3.shared.factory.ElectronicsCreator().createItem(id, name, startPrice);
-                        break;
-                    case "VEHICLE":
-                        item = new com.nhom3.shared.factory.VehicleCreator().createItem(id, name, startPrice);
-                        break;
-                }
+                com.nhom3.shared.model.item.ItemType itemType = com.nhom3.shared.model.item.ItemType.valueOf(type);
+                item = itemType.createItem(id, name, startPrice);
                 if (item != null) {
                     item.setCurHighest(curHighest);
                     list.add(item);
@@ -94,7 +85,7 @@ public class ItemDAOImpl implements ItemDAO {
             stmt.setString(1, item.getName());
             stmt.setDouble(2, item.getStartPrice());
             stmt.setDouble(3, item.getCurHighest());  
-            stmt.setString(4, item.getType());
+            stmt.setString(4, item.getType().name());
             stmt.setInt(5, item.getId()); 
             return stmt.executeUpdate() > 0;     
         } catch (Exception e) {

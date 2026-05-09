@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import com.nhom3.server.db.DbConnection;
 import com.nhom3.shared.model.user.Admin;
 import com.nhom3.shared.model.user.Bidder;
@@ -16,13 +18,17 @@ import com.nhom3.shared.model.user.UserInfo;
 public class UserDAOImpl implements UserDAO {
     @Override
     public User login(String username, String password) {
-        String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+        String sql = "SELECT * FROM users WHERE username = ?";
         try (Connection conn = DbConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
-            stmt.setString(2, password);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
+                String hashedPassword = rs.getString("password");
+                // Kiểm tra mật khẩu bằng BCrypt
+                boolean passwordMatch = BCrypt.checkpw(password, hashedPassword);
+
+                if (passwordMatch) {
                 int id = rs.getInt("id");
                 String role = rs.getString("role");
                 UserInfo info = new UserInfo(
@@ -41,6 +47,7 @@ public class UserDAOImpl implements UserDAO {
                 } else if (role.equals("ADMIN")) {
                     return new Admin(id, info, contact);
                 }
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -54,7 +61,8 @@ public class UserDAOImpl implements UserDAO {
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, user.getUserInfo().getUserName());
-            stmt.setString(2, user.getUserInfo().getPassword());
+            // Mã hóa mật khẩu trước khi lưu
+            stmt.setString(2, BCrypt.hashpw(user.getUserInfo().getPassword(), BCrypt.gensalt()));
             stmt.setString(3, user.getUserInfo().getName());
             stmt.setString(4, user.getUserContact().getEmail());
             stmt.setString(5, user.getUserContact().getPhoneNumber());
@@ -88,8 +96,8 @@ public class UserDAOImpl implements UserDAO {
         String sql = "UPDATE users SET password = ? WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, newPassword);
+            // Mã hóa mật khẩu mới
+            stmt.setString(1, BCrypt.hashpw(newPassword, BCrypt.gensalt()));
             stmt.setInt(2, userId); // Tìm đúng ID người dùng để đổi mật khẩu
 
             return stmt.executeUpdate() > 0;

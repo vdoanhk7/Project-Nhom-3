@@ -20,7 +20,7 @@ public class UserDAOImpl implements UserDAO {
     public User login(String username, String password) {
         String sql = "SELECT * FROM users WHERE username = ?";
         try (Connection conn = DbConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -29,24 +29,22 @@ public class UserDAOImpl implements UserDAO {
                 boolean passwordMatch = BCrypt.checkpw(password, hashedPassword);
 
                 if (passwordMatch) {
-                int id = rs.getInt("id");
-                String role = rs.getString("role");
-                UserInfo info = new UserInfo(
-                    rs.getString("username"),
-                    rs.getString("password"),
-                    rs.getString("full_name")
-                );
-                UserContact contact = new UserContact(
-                    rs.getString("email"),
-                    rs.getString("phone")
-                );
-                if (role.equals("BIDDER")) {
-                    return new Bidder(id, info, contact);
-                } else if (role.equals("SELLER")) {
-                    return new Seller(id, info, contact);
-                } else if (role.equals("ADMIN")) {
-                    return new Admin(id, info, contact);
-                }
+                    int id = rs.getInt("id");
+                    String role = rs.getString("role");
+                    UserInfo info = new UserInfo(
+                            rs.getString("username"),
+                            rs.getString("password"),
+                            rs.getString("full_name"));
+                    UserContact contact = new UserContact(
+                            rs.getString("email"),
+                            rs.getString("phone"));
+                    if (role.equals("BIDDER")) {
+                        return new Bidder(id, info, contact);
+                    } else if (role.equals("SELLER")) {
+                        return new Seller(id, info, contact);
+                    } else if (role.equals("ADMIN")) {
+                        return new Admin(id, info, contact);
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -59,7 +57,7 @@ public class UserDAOImpl implements UserDAO {
     public boolean register(User user) {
         String sql = "INSERT INTO users (username, password, full_name, email, phone, role) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DbConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, user.getUserInfo().getUserName());
             // Mã hóa mật khẩu trước khi lưu
             stmt.setString(2, BCrypt.hashpw(user.getUserInfo().getPassword(), BCrypt.gensalt()));
@@ -79,7 +77,7 @@ public class UserDAOImpl implements UserDAO {
     public boolean updateUser(User user) {
         String sql = "UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, user.getUserInfo().getName());
             stmt.setString(2, user.getUserContact().getEmail());
             stmt.setString(3, user.getUserContact().getPhoneNumber());
@@ -95,7 +93,7 @@ public class UserDAOImpl implements UserDAO {
     public boolean updatePassword(int userId, String newPassword) {
         String sql = "UPDATE users SET password = ? WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             // Mã hóa mật khẩu mới
             stmt.setString(1, BCrypt.hashpw(newPassword, BCrypt.gensalt()));
             stmt.setInt(2, userId); // Tìm đúng ID người dùng để đổi mật khẩu

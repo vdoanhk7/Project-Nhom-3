@@ -18,14 +18,24 @@ public class ItemDAOImpl implements ItemDAO {
             return false;
         }
         try (Connection conn = DbConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            PreparedStatement stmt = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, sellerId);
             stmt.setString(2, item.getName());
             stmt.setDouble(3, item.getStartPrice());
             stmt.setDouble(4, item.getCurHighest());
             stmt.setString(5, item.getType().name());
-            stmt.executeUpdate();
+            
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows > 0) {
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        item.setId(rs.getInt(1));
+                    }
+                }
+            } else {
+                return false;
             }
+        }
             catch (Exception e) {
                 e.printStackTrace();
                 return false;

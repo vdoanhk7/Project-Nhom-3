@@ -48,8 +48,7 @@ public class ClientPacketDispatcher {
     }
 
     private void handleLogin(Packet response, Gson gson) {
-        String tempJson = gson.toJson(response.getPayload()); 
-        ResultPayload loginResult = gson.fromJson(tempJson, ResultPayload.class);
+        ResultPayload loginResult = gson.fromJson(response.getPayload(), ResultPayload.class);
         logger.info("Server phản hồi Đăng nhập: {}", loginResult.getResult());
         try {
             if (LoginController.getInstance() != null) {
@@ -73,8 +72,7 @@ public class ClientPacketDispatcher {
     }
 
     private void handleRegister(Packet response, Gson gson) {
-        String regResJson = gson.toJson(response.getPayload());
-        ResultPayload regResultPayload = gson.fromJson(regResJson, ResultPayload.class);
+        ResultPayload regResultPayload = gson.fromJson(response.getPayload(), ResultPayload.class);
         logger.info("Server phản hồi Đăng ký: {}", regResultPayload.getResult());
         try {
             if (SignupController.getInstance() != null) {
@@ -84,8 +82,7 @@ public class ClientPacketDispatcher {
     }
 
     private void handlePlaceBid(Packet response, Gson gson) {
-        String bidResJson = gson.toJson(response.getPayload());
-        ResultPayload bidRes = gson.fromJson(bidResJson, ResultPayload.class);
+        ResultPayload bidRes = gson.fromJson(response.getPayload(), ResultPayload.class);
         logger.info("Server phản hồi Đặt giá: {}", bidRes.getResult());
         try {
             if (ViewItemDetailController.getInstance() != null) {
@@ -95,8 +92,7 @@ public class ClientPacketDispatcher {
     }
 
     private void handleLoadBidHistory(Packet response, Gson gson) {
-        String histJson = gson.toJson(response.getPayload());
-        BidHistoryResponsePayload histResult = gson.fromJson(histJson, BidHistoryResponsePayload.class);
+        BidHistoryResponsePayload histResult = gson.fromJson(response.getPayload(), BidHistoryResponsePayload.class);
         try {
             if (ViewItemDetailController.getInstance() != null) {
                 ViewItemDetailController.getInstance().handleLoadHistoryResult(histResult.getAuctionId(), histResult.getHistoryList());
@@ -105,8 +101,7 @@ public class ClientPacketDispatcher {
     }
 
     private void handleLoadSellerItems(Packet response, Gson gson) {
-        String itemsResJson = gson.toJson(response.getPayload());
-        SellerItemsResponsePayload itemsResult = gson.fromJson(itemsResJson, SellerItemsResponsePayload.class);
+        SellerItemsResponsePayload itemsResult = gson.fromJson(response.getPayload(), SellerItemsResponsePayload.class);
         try {
             if (ManageItemController.getInstance() != null) {
                 ManageItemController.getInstance().handleLoadItemsResult(itemsResult.getItems());
@@ -115,8 +110,7 @@ public class ClientPacketDispatcher {
     }
 
     private void handlePublishAuction(Packet response, Gson gson) {
-        String pubResJson = gson.toJson(response.getPayload());
-        ResultPayload pubRes = gson.fromJson(pubResJson, ResultPayload.class);
+        ResultPayload pubRes = gson.fromJson(response.getPayload(), ResultPayload.class);
         try {
             if (PublishAuctionController.getInstance() != null) {
                 PublishAuctionController.getInstance().handlePublishResult(pubRes.getResult(), pubRes.getMessage());
@@ -125,8 +119,7 @@ public class ClientPacketDispatcher {
     }
 
     private void handleLoadPurchaseHistory(Packet response, Gson gson) {
-        String purHistJson = gson.toJson(response.getPayload());
-        PurchaseHistoryResponsePayload purHistRes = gson.fromJson(purHistJson, PurchaseHistoryResponsePayload.class);
+        PurchaseHistoryResponsePayload purHistRes = gson.fromJson(response.getPayload(), PurchaseHistoryResponsePayload.class);
         try {
             if (PurchaseHistoryController.getInstance() != null) {
                 PurchaseHistoryController.getInstance().handleLoadHistoryResult(purHistRes.getHistoryList());
@@ -135,8 +128,7 @@ public class ClientPacketDispatcher {
     }
 
     private void handlePlaceAutoBid(Packet response, Gson gson) {
-        String autoResJson = gson.toJson(response.getPayload());
-        ResultPayload autoRes = gson.fromJson(autoResJson, ResultPayload.class);
+        ResultPayload autoRes = gson.fromJson(response.getPayload(), ResultPayload.class);
         Alert alert = new Alert(autoRes.getResult() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
         alert.setTitle("Auto-Bid");
         alert.setHeaderText(null);
@@ -148,8 +140,7 @@ public class ClientPacketDispatcher {
     }
 
     private void handleCheckAutoBid(Packet response, Gson gson) {
-        String checkJson = gson.toJson(response.getPayload());
-        AutoBidPayload config = gson.fromJson(checkJson, AutoBidPayload.class);
+        AutoBidPayload config = gson.fromJson(response.getPayload(), AutoBidPayload.class);
         try {
             if (ViewItemDetailController.getInstance() != null) {
                 ViewItemDetailController.getInstance().handleCheckAutoBidResult(config);
@@ -158,8 +149,7 @@ public class ClientPacketDispatcher {
     }
 
     private void handleCancelAutoBid(Packet response, Gson gson) {
-        String cancelResJson = gson.toJson(response.getPayload());
-        ResultPayload cancelRes = gson.fromJson(cancelResJson, ResultPayload.class);
+        ResultPayload cancelRes = gson.fromJson(response.getPayload(), ResultPayload.class);
         Alert alert = new Alert(cancelRes.getResult() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
         alert.setTitle("Hủy Auto-Bid");
         alert.setHeaderText(null);
@@ -171,8 +161,7 @@ public class ClientPacketDispatcher {
     }
 
     private void handleLoadDashboard(Packet response, Gson gson) {
-        String dashJson = gson.toJson(response.getPayload());
-        DashboardResponsePayload dashResult = gson.fromJson(dashJson, DashboardResponsePayload.class);
+        DashboardResponsePayload dashResult = gson.fromJson(response.getPayload(), DashboardResponsePayload.class);
         try {
             if (DashboardController.getInstance() != null) {
                 DashboardController.getInstance().handleDashboardData(dashResult);

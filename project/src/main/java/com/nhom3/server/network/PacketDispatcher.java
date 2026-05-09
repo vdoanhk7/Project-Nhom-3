@@ -30,8 +30,10 @@ public class PacketDispatcher {
     private final Map<PacketType, PacketHandler> handlers = new HashMap<>();
     private final AuthService authService;
     private final AuctionService auctionService;
+    private final AuctionHandler auctionHandler;
 
     public PacketDispatcher(AuthService authService, AuctionService auctionService) {
+        auctionHandler = AuctionHandler.getInstance();
         this.authService = authService;
         this.auctionService = auctionService;
         registerHandlers();
@@ -96,23 +98,7 @@ public class PacketDispatcher {
     private Packet handlePlaceBid(Packet request, Gson gson) {
         BidPayload bidData = gson.fromJson(request.getPayload(), BidPayload.class);                 
         logger.info("Nhận yêu cầu Đặt giá: " + bidData.getAmount() + " từ User ID: " + bidData.getUserId());
-        ResultPayload bidResultPayload;
-        try {
-            AuctionDAO dao = new AuctionDAOImpl();
-            Auction currentAuction = dao.getAuctionById(bidData.getAuctionId());
-            if (currentAuction == null) throw new IllegalStateException("Không tìm thấy phiên đấu giá này!");
-            
-            Bidder bidder = new Bidder(bidData.getUserId(), null, null);
-            BidTransaction newBid = new BidTransaction(0, bidder, bidData.getAmount(), LocalDateTime.now(), "Đặt giá qua mạng");
-            boolean isBidSuccess = auctionService.placeBid(currentAuction, newBid);
-
-            bidResultPayload = new ResultPayload(isBidSuccess, isBidSuccess ? "Đặt giá thành công" : "Có người đã trả giá cao hơn, vui lòng thử lại!", -1, "", "", "", "", "");
-        } catch (IllegalStateException e) {
-            bidResultPayload = new ResultPayload(false, e.getMessage(), -1, "", "", "", "", "");
-        } catch (Exception e) {
-            e.printStackTrace();
-            bidResultPayload = new ResultPayload(false, "Lỗi hệ thống máy chủ!", -1, "", "", "", "", "");
-        }
+        ResultPayload bidResultPayload = auctionHandler.handleBid(bidData);
         return new Packet(PacketType.PLACE_BID, bidResultPayload);
     }
 

@@ -121,7 +121,7 @@ public class ManageItemController {
         boolean matchesCategory = true;
         if (category != null && !category.equals("Tất cả")) {
             // So sánh loại của item với giá trị trong ComboBox
-            matchesCategory = item.getType().equalsIgnoreCase(category);
+            matchesCategory = item.getType().name().equalsIgnoreCase(category);
         }
         // Kiểm tra Tìm kiếm 
         boolean matchesSearch = true;
@@ -411,11 +411,8 @@ public class ManageItemController {
         for (com.nhom3.shared.network.payload.SellerItemsResponsePayload.SellerItemDTO dto : dtoList) {
             // 1. Tái tạo lại Object Item tùy theo Type
             Item item = null;
-            switch (dto.type) {
-                case "ART": item = new com.nhom3.shared.factory.ArtCreator().createItem(dto.id, dto.name, dto.startPrice); break;
-                case "ELECTRONICS": item = new com.nhom3.shared.factory.ElectronicsCreator().createItem(dto.id, dto.name, dto.startPrice); break;
-                case "VEHICLE": item = new com.nhom3.shared.factory.VehicleCreator().createItem(dto.id, dto.name, dto.startPrice); break;
-            }
+            com.nhom3.shared.model.item.ItemType typeEnum = com.nhom3.shared.model.item.ItemType.valueOf(dto.type);
+            item = typeEnum.createItem(dto.id, dto.name, dto.startPrice);
             if (item != null) {
                 item.setCurHighest(dto.curHighest);
                 realItems.add(item);

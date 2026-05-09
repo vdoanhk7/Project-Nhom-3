@@ -6,9 +6,9 @@ public abstract class Item extends Entity{
 	protected String name;
 	protected double startPrice;
 	protected double curHighest;
-	protected String type;
+	protected ItemType type;
 
-	public Item(int id, String name, double startPrice, String type) {
+	public Item(int id, String name, double startPrice, ItemType type) {
 		super(id);
 		this.name = name;
 		this.startPrice = startPrice;
@@ -36,7 +36,7 @@ public abstract class Item extends Entity{
 	public double getCurHighest(){
 		return curHighest;
 	}
-	public String getType() {
+	public ItemType getType() {
 		return type;
 	}
 

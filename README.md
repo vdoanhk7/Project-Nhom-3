@@ -16,7 +16,7 @@
 - [x] **Quản lý phiên đấu giá:** Xử lý logic tự động đóng phiên khi hết thời gian và chuyển trạng thái.
 - [x] **Thiết kế hướng đối tượng:** Xây dựng cây kế thừa + design pattern(factory)
 - [x] **Anti-sniping:** Viết thuật toán tự động gia hạn thêm 120 giây khi có người đặt giá ở 30 giây cuối.
-- [x] **Network:** Sử dụng Command & Dispatcher Pattern.
+- [x] **Network:** Refactor lại network bằng Command & Dispatcher Pattern.
 - [x] **Bảo mật:** Mã hóa mật khẩu người dùng bằng BCrypt.
 ### 3. Dũng 
 - [ ] **Quản lý người dùng:** Viết logic Đăng ký/Đăng nhập và phân quyền.

@@ -1,93 +1,186 @@
 package com.nhom3;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import com.nhom3.server.dao.UserDAO;
 import com.nhom3.server.dao.UserDAOImpl;
 import com.nhom3.server.db.DbConnection;
-import com.nhom3.shared.model.user.Bidder;
-import com.nhom3.shared.model.user.Seller;
-import com.nhom3.shared.model.user.User;
+import com.nhom3.shared.model.user.*;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
 public class UserDAOImplTest {
 
+    private UserDAOImpl userDAO;
+
+    private Connection conn;
+    private PreparedStatement stmt;
+    private ResultSet rs;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        userDAO = new UserDAOImpl();
+
+        conn = mock(Connection.class);
+        stmt = mock(PreparedStatement.class);
+        rs = mock(ResultSet.class);
+    }
+
     @Test
-    void testLogin_Success_AsSeller() throws Exception {
-        // 1. Sử dụng mockStatic để chặn hàm getConnection() của DbConnection
-        try (MockedStatic<DbConnection> mockedDb = mockStatic(DbConnection.class)) {
-            // Giả lập các đối tượng JDBC
-            Connection mockConn = mock(Connection.class);
-            PreparedStatement mockStmt = mock(PreparedStatement.class);
-            ResultSet mockRs = mock(ResultSet.class);
+    void testLoginSuccessBidder() throws Exception {
 
-            // 2. Định nghĩa hành vi: Khi code gọi DbConnection.getConnection() -> trả về Connection giả
-            mockedDb.when(DbConnection::getConnection).thenReturn(mockConn);
-            when(mockConn.prepareStatement(anyString())).thenReturn(mockStmt);
-            when(mockStmt.executeQuery()).thenReturn(mockRs);
+        String password = "123456";
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
-            // Giả lập dữ liệu trả về từ Database cho vai trò SELLER
-            when(mockRs.next()).thenReturn(true);
-            when(mockRs.getInt("id")).thenReturn(1);
-            when(mockRs.getString("role")).thenReturn("SELLER");
-            when(mockRs.getString("username")).thenReturn("seller_test");
-            when(mockRs.getString("password")).thenReturn("pass123");
-            when(mockRs.getString("full_name")).thenReturn("Nguoi Ban Mau");
+        try (MockedStatic<DbConnection> mockedDb =
+                     Mockito.mockStatic(DbConnection.class)) {
 
-            // 3. Thực thi hàm cần kiểm thử
-            UserDAO userDAO = new UserDAOImpl();
-            User result = userDAO.login("seller_test", "pass123");
+            mockedDb.when(DbConnection::getConnection).thenReturn(conn);
 
-            // 4. Kiểm tra (Assertion)
-            assertNotNull(result, "Đăng nhập đúng phải trả về đối tượng User");
-            assertTrue(result instanceof Seller, "Phải thực hiện đúng Role Mapping sang Seller");
-            assertEquals("Nguoi Ban Mau", result.getUserInfo().getName());
+            when(conn.prepareStatement(anyString())).thenReturn(stmt);
+
+            when(stmt.executeQuery()).thenReturn(rs);
+
+            when(rs.next()).thenReturn(true);
+
+            when(rs.getString("password")).thenReturn(hashedPassword);
+            when(rs.getInt("id")).thenReturn(1);
+            when(rs.getString("role")).thenReturn("BIDDER");
+
+            when(rs.getString("username")).thenReturn("dung");
+            when(rs.getString("full_name")).thenReturn("Pham Dung");
+            when(rs.getString("email")).thenReturn("dung@gmail.com");
+            when(rs.getString("phone")).thenReturn("0123456789");
+
+            User result = userDAO.login("dung", password);
+
+            assertNotNull(result);
+            assertTrue(result instanceof Bidder);
+            assertEquals(1, result.getId());
         }
     }
 
     @Test
-    void testLogin_Failed_WrongPassword() throws Exception {
-        try (MockedStatic<DbConnection> mockedDb = mockStatic(DbConnection.class)) {
-            Connection mockConn = mock(Connection.class);
-            PreparedStatement mockStmt = mock(PreparedStatement.class);
-            ResultSet mockRs = mock(ResultSet.class);
+    void testLoginWrongPassword() throws Exception {
 
-            mockedDb.when(DbConnection::getConnection).thenReturn(mockConn);
-            when(mockConn.prepareStatement(anyString())).thenReturn(mockStmt);
-            when(mockStmt.executeQuery()).thenReturn(mockRs);
+        String hashedPassword =
+                BCrypt.hashpw("correctPassword", BCrypt.gensalt());
 
-            // Giả lập database không tìm thấy bản ghi nào khớp (sai user/pass)
-            when(mockRs.next()).thenReturn(false);
+        try (MockedStatic<DbConnection> mockedDb =
+                     Mockito.mockStatic(DbConnection.class)) {
 
-            UserDAO userDAO = new UserDAOImpl();
-            User result = userDAO.login("user_sai", "pass_sai");
+            mockedDb.when(DbConnection::getConnection).thenReturn(conn);
 
-            assertNull(result, "Đăng nhập sai phải trả về null");
+            when(conn.prepareStatement(anyString())).thenReturn(stmt);
+
+            when(stmt.executeQuery()).thenReturn(rs);
+
+            when(rs.next()).thenReturn(true);
+
+            when(rs.getString("password")).thenReturn(hashedPassword);
+
+            User result = userDAO.login("dung", "wrongPassword");
+
+            assertNull(result);
         }
     }
 
     @Test
-    void testRegister_Success() throws Exception {
-        try (MockedStatic<DbConnection> mockedDb = mockStatic(DbConnection.class)) {
-            Connection mockConn = mock(Connection.class);
-            PreparedStatement mockStmt = mock(PreparedStatement.class);
+    void testRegisterSuccess() throws Exception {
 
-            mockedDb.when(DbConnection::getConnection).thenReturn(mockConn);
-            when(mockConn.prepareStatement(anyString())).thenReturn(mockStmt);
+        UserInfo info = new UserInfo(
+                "dung",
+                "123456",
+                "Pham Dung"
+        );
 
-            // Giả lập việc thực thi câu lệnh INSERT thành công
-            when(mockStmt.executeUpdate()).thenReturn(1);
+        UserContact contact = new UserContact(
+                "dung@gmail.com",
+                "0123456789"
+        );
 
-            // Tạo đối tượng User giả lập để đăng ký
-            User bidder = new Bidder(0, null, null);
+        User user = new Bidder(1, info, contact);
 
-            UserDAO userDAO = new UserDAOImpl();
+        try (MockedStatic<DbConnection> mockedDb =
+                     Mockito.mockStatic(DbConnection.class)) {
+
+            mockedDb.when(DbConnection::getConnection).thenReturn(conn);
+
+            when(conn.prepareStatement(anyString())).thenReturn(stmt);
+
+            when(stmt.executeUpdate()).thenReturn(1);
+
+            boolean result = userDAO.register(user);
+
+            assertTrue(result);
+
+            verify(stmt).setString(eq(1), eq("dung"));
+            verify(stmt).setString(eq(3), eq("Pham Dung"));
+        }
+    }
+
+    @Test
+    void testUpdateUserSuccess() throws Exception {
+
+        UserInfo info = new UserInfo(
+                "dung",
+                "123456",
+                "New Name"
+        );
+
+        UserContact contact = new UserContact(
+                "new@gmail.com",
+                "0999999999"
+        );
+
+        User user = new Bidder(1, info, contact);
+
+        try (MockedStatic<DbConnection> mockedDb =
+                     Mockito.mockStatic(DbConnection.class)) {
+
+            mockedDb.when(DbConnection::getConnection).thenReturn(conn);
+
+            when(conn.prepareStatement(anyString())).thenReturn(stmt);
+
+            when(stmt.executeUpdate()).thenReturn(1);
+
+            boolean result = userDAO.updateUser(user);
+
+            assertTrue(result);
+
+            verify(stmt).setString(1, "New Name");
+            verify(stmt).setString(2, "new@gmail.com");
+            verify(stmt).setString(3, "0999999999");
+            verify(stmt).setInt(4, 1);
+        }
+    }
+
+    @Test
+    void testUpdatePasswordSuccess() throws Exception {
+
+        try (MockedStatic<DbConnection> mockedDb =
+                     Mockito.mockStatic(DbConnection.class)) {
+
+            mockedDb.when(DbConnection::getConnection).thenReturn(conn);
+
+            when(conn.prepareStatement(anyString())).thenReturn(stmt);
+
+            when(stmt.executeUpdate()).thenReturn(1);
+
+            boolean result =
+                    userDAO.updatePassword(1, "newPassword");
+
+            assertTrue(result);
+
+            verify(stmt).setInt(2, 1);
         }
     }
 }

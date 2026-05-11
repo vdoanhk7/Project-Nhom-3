@@ -87,7 +87,7 @@ public class MarketController {
             Item item = auction.getItem();
             
             // Điều kiện lọc theo Loại
-            boolean matchCategory = selectedCategory.equals("Tất cả") || item.getType().equalsIgnoreCase(selectedCategory);
+            boolean matchCategory = selectedCategory.equals("Tất cả") || item.getType().name().equalsIgnoreCase(selectedCategory);
             
             // Điều kiện tìm kiếm theo Tên
             boolean matchSearch = searchText.isEmpty() || item.getName().toLowerCase().contains(searchText);
@@ -127,7 +127,7 @@ public class MarketController {
         lblName.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
 
         // Lấy phân loại từ Item
-        Label lblType = new Label(item.getType());
+        Label lblType = new Label(item.getType().name());
         lblType.setStyle("-fx-text-fill: #7f8c8d;");
 
         // Lấy giá hiện tại từ Item (curHighest)

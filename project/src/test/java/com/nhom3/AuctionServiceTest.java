@@ -8,7 +8,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,126 +22,166 @@ import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.model.auction.StatusOfAuction;
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Bidder;
-import com.nhom3.shared.model.user.Seller;
-import com.nhom3.shared.model.user.UserInfo;
-
 
 class AuctionServiceTest {
 
     @Mock
     private AuctionDAO auctionDAO;
 
-    @InjectMocks
     private AuctionService auctionService;
 
     @BeforeEach
     void setUp() {
-        // Khởi tạo các mock object
         MockitoAnnotations.openMocks(this);
+        auctionService = new AuctionService(auctionDAO);
     }
 
     @Test
-    void testCreateAuction_Success() {
-        // 1. Giả lập các đối tượng phụ thuộc
-        UserInfo info = new UserInfo("email@test.com", "0123456", "Nguyen Van A");
-        Seller seller = new Seller(002, info, null); 
-        Item item = mock(Item.class); // Tạo một bản sao giả của Item mà không cần new
+    void testCreateAuction_NullAuction_ThrowsException() {
+        assertThrows(IllegalArgumentException.class, () -> auctionService.createAuction(null));
+    }
+
+    @Test
+    void testCreateAuction_NullItem_ThrowsException() {
+        Auction auction = new Auction(1, null, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
+        assertThrows(IllegalArgumentException.class, () -> auctionService.createAuction(auction));
+    }
+
+    @Test
+    void testCreateAuction_InvalidItemId_ThrowsException() {
+        Item item = mock(Item.class);
+        when(item.getId()).thenReturn(0);
+        Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
+        assertThrows(IllegalArgumentException.class, () -> auctionService.createAuction(auction));
+    }
+
+    @Test
+    void testCreateAuction_EndTimeBeforeStartTime_ThrowsException() {
+        Item item = mock(Item.class);
+        when(item.getId()).thenReturn(1);
+        Auction auction = new Auction(1, item, LocalDateTime.now().plusHours(1), LocalDateTime.now());
         
-        LocalDateTime start = LocalDateTime.now();
-        LocalDateTime end = start.plusHours(1);
-
-        // 3. Kiểm tra
-        assertEquals(1, seller.getManagedAuctions().size());
+        assertThrows(IllegalArgumentException.class, () -> auctionService.createAuction(auction));
     }
 
     @Test
-    void testStartAuction_FromOpenToRunning() {
-        // Giả lập auction đang ở trạng thái OPEN
+    void testCreateAuction_AlreadyHasRunningAuction_ThrowsException() {
+        Item item = mock(Item.class);
+        when(item.getId()).thenReturn(1);
+        Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
+        
+        Auction existingAuction = new Auction(2, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
+        existingAuction.setStatus(StatusOfAuction.RUNNING);
+        
+        when(auctionDAO.getAuctionByItemId(1)).thenReturn(existingAuction);
+        
+        assertThrows(IllegalStateException.class, () -> auctionService.createAuction(auction));
+    }
+
+    @Test
+    void testCreateAuction_Success_FutureTime() {
+        Item item = mock(Item.class);
+        when(item.getId()).thenReturn(1);
+        Auction auction = new Auction(1, item, LocalDateTime.now().plusHours(1), LocalDateTime.now().plusHours(2));
+        
+        when(auctionDAO.getAuctionByItemId(1)).thenReturn(null);
+        when(auctionDAO.createAuction(auction)).thenReturn(true);
+        
+        boolean result = auctionService.createAuction(auction);
+        
+        assertTrue(result);
+        assertEquals(StatusOfAuction.OPEN, auction.getStatus());
+        verify(auctionDAO).createAuction(auction);
+    }
+
+    @Test
+    void testStartAuction_Success() {
         Item item = mock(Item.class);
         Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
         auction.setStatus(StatusOfAuction.OPEN);
-
-        auctionService.startAuction(auction);
-
-        assertEquals(StatusOfAuction.RUNNING, auction.getStatus());
+        
+        when(auctionDAO.startAuction(1)).thenReturn(true);
+        
+        boolean result = auctionService.startAuction(auction);
+        assertTrue(result);
     }
 
     @Test
-    void testEndAuction_FromRunningToFinished() {
-        // Giả lập auction đang chạy
+    void testStartAuction_Fail_AlreadyRunning() {
         Item item = mock(Item.class);
         Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
         auction.setStatus(StatusOfAuction.RUNNING);
         
-        // Giả lập có người đấu giá cao nhất
-        UserInfo info = new UserInfo("email@test.com", "0123456", "Nguyen Van A");
-        Bidder bidder = new Bidder(10, info, null);
-        auction.setHighestBidder(bidder);
+        boolean result = auctionService.startAuction(auction);
+        assertFalse(result);
+        verify(auctionDAO, never()).startAuction(anyInt());
+    }
 
-        auctionService.endAuction(auction);
-
-        assertEquals(StatusOfAuction.FINISHED, auction.getStatus());
+    @Test
+    void testEndAuction_Success() {
+        Item item = mock(Item.class);
+        Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
+        auction.setStatus(StatusOfAuction.RUNNING);
+        
+        when(auctionDAO.endAuction(1)).thenReturn(true);
+        
+        boolean result = auctionService.endAuction(auction);
+        assertTrue(result);
     }
 
     @Test
     void testCancelAuction_Success() {
-        Item item = mock(Item.class);
-        Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
-        auction.setStatus(StatusOfAuction.OPEN);
+        when(auctionDAO.cancelAuction(1)).thenReturn(true);
+        
+        boolean result = auctionService.cancelAuction(1);
+        assertTrue(result);
+    }
 
-        auctionService.cancelAuction(1);
-
-        assertEquals(StatusOfAuction.CANCELLED, auction.getStatus());
+    @Test
+    void testCancelAuction_Fail() {
+        when(auctionDAO.cancelAuction(1)).thenReturn(false);
+        
+        assertThrows(IllegalStateException.class, () -> auctionService.cancelAuction(1));
     }
 
     @Test
     void testPlaceBid_Success() {
-        // 1. Chuẩn bị dữ liệu
         Item item = mock(Item.class);
-        item.setCurHighest(100.0);
-        Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
-        auction.setBidHistory(new ArrayList<>());
-        UserInfo info = new UserInfo("email@test.com", "0123456", "Nguyen Van A");
-        Bidder bidder = new Bidder(10, info, null);
+        when(item.getId()).thenReturn(1);
+        when(item.getCurHighest()).thenReturn(100.0);
         
-        BidTransaction bid = new BidTransaction(001, bidder, 150.0, LocalDateTime.now(), "Test Bid");
-
-        // 2. Giả lập hành vi của DAO: Trả về true khi update thành công
-        when(auctionDAO.updateHighestBid(eq(auction.getId()), eq(bidder.getId()), eq(150.0)))
-            .thenReturn(true);
-
-        // 3. Thực thi
+        Auction auction = new Auction(1, item, LocalDateTime.now().minusHours(1), LocalDateTime.now().plusHours(1));
+        auction.setStatus(StatusOfAuction.RUNNING);
+        auction.setHighestBidder(new Bidder(1, null, null)); // highest bidder is 1
+        
+        Bidder bidder = new Bidder(2, null, null); // bidder 2 places bid
+        BidTransaction bid = new BidTransaction(1, bidder, 150.0, LocalDateTime.now(), "Test");
+        
+        when(auctionDAO.updateHighestBid(1, 2, 150.0)).thenReturn(true);
+        when(auctionDAO.getEndTime(1)).thenReturn(auction.getEndTime());
+        
         boolean result = auctionService.placeBid(auction, bid);
-
-        // 4. Kiểm chứng (Assert)
+        
         assertTrue(result);
-        assertEquals(150.0, auction.getItem().getCurHighest());
+        verify(item).setCurHighest(150.0);
         assertEquals(bidder, auction.getHighestBidder());
-        assertEquals(1, auction.getBidHistory().size());
-        
-        // Kiểm tra xem DAO có thực sự được gọi không
-        verify(auctionDAO, times(1)).saveBidTransaction(bid, auction.getId());
+        verify(auctionDAO).saveBidTransaction(bid, 1);
     }
-
+    
     @Test
-    void testPlaceBid_Failure() {
-        // Giả lập trường hợp giá đặt thấp hơn hoặc lỗi DB
+    void testPlaceBid_SameBidder_ThrowsException() {
         Item item = mock(Item.class);
-        Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
-        UserInfo info = new UserInfo("email@test.com", "0123456", "Nguyen Van A");
-        Bidder bidder = new Bidder(10, info, null);
-        info.setName("Người Đấu Giá");
+        when(item.getId()).thenReturn(1);
         
-        BidTransaction bid = new BidTransaction(001, bidder, 50.0, LocalDateTime.now(), "Test Bid");
-
-        // Giả lập DAO trả về false
-        when(auctionDAO.updateHighestBid(anyInt(), anyInt(), anyDouble())).thenReturn(false);
-
-        boolean result = auctionService.placeBid(auction, bid);
-
-        assertFalse(result);
-        // Đảm bảo không lưu giao dịch nếu update thất bại
-        verify(auctionDAO, never()).saveBidTransaction(any(), anyInt());
+        Auction auction = new Auction(1, item, LocalDateTime.now().minusHours(1), LocalDateTime.now().plusHours(1));
+        auction.setStatus(StatusOfAuction.RUNNING);
+        auction.setHighestBidder(new Bidder(1, null, null)); // highest bidder is 1
+        
+        Bidder bidder = new Bidder(1, null, null); // bidder 1 places bid again
+        BidTransaction bid = new BidTransaction(1, bidder, 150.0, LocalDateTime.now(), "Test");
+        
+        assertThrows(IllegalStateException.class, () -> auctionService.placeBid(auction, bid));
     }
 }
+
 

@@ -35,6 +35,12 @@ public class AuctionService {
     public AuctionService() {
         this.auctionDAO = new AuctionDAOImpl();
     }
+
+    // Constructor for testing
+    public AuctionService(AuctionDAO auctionDAO) {
+        this.auctionDAO = auctionDAO;
+    }
+    
     public boolean createAuction(Auction auction) throws IllegalArgumentException, IllegalStateException {
 
         if (auction == null) {

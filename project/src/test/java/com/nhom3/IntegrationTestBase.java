@@ -8,7 +8,6 @@ import org.mockito.Mockito;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.sql.Statement;
 
 public abstract class IntegrationTestBase {
@@ -20,7 +19,7 @@ public abstract class IntegrationTestBase {
     public void setUpDb() throws Exception {
         // Create initial connection to initialize schema
         h2Connection = DriverManager.getConnection("jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1", "sa", "");
-        
+
         // Initialize schema
         try (Statement stmt = h2Connection.createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS users (" +
@@ -55,7 +54,7 @@ public abstract class IntegrationTestBase {
                     "FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE," +
                     "FOREIGN KEY (highest_bidder_id) REFERENCES users(id) ON DELETE SET NULL" +
                     ");");
-                    
+
             stmt.execute("CREATE TABLE IF NOT EXISTS bid_transactions (" +
                     "id INT AUTO_INCREMENT PRIMARY KEY," +
                     "auction_id INT NOT NULL," +
@@ -70,9 +69,8 @@ public abstract class IntegrationTestBase {
 
         // Mock DbConnection to return new H2 connection each time
         mockedDbConnection = Mockito.mockStatic(DbConnection.class);
-        mockedDbConnection.when(DbConnection::getConnection).thenAnswer(invocation -> 
-            DriverManager.getConnection("jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1", "sa", "")
-        );
+        mockedDbConnection.when(DbConnection::getConnection).thenAnswer(
+                invocation -> DriverManager.getConnection("jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1", "sa", ""));
     }
 
     @AfterEach
@@ -80,7 +78,7 @@ public abstract class IntegrationTestBase {
         if (mockedDbConnection != null) {
             mockedDbConnection.close();
         }
-        
+
         // Clean up database tables for the next test
         if (h2Connection != null && !h2Connection.isClosed()) {
             try (Statement stmt = h2Connection.createStatement()) {

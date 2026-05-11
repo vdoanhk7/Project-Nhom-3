@@ -15,10 +15,16 @@ public class ItemService {
     private final ItemDAO itemDAO;
     private final AuctionDAO auctionDAO;
 
-    public ItemService(){
+    public ItemService() {
         this.itemDAO = new ItemDAOImpl();
         this.auctionDAO = new AuctionDAOImpl();
     }
+
+    public ItemService(ItemDAO itemDAO, AuctionDAO auctionDAO) {
+        this.itemDAO = itemDAO;
+        this.auctionDAO = auctionDAO;
+    }
+
     public boolean createItem(Seller seller, Item newItem) throws IllegalArgumentException {
         log.info("Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: {}", seller != null ? seller.getId() : "null");
 
@@ -49,12 +55,15 @@ public class ItemService {
     public boolean removeItem(int sellerId, int itemId) throws IllegalStateException {
         log.info("Bắt đầu xử lý yêu cầu xóa sản phẩm ID: {} từ Seller ID: {}", itemId, sellerId);
 
-        // Nếu đã có phiên đấu giá (dù là đang chạy hay đã kết thúc), TUYỆT ĐỐI KHÔNG ĐƯỢC XÓA
+        // Nếu đã có phiên đấu giá (dù là đang chạy hay đã kết thúc), TUYỆT ĐỐI KHÔNG
+        // ĐƯỢC XÓA
         // vì sẽ làm mất lịch sử giao dịch và gây lỗi Khóa ngoại trong DB.
         Auction existingAuction = auctionDAO.getAuctionByItemId(itemId);
         if (existingAuction != null) {
-            log.warn("Từ chối xóa: Sản phẩm ID {} đã được liên kết với phiên đấu giá ID {}.", itemId, existingAuction.getId());
-            throw new IllegalStateException("Không thể xóa! Sản phẩm này đã được đưa lên sàn đấu giá. Vui lòng chỉ ẩn hoặc hủy phiên đấu giá.");
+            log.warn("Từ chối xóa: Sản phẩm ID {} đã được liên kết với phiên đấu giá ID {}.", itemId,
+                    existingAuction.getId());
+            throw new IllegalStateException(
+                    "Không thể xóa! Sản phẩm này đã được đưa lên sàn đấu giá. Vui lòng chỉ ẩn hoặc hủy phiên đấu giá.");
         }
 
         boolean isSuccess = itemDAO.deleteItem(itemId, sellerId);
@@ -63,8 +72,10 @@ public class ItemService {
             log.info("Đã xóa vĩnh viễn sản phẩm ID: {}", itemId);
             return true;
         } else {
-            log.warn("Xóa thất bại: Sản phẩm ID {} không tồn tại hoặc Seller ID {} không có quyền sở hữu.", itemId, sellerId);
-            throw new IllegalStateException("Xóa thất bại! Sản phẩm không tồn tại hoặc bạn không có quyền xóa sản phẩm này.");
+            log.warn("Xóa thất bại: Sản phẩm ID {} không tồn tại hoặc Seller ID {} không có quyền sở hữu.", itemId,
+                    sellerId);
+            throw new IllegalStateException(
+                    "Xóa thất bại! Sản phẩm không tồn tại hoặc bạn không có quyền xóa sản phẩm này.");
         }
     }
 }

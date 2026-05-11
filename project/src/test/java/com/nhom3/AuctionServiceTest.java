@@ -1,17 +1,13 @@
 package com.nhom3;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -60,7 +56,7 @@ class AuctionServiceTest {
         Item item = mock(Item.class);
         when(item.getId()).thenReturn(1);
         Auction auction = new Auction(1, item, LocalDateTime.now().plusHours(1), LocalDateTime.now());
-        
+
         assertThrows(IllegalArgumentException.class, () -> auctionService.createAuction(auction));
     }
 
@@ -69,12 +65,12 @@ class AuctionServiceTest {
         Item item = mock(Item.class);
         when(item.getId()).thenReturn(1);
         Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
-        
+
         Auction existingAuction = new Auction(2, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
         existingAuction.setStatus(StatusOfAuction.RUNNING);
-        
+
         when(auctionDAO.getAuctionByItemId(1)).thenReturn(existingAuction);
-        
+
         assertThrows(IllegalStateException.class, () -> auctionService.createAuction(auction));
     }
 
@@ -83,12 +79,12 @@ class AuctionServiceTest {
         Item item = mock(Item.class);
         when(item.getId()).thenReturn(1);
         Auction auction = new Auction(1, item, LocalDateTime.now().plusHours(1), LocalDateTime.now().plusHours(2));
-        
+
         when(auctionDAO.getAuctionByItemId(1)).thenReturn(null);
         when(auctionDAO.createAuction(auction)).thenReturn(true);
-        
+
         boolean result = auctionService.createAuction(auction);
-        
+
         assertTrue(result);
         assertEquals(StatusOfAuction.OPEN, auction.getStatus());
         verify(auctionDAO).createAuction(auction);
@@ -99,9 +95,9 @@ class AuctionServiceTest {
         Item item = mock(Item.class);
         Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
         auction.setStatus(StatusOfAuction.OPEN);
-        
+
         when(auctionDAO.startAuction(1)).thenReturn(true);
-        
+
         boolean result = auctionService.startAuction(auction);
         assertTrue(result);
     }
@@ -111,7 +107,7 @@ class AuctionServiceTest {
         Item item = mock(Item.class);
         Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
         auction.setStatus(StatusOfAuction.RUNNING);
-        
+
         boolean result = auctionService.startAuction(auction);
         assertFalse(result);
         verify(auctionDAO, never()).startAuction(anyInt());
@@ -122,9 +118,9 @@ class AuctionServiceTest {
         Item item = mock(Item.class);
         Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
         auction.setStatus(StatusOfAuction.RUNNING);
-        
+
         when(auctionDAO.endAuction(1)).thenReturn(true);
-        
+
         boolean result = auctionService.endAuction(auction);
         assertTrue(result);
     }
@@ -132,7 +128,7 @@ class AuctionServiceTest {
     @Test
     void testCancelAuction_Success() {
         when(auctionDAO.cancelAuction(1)).thenReturn(true);
-        
+
         boolean result = auctionService.cancelAuction(1);
         assertTrue(result);
     }
@@ -140,7 +136,7 @@ class AuctionServiceTest {
     @Test
     void testCancelAuction_Fail() {
         when(auctionDAO.cancelAuction(1)).thenReturn(false);
-        
+
         assertThrows(IllegalStateException.class, () -> auctionService.cancelAuction(1));
     }
 
@@ -149,39 +145,37 @@ class AuctionServiceTest {
         Item item = mock(Item.class);
         when(item.getId()).thenReturn(1);
         when(item.getCurHighest()).thenReturn(100.0);
-        
+
         Auction auction = new Auction(1, item, LocalDateTime.now().minusHours(1), LocalDateTime.now().plusHours(1));
         auction.setStatus(StatusOfAuction.RUNNING);
         auction.setHighestBidder(new Bidder(1, null, null)); // highest bidder is 1
-        
+
         Bidder bidder = new Bidder(2, null, null); // bidder 2 places bid
         BidTransaction bid = new BidTransaction(1, bidder, 150.0, LocalDateTime.now(), "Test");
-        
+
         when(auctionDAO.updateHighestBid(1, 2, 150.0)).thenReturn(true);
         when(auctionDAO.getEndTime(1)).thenReturn(auction.getEndTime());
-        
+
         boolean result = auctionService.placeBid(auction, bid);
-        
+
         assertTrue(result);
         verify(item).setCurHighest(150.0);
         assertEquals(bidder, auction.getHighestBidder());
         verify(auctionDAO).saveBidTransaction(bid, 1);
     }
-    
+
     @Test
     void testPlaceBid_SameBidder_ThrowsException() {
         Item item = mock(Item.class);
         when(item.getId()).thenReturn(1);
-        
+
         Auction auction = new Auction(1, item, LocalDateTime.now().minusHours(1), LocalDateTime.now().plusHours(1));
         auction.setStatus(StatusOfAuction.RUNNING);
         auction.setHighestBidder(new Bidder(1, null, null)); // highest bidder is 1
-        
+
         Bidder bidder = new Bidder(1, null, null); // bidder 1 places bid again
         BidTransaction bid = new BidTransaction(1, bidder, 150.0, LocalDateTime.now(), "Test");
-        
+
         assertThrows(IllegalStateException.class, () -> auctionService.placeBid(auction, bid));
     }
 }
-
-

@@ -14,6 +14,10 @@ public class AuthService {
         this.userDAO = new UserDAOImpl();
     }
 
+    public AuthService(UserDAO userDAO) {
+        this.userDAO = userDAO;
+    }
+
     public User login(String username, String password) {
         User user = userDAO.login(username, password);
         if (user != null) {

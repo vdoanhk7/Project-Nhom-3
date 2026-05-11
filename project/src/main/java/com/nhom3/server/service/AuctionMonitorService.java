@@ -41,6 +41,14 @@ public class AuctionMonitorService {
     }
 
     /**
+     * Constructor for testing.
+     */
+    public AuctionMonitorService(AuctionDAO auctionDAO, ScheduledExecutorService scheduler) {
+        this.auctionDAO = auctionDAO;
+        this.scheduler = scheduler;
+    }
+
+    /**
      * Bắt đầu tiến trình giám sát định kỳ.
      */
     public void startMonitoring() {

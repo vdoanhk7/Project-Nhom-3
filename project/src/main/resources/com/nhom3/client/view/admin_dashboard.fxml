@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+
+<VBox prefHeight="700.0" prefWidth="1000.0" spacing="20" style="-fx-background-color: #f0f3f6;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.AdminDashboardController">
+    <children>
+        <HBox alignment="CENTER" prefHeight="100.0" style="-fx-background-color: linear-gradient(to right, #2980b9, #3498db); -fx-background-radius: 0 0 20 20;">
+            <children>
+                <VBox alignment="CENTER">
+                    <Text fill="WHITE" style="-fx-font-size: 28px; -fx-font-weight: bold;" text="HỆ THỐNG QUẢN TRỊ ĐẤU GIÁ" />
+                    <Text fill="WHITE" style="-fx-font-size: 14px;" text="Bảng điều khiển dành cho Quản trị viên hệ thống" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#handleLogout" style="-fx-background-color: #ffffff; -fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-background-radius: 10;" text="Đăng xuất">
+                    <HBox.margin>
+                        <Insets right="20.0" />
+                    </HBox.margin></Button>
+            </children>
+        </HBox>
+
+        <HBox spacing="20">
+            <padding><Insets left="20" right="20" /></padding>
+            <children>
+                <VBox alignment="CENTER" prefWidth="300.0" style="-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
+                    <children>
+                        <Text fill="#7f8c8d" text="Tổng Thành Viên" />
+                        <Text fx:id="txtTotalUsers" style="-fx-font-size: 24px; -fx-font-weight: bold;" text="---" />
+                    </children>
+                    <padding><Insets bottom="15" top="15" /></padding>
+                </VBox>
+                <VBox alignment="CENTER" prefWidth="300.0" style="-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
+                    <children>
+                        <Text fill="#d35400" text="Phiên Đang Chạy" />
+                        <Text fx:id="txtActiveAuctions" fill="#d35400" style="-fx-font-size: 24px; -fx-font-weight: bold;" text="---" />
+                    </children>
+                    <padding><Insets bottom="15" top="15" /></padding>
+                </VBox>
+                <VBox alignment="CENTER" prefWidth="300.0" style="-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
+                    <children>
+                        <Text fill="#27ae60" text="Tổng Giao Dịch (VNĐ)" />
+                        <Text fx:id="txtTotalValue" fill="#27ae60" style="-fx-font-size: 24px; -fx-font-weight: bold;" text="---" />
+                    </children>
+                    <padding><Insets bottom="15" top="15" /></padding>
+                </VBox>
+            </children>
+        </HBox>
+
+        <TabPane prefHeight="450.0" style="-fx-background-color: white; -fx-background-radius: 15;" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+            <VBox.margin><Insets left="20" right="20" bottom="20"/></VBox.margin>
+            <tabs>
+                <Tab text="Quản lý Người dùng">
+                    <VBox spacing="10" style="-fx-padding: 15;">
+                        <TableView fx:id="tableUsers" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colUserId" text="ID" prefWidth="50" />
+                                <TableColumn fx:id="colUserName" text="Tên đăng nhập" prefWidth="150" />
+                                <TableColumn fx:id="colUserRole" text="Vai trò" prefWidth="100" />
+                                <TableColumn fx:id="colUserAction" text="Thao tác" prefWidth="150" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+                <Tab text="Quản lý Đấu giá">
+                    <VBox spacing="10" style="-fx-padding: 15;">
+                        <TableView fx:id="tableAuctions" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colAuctionId" text="ID" prefWidth="50" />
+                                <TableColumn fx:id="colItemName" text="Sản phẩm" prefWidth="250" />
+                                <TableColumn fx:id="colStatus" text="Trạng thái" prefWidth="100" />
+                                <TableColumn fx:id="colAuctionAction" text="Thao tác Admin" prefWidth="200" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </children>
+</VBox>

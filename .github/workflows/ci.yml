@@ -2,7 +2,11 @@ name: Java CI with Maven
 
 on:
   push:
+<<<<<<< HEAD
+    branches: [ "main" ] # Chạy khi push lên nhánh main
+=======
     branches: [ "main" ]
+>>>>>>> 2ca01ded37c0ebdd8ed49f928e753aab2035e05f
   pull_request:
     branches: [ "main" ]
 

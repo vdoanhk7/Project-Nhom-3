@@ -16,8 +16,8 @@
 - [x] **Quản lý phiên đấu giá:** Xử lý logic tự động đóng phiên khi hết thời gian và chuyển trạng thái.
 - [x] **Thiết kế hướng đối tượng:** Xây dựng cây kế thừa + design pattern(factory)
 - [x] **Anti-sniping:** Viết thuật toán tự động gia hạn thêm 120 giây khi có người đặt giá ở 30 giây cuối.
-- [ ] **Network:** Viết network cơ bản của server và shared
-- [ ] **Setup Dự án/Refactor code:** Cấu hình Build tool (Maven) và Coding convention
+- [x] **Network:** Refactor lại network bằng Command & Dispatcher Pattern.
+- [x] **Bảo mật:** Mã hóa mật khẩu người dùng bằng BCrypt.
 ### 3. Dũng 
 - [ ] **Quản lý người dùng:** Viết logic Đăng ký/Đăng nhập và phân quyền.
 - [ ] **CI/CD:** Thiết lập GitHub Actions để tự động chạy test khi có commit mới.
@@ -41,8 +41,10 @@
 - [ ] **Hoàn thiện Báo cáo:** Viết tài liệu hướng dẫn cài đặt và mô tả kiến trúc hệ thống.
 - [ ] **Kiểm thử cuối cùng:** Chạy demo giả lập nhiều người dùng đặt giá cùng lúc để kiểm tra độ ổn định.
 ### 6. Các công nghệ sử dụng thêm
-- HikariCP connection pool: nhiều kết nối tới database
-- SLF4J logging: ghi log chi tiết
+- **HikariCP:** Connection pool giúp duy trì và chịu tải nhiều kết nối tới Database cùng lúc.
+- **SLF4J & Logback:** Ghi log chi tiết hệ thống.
+- **jBCrypt:** Mã hóa bảo mật mật khẩu người dùng chống dò ngược.
+
 
 ##  Shared
 ![Class UML Diagram package Shared](images/diagram_shared.png)

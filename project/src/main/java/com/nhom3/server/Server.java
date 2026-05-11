@@ -3,22 +3,26 @@ package com.nhom3.server;
 import java.net.ServerSocket;
 import java.io.IOException;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.concurrent.*;
 
 import com.nhom3.server.network.ClientHandler;
 
 public class Server {
-    public static final int PORT = 8080; // Cổng do người dùng chọn
-    public static final int MAX_CLIENTS = 100; // Giới hạn số lượng client kết nối đồng thời
-    private ServerSocket serverSocket;
-    private ExecutorService clientThreadPool;
-    private List<ClientHandler> connectedClients;
+    public static final int PORT = 8080;
+    public static final int MAX_CLIENTS = 100; 
+    private final ServerSocket serverSocket;
+    private final ExecutorService clientThreadPool;
+    private final List<ClientHandler> connectedClients;
+    private final Semaphore clientLimiter;
 
     public Server() throws IOException {
         serverSocket = new ServerSocket(PORT);
-        clientThreadPool = Executors.newFixedThreadPool(MAX_CLIENTS);
-        connectedClients = new ArrayList<>();
+        // Sử dụng Virtual Threads thay cho FixedThreadPool để tối ưu I/O
+        clientThreadPool = Executors.newVirtualThreadPerTaskExecutor();
+        // Cấu trúc dữ liệu Thread-safe cho danh sách clients
+        connectedClients = new CopyOnWriteArrayList<>();
+        // Semaphore quản lý giới hạn kết nối (thay thế cho size của FixedThreadPool cũ)
+        clientLimiter = new Semaphore(MAX_CLIENTS);
     }
 
     public ServerSocket getServerSocket() {
@@ -30,21 +34,41 @@ public class Server {
     }
 
     public void addClientHandler(ClientHandler clientHandler) {
-        clientThreadPool.submit(clientHandler);
         connectedClients.add(clientHandler);
+        // Submit thông qua một Runnable để tự động xóa client khi hoàn thành/lỗi
+        clientThreadPool.submit(() -> {
+            try {
+                clientHandler.run();
+            } finally {
+                removeClientHandler(clientHandler);
+            }
+        });
+    }
+
+    public void removeClientHandler(ClientHandler clientHandler) {
+        connectedClients.remove(clientHandler);
+        clientLimiter.release(); // Giải phóng 1 slot khi client ngắt kết nối
+    }
+
+    public void acquireClientSlot() throws InterruptedException {
+        clientLimiter.acquire(); // Xin 1 slot trước khi accept
+    }
+
+    public void releaseClientSlot() {
+        clientLimiter.release(); // Hoàn trả slot nếu có lỗi
     }
 
     public void shutdown() {
         try {
             for (ClientHandler client : connectedClients) {
-                client.interrupt(); // Dừng thread của client
+                client.interrupt(); // Gửi tín hiệu ngắt luồng
             }
-            clientThreadPool.shutdownNow(); // Dừng thread pool
+            clientThreadPool.shutdownNow(); // Dừng toàn bộ ThreadPool
             if (serverSocket != null && !serverSocket.isClosed()) {
-                serverSocket.close(); // Đóng server socket
+                serverSocket.close(); // Đóng port
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Lỗi khi tắt server: " + e.getMessage());
         }
     }
 }

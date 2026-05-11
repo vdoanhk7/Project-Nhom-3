@@ -5,8 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
+
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -42,7 +41,7 @@ public class AuthServiceTest {
         UserInfo mockUserInfo = mock(UserInfo.class);
         when(mockUserInfo.getName()).thenReturn("Test User");
         when(mockUser.getUserInfo()).thenReturn(mockUserInfo);
-        
+
         when(userDAO.login("testuser", "password")).thenReturn(mockUser);
 
         User result = authService.login("testuser", "password");

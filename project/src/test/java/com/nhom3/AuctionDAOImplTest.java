@@ -1,7 +1,6 @@
 package com.nhom3;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -53,7 +52,7 @@ public class AuctionDAOImplTest {
     void testCreateAuctionSuccess() throws Exception {
         Item mockItem = mock(Item.class);
         when(mockItem.getId()).thenReturn(1);
-        
+
         Auction auction = new Auction(0, mockItem, LocalDateTime.now(), LocalDateTime.now().plusDays(1));
         auction.setStatus(StatusOfAuction.OPEN);
 
@@ -78,10 +77,10 @@ public class AuctionDAOImplTest {
     void testUpdateHighestBidSuccess() throws Exception {
         try (MockedStatic<DbConnection> mockedDb = Mockito.mockStatic(DbConnection.class)) {
             mockedDb.when(DbConnection::getConnection).thenReturn(conn);
-            
+
             // It runs 2 statements
             when(conn.prepareStatement(anyString())).thenReturn(stmt1, stmt2);
-            
+
             when(stmt1.executeUpdate()).thenReturn(1); // item update success
             when(stmt2.executeUpdate()).thenReturn(1); // auction update success
 
@@ -90,11 +89,11 @@ public class AuctionDAOImplTest {
             assertTrue(result);
             verify(conn).setAutoCommit(false);
             verify(conn).commit();
-            
+
             verify(stmt1).setDouble(1, 500.0);
             verify(stmt1).setInt(2, 1);
             verify(stmt1).setDouble(3, 500.0);
-            
+
             verify(stmt2).setInt(1, 10);
             verify(stmt2).setInt(2, 1);
         }
@@ -126,7 +125,7 @@ public class AuctionDAOImplTest {
             mockedDb.when(DbConnection::getConnection).thenReturn(conn);
             when(conn.prepareStatement(anyString())).thenReturn(stmt1);
             when(stmt1.executeQuery()).thenReturn(rs);
-            
+
             when(rs.next()).thenReturn(true);
             when(rs.getString("item_type")).thenReturn("ELECTRONICS");
             when(rs.getInt("item_id")).thenReturn(5);
@@ -154,7 +153,7 @@ public class AuctionDAOImplTest {
             mockedDb.when(DbConnection::getConnection).thenReturn(conn);
             when(conn.prepareStatement(anyString())).thenReturn(stmt1);
             when(stmt1.executeQuery()).thenReturn(rs);
-            
+
             when(rs.next()).thenReturn(false);
 
             Auction auction = auctionDAO.getAuctionById(99);

@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -97,7 +96,7 @@ public class ItemDAOImplTest {
             mockedDb.when(DbConnection::getConnection).thenReturn(conn);
             when(conn.prepareStatement(anyString())).thenReturn(stmt);
             when(stmt.executeQuery()).thenReturn(rs);
-            
+
             when(rs.next()).thenReturn(true, false); // 1 result
             when(rs.getInt("id")).thenReturn(1);
             when(rs.getString("name")).thenReturn("Test Item");

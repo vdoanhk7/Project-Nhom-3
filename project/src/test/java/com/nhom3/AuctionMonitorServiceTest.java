@@ -1,11 +1,9 @@
 package com.nhom3;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -50,8 +48,7 @@ public class AuctionMonitorServiceTest {
                 any(Runnable.class),
                 eq(0L),
                 eq(5L),
-                eq(TimeUnit.SECONDS)
-        );
+                eq(TimeUnit.SECONDS));
     }
 
     @Test
@@ -63,8 +60,7 @@ public class AuctionMonitorServiceTest {
                 any(Runnable.class),
                 anyLong(),
                 anyLong(),
-                any(TimeUnit.class)
-        );
+                any(TimeUnit.class));
     }
 
     @Test
@@ -76,7 +72,7 @@ public class AuctionMonitorServiceTest {
         auctionMonitorService.stopMonitoring();
 
         verify(scheduler, times(1)).shutdown();
-        
+
         try {
             Field isRunningField = AuctionMonitorService.class.getDeclaredField("isRunning");
             isRunningField.setAccessible(true);
@@ -106,11 +102,10 @@ public class AuctionMonitorServiceTest {
                 runnableCaptor.capture(),
                 anyLong(),
                 anyLong(),
-                any(TimeUnit.class)
-        );
+                any(TimeUnit.class));
 
         Runnable checkTask = runnableCaptor.getValue();
-        
+
         // Execute the task
         checkTask.run();
 

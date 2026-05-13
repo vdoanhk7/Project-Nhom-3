@@ -207,11 +207,10 @@ public class PacketDispatcher {
         Packet k = new Packet(PacketType.AUCTION_SUBSCRIBE, new ResultPayload(true, "", -1, "", "", "", "", ""));
         if (subscribePayload.isSub()){
             announcer.addObserver(subscribePayload.getAuctionId(), currentClient);
-            return k;
         }
         else {
             announcer.removeObserver(subscribePayload.getAuctionId(), currentClient);
-            return k;
         }
+        return k;
     }
 }

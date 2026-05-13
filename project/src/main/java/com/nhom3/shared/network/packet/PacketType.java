@@ -12,6 +12,8 @@ public enum PacketType {
     PUBLISH_AUCTION("publish auction"),
     LOAD_BID_HISTORY("load bid history"),
     LOAD_PURCHASE_HISTORY("load purchase history"),
+    SCREEN_NOTIFY("screen notify"),
+    AUCTION_SUBSCRIBE("auction subscribe"),
     LOAD_DASHBOARD("load dashboard");
 
 

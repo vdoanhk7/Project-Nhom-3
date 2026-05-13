@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.server.network.liveUpdate.Announcer;
 
 import com.nhom3.server.service.AuthService;
 import com.nhom3.server.service.AuctionService;
@@ -31,6 +32,7 @@ public class PacketDispatcher {
     private final AuthService authService;
     private final AuctionService auctionService;
     private final AuctionHandler auctionHandler;
+    private final Announcer announcer = Announcer.getInstance();
 
     public PacketDispatcher(AuthService authService, AuctionService auctionService) {
         auctionHandler = AuctionHandler.getInstance();
@@ -51,6 +53,7 @@ public class PacketDispatcher {
         handlers.put(PacketType.CHECK_AUTO_BID, this::handleCheckAutoBid);
         handlers.put(PacketType.CANCEL_AUTO_BID, this::handleCancelAutoBid);
         handlers.put(PacketType.LOAD_DASHBOARD, this::handleLoadDashboard);
+        handlers.put(PacketType.AUCTION_SUBSCRIBE, this::handleAuctionSubscribe);
     }
 
     public Packet dispatch(Packet request, Gson gson) {
@@ -196,5 +199,19 @@ public class PacketDispatcher {
         AuctionDAO dashDao = new AuctionDAOImpl();
         DashboardResponsePayload dashRes = dashDao.getDashboardStats();
         return new Packet(PacketType.LOAD_DASHBOARD, dashRes);
+    }
+
+    private Packet handleAuctionSubscribe(Packet request, Gson gson) {
+        AuctionSubscribePayload subscribePayload = gson.fromJson(request.getPayload(), AuctionSubscribePayload.class);
+        ClientHandler currentClient = (ClientHandler) Thread.currentThread();
+        Packet k = new Packet(PacketType.AUCTION_SUBSCRIBE, new ResultPayload(true, "", -1, "", "", "", "", ""));
+        if (subscribePayload.isSub()){
+            announcer.addObserver(subscribePayload.getAuctionId(), currentClient);
+            return k;
+        }
+        else {
+            announcer.removeObserver(subscribePayload.getAuctionId(), currentClient);
+            return k;
+        }
     }
 }

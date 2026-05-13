@@ -1,13 +1,19 @@
 package com.nhom3.server.network;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.google.gson.Gson;
-import com.nhom3.shared.network.packet.Packet;
-import com.nhom3.server.service.AuthService;
 import com.nhom3.server.service.AuctionService;
+import com.nhom3.server.service.AuthService;
+import com.nhom3.shared.network.packet.Packet;
 
 public class ClientHandler extends Thread {
     private final Socket clientSocket;
@@ -22,12 +28,18 @@ public class ClientHandler extends Thread {
         this.dispatcher = new PacketDispatcher(this.authService, this.auctionService);
     }
 
+    public synchronized void send(Packet packet) throws IOException {
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+        Gson gson = new Gson();
+        out.write(gson.toJson(packet));
+        out.newLine();
+        out.flush();
+    }
     @Override
     public void run() {
         Logger logger = LoggerFactory.getLogger(ClientHandler.class);
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
             String line;
             Gson gson = new Gson();
 
@@ -37,11 +49,8 @@ public class ClientHandler extends Thread {
 
                 // Sử dụng Dispatcher thay vì Switch Case khổng lồ
                 Packet response = dispatcher.dispatch(request, gson);
-
                 if (response != null) {
-                    out.write(gson.toJson(response));
-                    out.newLine();
-                    out.flush();
+                    send(response);
                 }
             }
         } catch (IOException e) {

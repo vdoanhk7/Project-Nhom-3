@@ -46,7 +46,7 @@ public class AuthService {
     }
     
     // FIX: Bổ sung tham số oldPassword để đồng bộ với cách gọi từ PacketDispatcher
-    public boolean changePassword(int userId, String oldPassword, String newPassword) {
+    public boolean updatePassword(int userId, String oldPassword, String newPassword) {
         return userDAO.changePassword(userId, oldPassword, newPassword);
     }
 

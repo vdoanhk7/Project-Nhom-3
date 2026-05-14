@@ -1,21 +1,21 @@
 package com.nhom3.server.network;
 
-import com.nhom3.server.dao.AuctionDAOImpl;
-import com.nhom3.server.service.AuctionService;
-import com.nhom3.shared.model.auction.Auction;
-import com.nhom3.shared.model.auction.BidTransaction;
-import com.nhom3.shared.model.user.Bidder;
-import com.nhom3.shared.network.payload.*;
+import java.time.LocalDateTime;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Callable;
-import java.util.Set;
+import com.nhom3.server.dao.AuctionDAOImpl;
+import com.nhom3.server.network.liveUpdate.Announcer;
+import com.nhom3.server.service.AuctionService;
+import com.nhom3.shared.model.auction.Auction;
+import com.nhom3.shared.model.auction.BidTransaction;
+import com.nhom3.shared.model.user.Bidder;
+import com.nhom3.shared.network.payload.BidPayload;
+import com.nhom3.shared.network.payload.ResultPayload;
 
 public class AuctionHandler {
     private static final Logger logger = LoggerFactory.getLogger(AuctionHandler.class);
@@ -24,7 +24,7 @@ public class AuctionHandler {
 
     private final AuctionDAOImpl dao;
     private final AuctionService auctionService;
-    private final ConcurrentHashMap<Integer, Set<Integer>> clientInAuctions;
+    private final Announcer announcer;
     private final ExecutorService[] auctionThreads;
 
     public static AuctionHandler getInstance() {
@@ -37,37 +37,17 @@ public class AuctionHandler {
     private AuctionHandler() {
         auctionService = new AuctionService();
         dao = new AuctionDAOImpl();
-        clientInAuctions = new ConcurrentHashMap<>();
+        announcer = Announcer.getInstance();
         auctionThreads = new ExecutorService[AUCTION_SHARDS];
         for (int i = 0; i < AUCTION_SHARDS; i++) {
             auctionThreads[i] = Executors.newSingleThreadExecutor();
         }
     }
 
-    // Manages client connections to auctions
-    public boolean addClientToAuction(int clientId, int auctionId) {
-        boolean success = clientInAuctions.get(auctionId).add(clientId);
-        if (success) {
-            logger.info("Client {} added to auction {}", clientId, auctionId);
-        } else {
-            logger.info("Client {} already in auction {}", clientId, auctionId);
-        }
-        return success;
-    }
-
-    public boolean removeClientFromAuction(int clientId, int auctionId) {
-        boolean success = clientInAuctions.get(auctionId).remove(clientId);
-        if (success) {
-            logger.info("Client {} removed from auction {}", clientId, auctionId);
-        } else {
-            logger.info("Client {} not in auction {}", clientId, auctionId);
-        }
-        return success;
-    }
-
     // Handle Bid/AutoBid
     public ResultPayload handleBid(BidPayload bidData) {
-        Callable<ResultPayload> placeBidTask = () -> {
+        Callable<ResultPayload> placeBidTask;
+        placeBidTask = () -> {
             try {
                 Auction currentAuction = dao.getAuctionById(bidData.getAuctionId());
                 if (currentAuction == null)
@@ -81,12 +61,15 @@ public class AuctionHandler {
                 ResultPayload bidResultPayload = new ResultPayload(isBidSuccess,
                         isBidSuccess ? "Đặt giá thành công" : "Có người đã trả giá cao hơn, vui lòng thử lại!", -1, "",
                         "", "", "", "");
+                if (isBidSuccess) {
+                    announcer.notify(bidData.getAuctionId(), bidData.getAmount());
+                }
                 return bidResultPayload;
             } catch (IllegalStateException e) {
                 ResultPayload bidResultPayload = new ResultPayload(false, e.getMessage(), -1, "", "", "", "", "");
                 return bidResultPayload;
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("Lỗi đặt giá", e);
                 ResultPayload bidResultPayload = new ResultPayload(false, "Lỗi hệ thống máy chủ!", -1, "", "", "", "", "");
                 return bidResultPayload;
             }
@@ -94,11 +77,9 @@ public class AuctionHandler {
         try {
             return auctionThreads[bidData.getAuctionId() % AUCTION_SHARDS].submit(placeBidTask).get();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Lỗi đặt giá", e);
             ResultPayload bidResultPayload = new ResultPayload(false, "Lỗi hệ thống máy chủ!", -1, "", "", "", "", "");
             return bidResultPayload;
         }
     }
-
-
 }

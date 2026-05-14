@@ -253,9 +253,17 @@ public class PacketDispatcher {
     private Packet handleUpdateProfile(Packet request, Gson gson) {
         UserProfilePayload payload = gson.fromJson(request.getPayload(), UserProfilePayload.class);
         User user = buildUser(payload);
-        boolean success = authService.updateUser(user);
+        boolean success;
+        String message;
+        try {
+            success = authService.updateUser(user);
+            message = success ? "Cập nhật thông tin cá nhân thành công!" : "Không thể cập nhật thông tin!";
+        } catch (IllegalArgumentException e) {
+            success = false;
+            message = e.getMessage();
+        }
         return new Packet(PacketType.UPDATE_PROFILE, new ResultPayload(success,
-                success ? "Cập nhật thông tin cá nhân thành công!" : "Không thể cập nhật thông tin!",
+                message,
                 payload.getUserId(), payload.getUsername(), payload.getFullName(),
                 payload.getRole(), payload.getEmail(), payload.getPhone()));
     }

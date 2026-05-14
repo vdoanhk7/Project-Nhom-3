@@ -19,7 +19,7 @@ public class App extends Application {
         Parent root = loader.load();
         
         // Thiết lập các thuộc tính cho cửa sổ (Stage)
-        primaryStage.setTitle("Hệ Thống Đấu Giá - Nhóm 3");
+        primaryStage.setTitle(" ⚖️ Hệ Thống Đấu Giá - Nhóm 3");
         primaryStage.setScene(new Scene(root));
         
         // Mẹo: Tạm thời khóa tính năng phóng to/thu nhỏ cửa sổ để màn hình Login không bị vỡ layout

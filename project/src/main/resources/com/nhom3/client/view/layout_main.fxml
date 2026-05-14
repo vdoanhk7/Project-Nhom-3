@@ -3,129 +3,131 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
-<!-- Root layout sử dụng BorderPane -->
-
-<BorderPane prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.MainController">
+<BorderPane prefHeight="750.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.MainController">
    
-   <!-- PHẦN TOP: Thanh Header -->
+   <!-- PHẦN TOP: Thanh Header nổi 3D -->
    <top>
-      <HBox alignment="CENTER_LEFT" prefHeight="60.0" style="-fx-background-color: #ffffff; -fx-border-color: #e0e0e0; -fx-border-width: 0 0 1 0;" BorderPane.alignment="CENTER">
+      <HBox alignment="CENTER_LEFT" prefHeight="70.0" style="-fx-background-color: #ffffff;" BorderPane.alignment="CENTER">
          <children>
-            <!-- Logo hoặc Tiêu đề App -->
-            <Label text="🔥 AUCTION PRO" textFill="#e74c3c">
-               <font>
-                  <Font name="System Bold" size="22.0" />
-               </font>
-            </Label>
+            <!-- Logo Typographic chuyên nghiệp -->
+            <HBox alignment="CENTER" spacing="8.0">
+               <children>
+                  <Label alignment="CENTER" prefHeight="35.0" prefWidth="35.0" style="-fx-background-color: linear-gradient(to bottom right, #3498db, #2980b9); -fx-text-fill: white; -fx-background-radius: 10;" text="A">
+                     <font><Font name="System Bold" size="22.0" /></font>
+                     <effect>
+                        <DropShadow color="#3498db66" offsetY="3.0" radius="4.0" />
+                     </effect>
+                  </Label>
+                  <Label text="AUCTION" textFill="#2c3e50">
+                     <font><Font name="System Bold" size="20.0" /></font>
+                  </Label>
+                  <Label text="PRO" textFill="#3498db">
+                     <font><Font name="System Bold" size="20.0" /></font>
+                  </Label>
+               </children>
+               <HBox.margin>
+                  <Insets left="25.0" />
+               </HBox.margin>
+            </HBox>
             
-            <!-- Spacer (Region) để đẩy thông tin User sát sang bên phải -->
             <Region HBox.hgrow="ALWAYS" />
             
-            <!-- Thông tin User và Nút Đăng xuất -->
-            <Label fx:id="lblUserName" text="Xin chào, User" textFill="#555555">
-               <font>
-                  <Font size="14.0" />
-               </font>
+            <!-- Khu vực User Profile -->
+            <HBox alignment="CENTER" spacing="12.0" style="-fx-background-color: #f4f6f9; -fx-padding: 6 15 6 8; -fx-background-radius: 30;">
+               <children>
+                  <Circle fill="#95a5a6" radius="16.0" />
+                  <Label fx:id="lblUserName" text="User Name" textFill="#34495e">
+                     <font><Font name="System Bold" size="14.0" /></font>
+                  </Label>
+               </children>
                <HBox.margin>
-                  <Insets right="15.0" />
+                  <Insets right="20.0" />
                </HBox.margin>
-            </Label>
-            <Button mnemonicParsing="false" onAction="#handleLogout" style="-fx-background-color: #fce4e4; -fx-text-fill: #cc0000; -fx-cursor: hand;" text="Đăng xuất" />
+            </HBox>
+
+            <!-- Nút Đăng xuất -->
+            <Button mnemonicParsing="false" onAction="#handleLogout" style="-fx-background-color: #fdeaea; -fx-text-fill: #e74c3c; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 8 20 8 20;" text="Đăng xuất">
+               <font><Font name="System Bold" size="13.0" /></font>
+            </Button>
          </children>
          <padding>
-            <Insets left="20.0" right="20.0" />
+            <Insets right="30.0" />
          </padding>
+         <effect>
+            <DropShadow color="#0000000d" height="15.0" offsetY="3.0" radius="7.0" width="15.0" />
+         </effect>
       </HBox>
    </top>
 
    <!-- PHẦN LEFT: Thanh Menu Sidebar -->
+   <!-- Đã đổi sang tông màu Xanh Slate nhạt dần, sáng hơn đen nhưng vẫn có chiều sâu -->
    <left>
-      <VBox prefWidth="220.0" spacing="10.0" style="-fx-background-color: #2c3e50;" BorderPane.alignment="CENTER">
+      <VBox prefWidth="270.0" style="-fx-background-color: linear-gradient(to bottom, #2b3d52, #1e2b3c);" BorderPane.alignment="CENTER">
          <children>
-            <Label text="MENU CHÍNH" textFill="#8e9ca8">
-               <font>
-                  <Font name="System Bold" size="12.0" />
-               </font>
+            <Label text="MENU ĐIỀU HƯỚNG" textFill="#8899a6">
+               <font><Font name="System Bold" size="11.0" /></font>
                <VBox.margin>
-                  <Insets bottom="10.0" left="15.0" top="10.0" />
+                  <Insets bottom="15.0" left="30.0" top="35.0" />
                </VBox.margin>
             </Label>
             
-            <!-- Các nút Menu (Sử dụng MAX_VALUE để rộng tràn viền VBox) -->
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showDashboard" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="📊  Tổng quan (Dashboard)">
-               <padding>
-                  <Insets bottom="12.0" left="20.0" top="12.0" />
-               </padding>
-               <font>
-                  <Font size="14.0" />
-               </font>
-            </Button>
-            
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showMarket" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="🛒  Chợ Đấu Giá">
-               <padding>
-                  <Insets bottom="12.0" left="20.0" top="12.0" />
-               </padding>
-               <font>
-                  <Font size="14.0" />
-               </font>
-            </Button>
-            
-            <Button fx:id="btnPurchaseHistory" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showPurchaseHistory" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="📦  Lịch sử đấu giá">
-               <padding>
-                  <Insets bottom="12.0" left="20.0" top="12.0" />
-               </padding>
-               <font><Font size="14.0" /></font>
-            </Button>
+            <VBox spacing="2.0">
+               <children>
+                  <Button fx:id="btnDashboard" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showDashboard" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="   ⊞     Tổng Quan">
+                     <padding><Insets bottom="16.0" left="30.0" top="16.0" /></padding>
+                  </Button>
+                  
+                  <Button fx:id="btnMarket" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showMarket" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="   ◈     Chợ Đấu Giá">
+                     <padding><Insets bottom="16.0" left="30.0" top="16.0" /></padding>
+                  </Button>
+                  
+                  <Button fx:id="btnPurchaseHistory" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showPurchaseHistory" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="   ▤     Lịch Sử Đấu Giá">
+                     <padding><Insets bottom="16.0" left="30.0" top="16.0" /></padding>
+                  </Button>
 
-            <Button fx:id="btnManageItem" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showManageItem" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="🏪  Quản lý sản phẩm">
-               <padding>
-                  <Insets bottom="12.0" left="20.0" top="12.0" />
-               </padding>
-               <font><Font size="14.0" /></font>
-            </Button>
+                  <Button fx:id="btnManageItem" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showManageItem" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="   ❐     Quản Lý Sản Phẩm">
+                     <padding><Insets bottom="16.0" left="30.0" top="16.0" /></padding>
+                  </Button>
 
-            <Button fx:id="btnAdminPanel" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showAdminPanel" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="⚙️  Quản trị hệ thống">
-               <padding>
-                  <Insets bottom="12.0" left="20.0" top="12.0" />
-               </padding>
-               <font><Font size="14.0" /></font>
-            </Button>
+                  <Button fx:id="btnAdminPanel" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showAdminPanel" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="   ⚙     Quản Trị Hệ Thống">
+                     <padding><Insets bottom="16.0" left="30.0" top="16.0" /></padding>
+                  </Button>
+               </children>
+            </VBox>
 
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showProfile" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand;" text="👤  Thông tin cá nhân">
-               <padding>
-                  <Insets bottom="12.0" left="20.0" top="12.0" />
-               </padding>
-               <font>
-                  <Font size="14.0" />
-               </font>
-            </Button>
+            <Region VBox.vgrow="ALWAYS" />
 
+            <VBox style="-fx-border-color: #3b4e63; -fx-border-width: 1 0 0 0;">
+               <children>
+                  <Label text="TÀI KHOẢN" textFill="#8899a6">
+                     <font><Font name="System Bold" size="11.0" /></font>
+                     <VBox.margin>
+                        <Insets bottom="10.0" left="30.0" top="20.0" />
+                     </VBox.margin>
+                  </Label>
+                  <Button fx:id="btnProfile" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showProfile" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="   👤     Hồ sơ cá nhân">
+                     <padding><Insets bottom="20.0" left="30.0" top="16.0" /></padding>
+                  </Button>
+               </children>
+            </VBox>
          </children>
-         <padding>
-            <Insets top="10.0" />
-         </padding>
+         <effect>
+            <DropShadow color="#00000026" height="0.0" radius="7.0" width="15.0" />
+         </effect>
       </VBox>
    </left>
 
-   <!-- PHẦN CENTER: Vùng nội dung thay đổi (Dynamic Content Area) -->
+   <!-- PHẦN CENTER: Vùng nội dung -->
    <center>
-      <!-- Đặt fx:id cho StackPane để gọi trong file Java -->
-      <StackPane fx:id="contentArea" style="-fx-background-color: #f4f6f9;" BorderPane.alignment="CENTER">
-         <children>
-            <!-- Label giữ chỗ, sau này sẽ bị ghi đè bởi các file FXML khác -->
-            <Label text="Vùng hiển thị nội dung động (Sẽ load FXML khác vào đây)" textFill="#aaaaaa">
-               <font>
-                  <Font size="18.0" />
-               </font>
-            </Label>
-         </children>
-      </StackPane>
+      <StackPane fx:id="contentArea" style="-fx-background-color: #f4f7f6;" BorderPane.alignment="CENTER" />
    </center>
 </BorderPane>

@@ -401,6 +401,7 @@ public class ManageItemController {
                 item,
                 LocalDateTime.parse(dto.startTime),
                 LocalDateTime.parse(dto.endTime));
+        auction.setBidStep(dto.bidStep);
         auction.setStatus(StatusOfAuction.valueOf(dto.status));
         if (dto.highestBidderId > 0) {
             auction.setHighestBidder(new Bidder(dto.highestBidderId, null, null));

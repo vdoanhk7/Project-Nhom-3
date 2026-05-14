@@ -69,7 +69,8 @@ public class AuctionDAOImplTest {
             assertTrue(result);
             assertEquals(100, auction.getId());
             verify(stmt1).setInt(1, 1);
-            verify(stmt1).setString(4, "OPEN");
+            verify(stmt1).setDouble(4, auction.getBidStep());
+            verify(stmt1).setString(5, "OPEN");
         }
     }
 
@@ -132,6 +133,7 @@ public class AuctionDAOImplTest {
             when(rs.getString("item_name")).thenReturn("Laptop");
             when(rs.getDouble("start_price")).thenReturn(1000.0);
             when(rs.getDouble("cur_highest")).thenReturn(1200.0);
+            when(rs.getDouble("bid_step")).thenReturn(200.0);
             when(rs.getTimestamp("start_time")).thenReturn(Timestamp.valueOf(LocalDateTime.now().minusDays(1)));
             when(rs.getTimestamp("end_time")).thenReturn(Timestamp.valueOf(LocalDateTime.now().plusDays(1)));
             when(rs.getString("status")).thenReturn("RUNNING");
@@ -142,6 +144,7 @@ public class AuctionDAOImplTest {
             assertNotNull(auction);
             assertEquals(1, auction.getId());
             assertEquals(5, auction.getItem().getId());
+            assertEquals(200.0, auction.getBidStep());
             assertEquals(StatusOfAuction.RUNNING, auction.getStatus());
             assertEquals(2, auction.getHighestBidder().getId());
         }

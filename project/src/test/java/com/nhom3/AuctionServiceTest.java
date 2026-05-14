@@ -1,6 +1,7 @@
 package com.nhom3;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
@@ -56,6 +57,16 @@ class AuctionServiceTest {
         Item item = mock(Item.class);
         when(item.getId()).thenReturn(1);
         Auction auction = new Auction(1, item, LocalDateTime.now().plusHours(1), LocalDateTime.now());
+
+        assertThrows(IllegalArgumentException.class, () -> auctionService.createAuction(auction));
+    }
+
+    @Test
+    void testCreateAuction_InvalidBidStep_ThrowsException() {
+        Item item = mock(Item.class);
+        when(item.getId()).thenReturn(1);
+        Auction auction = new Auction(1, item, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
+        auction.setBidStep(0);
 
         assertThrows(IllegalArgumentException.class, () -> auctionService.createAuction(auction));
     }
@@ -147,6 +158,7 @@ class AuctionServiceTest {
         when(item.getCurHighest()).thenReturn(100.0);
 
         Auction auction = new Auction(1, item, LocalDateTime.now().minusHours(1), LocalDateTime.now().plusHours(1));
+        auction.setBidStep(50.0);
         auction.setStatus(StatusOfAuction.RUNNING);
         auction.setHighestBidder(new Bidder(1, null, null)); // highest bidder is 1
 
@@ -162,6 +174,24 @@ class AuctionServiceTest {
         verify(item).setCurHighest(150.0);
         assertEquals(bidder, auction.getHighestBidder());
         verify(auctionDAO).saveBidTransaction(bid, 1);
+    }
+
+    @Test
+    void testPlaceBid_BelowBidStep_ThrowsException() {
+        Item item = mock(Item.class);
+        when(item.getId()).thenReturn(1);
+        when(item.getCurHighest()).thenReturn(100.0);
+
+        Auction auction = new Auction(1, item, LocalDateTime.now().minusHours(1), LocalDateTime.now().plusHours(1));
+        auction.setBidStep(50.0);
+        auction.setStatus(StatusOfAuction.RUNNING);
+        auction.setHighestBidder(new Bidder(1, null, null));
+
+        Bidder bidder = new Bidder(2, null, null);
+        BidTransaction bid = new BidTransaction(1, bidder, 149.0, LocalDateTime.now(), "Test");
+
+        assertThrows(IllegalStateException.class, () -> auctionService.placeBid(auction, bid));
+        verify(auctionDAO, never()).updateHighestBid(anyInt(), anyInt(), anyDouble());
     }
 
     @Test

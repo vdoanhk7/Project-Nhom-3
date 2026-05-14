@@ -31,6 +31,7 @@
           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
           <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
           <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
             <Label text="Sản phẩm:" textFill="#7f8c8d" />
@@ -53,6 +54,9 @@
                   <TextField fx:id="txtEndTime" prefWidth="80.0" promptText="HH:mm" text="22:00" />
                </children>
             </HBox>
+
+            <Label text="Bước giá:" textFill="#7f8c8d" GridPane.rowIndex="3" />
+            <TextField fx:id="txtBidStep" prefWidth="210.0" promptText="VD: 50,000" GridPane.columnIndex="1" GridPane.rowIndex="3" />
          </children>
       </GridPane>
 

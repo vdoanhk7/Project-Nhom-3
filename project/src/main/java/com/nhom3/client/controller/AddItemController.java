@@ -58,47 +58,55 @@ public class AddItemController {
         String priceText = txtStartPrice.getText().trim();
 
         if (name.isEmpty() || type == null || priceText.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Thieu thong tin",
-                    "Vui long dien day du cac truong!");
+            showAlert(Alert.AlertType.WARNING, "Thiếu thông tin", "Vui lòng điền đầy đủ các trường!");
+            return;
+        }
+
+        double startPrice;
+        try {
+            startPrice = Double.parseDouble(priceText); // FIX: Đã lấy giá trị từ TextField
+        } catch (NumberFormatException e) {
+            showAlert(Alert.AlertType.ERROR, "Lỗi định dạng", "Giá khởi điểm phải là một số hợp lệ!");
             return;
         }
 
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (!(currentUser instanceof Seller seller)) {
-            showAlert(Alert.AlertType.ERROR, "Loi quyen han",
-                    "Chi nguoi ban (Seller) moi duoc them san pham!");
+            showAlert(Alert.AlertType.ERROR, "Lỗi quyền hạn", "Chỉ người bán (Seller) mới được thêm sản phẩm!");
             return;
         }
-        Seller seller = (Seller) currentUser;
-        // 3. Chia luồng xử lí
-        // Chế đọ thêm mới
-        if (editingItem == null) {
-            com.nhom3.shared.model.item.ItemType typeEnum = com.nhom3.shared.model.item.ItemType.valueOf(type);
-            // Tạo Item mới (ID = 0 để DB tự tăng)
-            Item newItem = typeEnum.createItem(0, name, startPrice);
-            ItemService itemService = new ItemService();
-            boolean isSuccess = itemService.createItem(seller, newItem);
-            if (isSuccess) {
-                showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã thêm sản phẩm mới vào kho!");
-                closeWindow();
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Lỗi Database", "Không thể lưu sản phẩm!");
-            }
-        } else {
-            // Chế đọ chỉnh sửa
-            // Gán dữ liệu mới vào đối tượng hiện tại
-            editingItem.setName(name);
-            editingItem.setStartPrice(startPrice);
-            editingItem.setCurHighest(startPrice); 
-            ItemDAO itemDAO = new ItemDAOImpl();
-            boolean isSuccess = itemDAO.updateItem(editingItem);
-            if (isSuccess) {
-                showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã cập nhật thông tin sản phẩm!");
-                closeWindow();
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Lỗi Database", "Không thể cập nhật sản phẩm!");
-            }
+
+        // FIX: Xóa việc gọi DB trực tiếp. Thay vào đó, đóng gói dữ liệu và gửi qua Server bằng Socket.
+        try {
+            ItemPayload payload = new ItemPayload(
+                    editingItem == null ? 0 : editingItem.getId(),
+                    seller.getId(),
+                    name,
+                    type,
+                    startPrice
+            );
+            PacketType packetType = editingItem == null ? PacketType.SAVE_ITEM : PacketType.UPDATE_ITEM;
+            Packet packet = new Packet(packetType, payload);
+            
+            ServerConnection.getInstance().sendMessage(packet);
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể kết nối đến máy chủ để lưu sản phẩm!");
         }
+    }
+
+    // Server sẽ gửi phản hồi về và ClientPacketDispatcher sẽ gọi hàm này
+    public void handleItemMutationResult(PacketType type, boolean success, String message) {
+        javafx.application.Platform.runLater(() -> {
+            showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR, 
+                     success ? "Thành công" : "Lỗi Server", message);
+            if (success) {
+                closeWindow();
+                if (ManageItemController.getInstance() != null) {
+                    ManageItemController.getInstance().loadSellerItems();
+                }
+            }
+        });
     }
 
     @FXML

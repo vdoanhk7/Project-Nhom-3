@@ -67,34 +67,34 @@ public class MainController {
         // 1. Tạo ID mới mỗi lần bấm nút
         currentNavigationId = System.currentTimeMillis();
         final long thisLoadId = currentNavigationId;
+        
         // 2. Hiện vòng xoay
         ProgressIndicator spinner = new ProgressIndicator();
         spinner.setMaxSize(50, 50);
         contentArea.getChildren().clear();
         contentArea.getChildren().add(spinner);
-        // 3. Tải ngầm FXML
+        
+        // 3. Tải ngầm FXML an toàn trên luồng giao diện
         Thread loadThread = new Thread(() -> {
-            try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-                Parent view = loader.load();               
-                // 4. Cập nhật UI nếu ID vẫn khớp (Nghĩa là user chưa bấm nút khác)
-                javafx.application.Platform.runLater(() -> {
+            javafx.application.Platform.runLater(() -> {
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+                    Parent view = loader.load();               
+                    // Cập nhật UI nếu ID vẫn khớp (Nghĩa là user chưa bấm nút khác)
                     if (thisLoadId == currentNavigationId) {
                         contentArea.getChildren().clear();
                         contentArea.getChildren().add(view);
                     }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-                javafx.application.Platform.runLater(() -> {
+                } catch (Exception e) {
+                    e.printStackTrace();
                     if (thisLoadId == currentNavigationId) {
                         contentArea.getChildren().clear();
                         Label lblError = new Label("Lỗi: Không thể tải giao diện!");
                         lblError.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
                         contentArea.getChildren().add(lblError);
                     }
-                });
-            }
+                }
+            });
         });
 
         loadThread.setDaemon(true); 

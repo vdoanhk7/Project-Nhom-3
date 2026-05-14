@@ -1,15 +1,23 @@
 package com.nhom3.client.controller;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDateTime;
 
+import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.StatusOfAuction;
 import com.nhom3.shared.model.item.Item;
+import com.nhom3.shared.model.item.ItemType;
 import com.nhom3.shared.model.user.Role;
 import com.nhom3.shared.model.user.User;
-import com.nhom3.server.dao.AuctionDAO;
-import com.nhom3.server.dao.AuctionDAOImpl;
+import com.nhom3.shared.model.user.Bidder;
+import com.nhom3.shared.network.packet.Packet;
+import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.shared.network.payload.AuctionListResponsePayload;
+
+// Đã xóa 2 import sai của Server (AuctionDAO, AuctionDAOImpl)
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -66,7 +74,7 @@ public class MarketController {
             ServerConnection.getInstance().sendMessage(new Packet(PacketType.LOAD_ACTIVE_AUCTIONS, null));
         } catch (Exception e) {
             e.printStackTrace();
-            showEmptyMessage("Khong the tai du lieu cho dau gia.");
+            showEmptyMessage("Không thể tải dữ liệu chợ đấu giá.");
         }
     }
 
@@ -77,14 +85,36 @@ public class MarketController {
                 allActiveAuctions.add(toAuction(dto));
             }
         }
-        filterMarket();
+        
+        // FIX: Bắt buộc gọi vẽ lại màn hình trên luồng JavaFX
+        javafx.application.Platform.runLater(this::filterMarket);
+    }
+
+    // FIX: Đã thêm hàm toAuction còn thiếu để dịch từ gói tin mạng sang Object
+    private Auction toAuction(AuctionListResponsePayload.AuctionDTO dto) {
+        ItemType type = ItemType.valueOf(dto.itemType);
+        Item item = type.createItem(dto.itemId, dto.itemName, dto.startPrice);
+        item.setCurHighest(dto.curHighest);
+        
+        Auction auction = new Auction(
+                dto.auctionId,
+                item,
+                LocalDateTime.parse(dto.startTime),
+                LocalDateTime.parse(dto.endTime));
+                
+        auction.setStatus(StatusOfAuction.valueOf(dto.status));
+        
+        if (dto.highestBidderId > 0) {
+            auction.setHighestBidder(new Bidder(dto.highestBidderId, null, null));
+        }
+        return auction;
     }
 
     private void filterMarket() {
         flowMarket.getChildren().clear();
 
         if (allActiveAuctions == null || allActiveAuctions.isEmpty()) {
-            showEmptyMessage("Hien tai chua co san pham nao dang len san.");
+            showEmptyMessage("Hiện tại chưa có sản phẩm nào đang lên sàn.");
             return;
         }
 
@@ -106,7 +136,7 @@ public class MarketController {
         }
 
         if (displayCount == 0) {
-            showEmptyMessage("Khong tim thay san pham phu hop.");
+            showEmptyMessage("Không tìm thấy sản phẩm phù hợp.");
         }
     }
 
@@ -166,7 +196,7 @@ public class MarketController {
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Chi tiet san pham - " + item.getName());
+            stage.setTitle("Chi tiết sản phẩm - " + item.getName());
             stage.setScene(new Scene(root));
             stage.showAndWait();
 

@@ -3,7 +3,6 @@ package com.nhom3.client.controller;
 import com.nhom3.shared.network.payload.BidHistoryResponsePayload;
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Bidder;
-import com.nhom3.shared.model.user.Seller;
 import com.nhom3.shared.model.user.User;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
@@ -639,7 +638,9 @@ public class ViewItemDetailController {
                 autoBidInfoBox.getChildren().addAll(lblTitle, lblMax, lblInc, btnBox);
                 
                 javafx.scene.layout.Pane parent = (javafx.scene.layout.Pane) boxBidderActions.getParent();
-                parent.getChildren().add(parent.getChildren().indexOf(boxBidderActions), autoBidInfoBox);
+                if (!parent.getChildren().contains(autoBidInfoBox)) {
+                    parent.getChildren().add(parent.getChildren().indexOf(boxBidderActions), autoBidInfoBox);
+                }
             }
             
             // Cập nhật thông số

@@ -1,7 +1,5 @@
 package com.nhom3.client.controller;
 
-import com.nhom3.server.dao.AuctionDAO;
-import com.nhom3.server.dao.AuctionDAOImpl;
 import com.nhom3.shared.network.payload.BidHistoryResponsePayload;
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Bidder;
@@ -12,6 +10,7 @@ import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.shared.network.payload.AuctionSubscribePayload;
 import com.nhom3.shared.network.payload.BidPayload;
 import com.nhom3.client.network.ServerConnection;
 import javafx.animation.Animation;
@@ -30,6 +29,9 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
+        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class ViewItemDetailController {
 
     @FXML private Label lblItemName, lblItemType, lblStatusBadge;
@@ -53,7 +55,6 @@ public class ViewItemDetailController {
     @FXML private TableColumn<BidTransaction, String> colBidNote;
 
     private Timeline countdownTimeline;
-    private Timeline pollingTimeline;
     private Auction currentAuction;
     private int currentBidCount = -1;
     private static ViewItemDetailController instance;
@@ -151,12 +152,13 @@ public class ViewItemDetailController {
         
         setupDynamicUI();
         loadBidHistory();
-        startPollingData(); 
+        subscribeToAuction(true);
         javafx.application.Platform.runLater(() -> {
             if (lblItemName.getScene() != null && lblItemName.getScene().getWindow() != null) {
                 javafx.stage.Stage stage = (javafx.stage.Stage) lblItemName.getScene().getWindow();
                 stage.setOnCloseRequest(event -> {
-                    if (pollingTimeline != null) pollingTimeline.stop();
+                    subscribeToAuction(false);
+                    if (countdownTimeline != null) countdownTimeline.stop();
                 });
             }
         });
@@ -185,7 +187,6 @@ public class ViewItemDetailController {
         lblCountdown.setText("00:00:00");
         lblTimeRange.setText("Đã đóng lúc: " + formatTime(auction.getEndTime()));
         if (countdownTimeline != null) countdownTimeline.stop();
-        if (pollingTimeline != null) pollingTimeline.stop();
     }
 
     private void setupPaidState(Auction auction) {
@@ -227,8 +228,8 @@ public class ViewItemDetailController {
 
     @FXML
     private void handleClose() {
+        subscribeToAuction(false);
         if (countdownTimeline != null) countdownTimeline.stop();
-        if (pollingTimeline != null) pollingTimeline.stop();
         ((Stage) lblItemName.getScene().getWindow()).close();
     }
 
@@ -453,28 +454,16 @@ public class ViewItemDetailController {
             priceHistoryChart.setManaged(true);
             btnShowChart.setText("❌ Đóng Biểu Đồ");
 
-            // Mỗi lần mở ra, nạp lại lịch sử
-            loadPriceHistoryToChart();
+            // Mỗi lần mở ra, nạp lại lịch sử mới nhất từ server
+            refreshChartFromBidList(tableBids.getItems());
+            loadBidHistory();
         }
     }
 
     private void loadPriceHistoryToChart() {
         if (currentAuction == null) return;
 
-        // Xóa dữ liệu cũ trên biểu đồ trước khi nạp mới
-        priceSeries.getData().clear();
-
-        AuctionDAO dao = new AuctionDAOImpl();
-        List<BidTransaction> history = dao.getBidHistory(currentAuction.getId());
-
-        if (history != null) {
-            // Duyệt ngược từ cũ đến mới để vẽ đường giá đi lên
-            for (int i = history.size() - 1; i >= 0; i--) {
-                BidTransaction bid = history.get(i);
-                String time = bid.getBidTime().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
-                priceSeries.getData().add(new XYChart.Data<>(time, bid.getAmount()));
-            }
-        }
+        refreshChartFromBidList(tableBids.getItems());
     }
 
     public void handleBidResult(boolean isSuccess, String message) {
@@ -522,19 +511,6 @@ public class ViewItemDetailController {
         alert.showAndWait();
     }
     
-    private void startPollingData() {
-        if (pollingTimeline != null) pollingTimeline.stop();
-
-        pollingTimeline = new Timeline(new KeyFrame(Duration.seconds(3), event -> {
-            if (currentAuction != null) {
-                // Gửi mạng xin lịch sử liên tục mỗi 3 giây, bất chấp trạng thái là gì
-                loadBidHistory(); 
-            }
-        }));
-        pollingTimeline.setCycleCount(Animation.INDEFINITE);
-        pollingTimeline.play();
-    }
-
     public void handleLoadHistoryResult(int responseAuctionId,List<BidHistoryResponsePayload.SimpleBid> simpleList) {
         if (simpleList == null || currentAuction == null) return;
         if (currentAuction.getId() != responseAuctionId) {
@@ -579,7 +555,43 @@ public class ViewItemDetailController {
                     lblCurrentPrice.setText(String.format("%,.0f VNĐ", realHighest));
                 }
             }
+            if (priceHistoryChart.isVisible()) {
+                refreshChartFromBidList(realList);
+            }
         });
+    }
+
+    private void refreshChartFromBidList(List<BidTransaction> history) {
+        priceSeries.getData().clear();
+        if (history == null) return;
+
+        for (int i = history.size() - 1; i >= 0; i--) {
+            BidTransaction bid = history.get(i);
+            String time = bid.getBidTime().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
+            priceSeries.getData().add(new XYChart.Data<>(time, bid.getAmount()));
+        }
+    }
+
+    public void handleScreenNotify(double highestPrice) {
+        if (currentAuction == null) return;
+
+        if (highestPrice > currentAuction.getItem().getCurHighest()) {
+            currentAuction.getItem().setCurHighest(highestPrice);
+            lblCurrentPrice.setText(String.format("%,.0f VNĐ", highestPrice));
+        }
+        loadBidHistory();
+    }
+
+    private void subscribeToAuction(boolean subscribe) {
+        if (currentAuction == null) return;
+
+        try {
+            AuctionSubscribePayload payload = new AuctionSubscribePayload(currentAuction.getId(), subscribe);
+            Packet packet = new Packet(PacketType.AUCTION_SUBSCRIBE, payload);
+            ServerConnection.getInstance().sendMessage(packet);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     // Gửi yêu cầu kiểm tra trạng thái

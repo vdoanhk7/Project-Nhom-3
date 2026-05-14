@@ -1,37 +1,51 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.UserSession;
-import com.nhom3.server.dao.AuctionDAO;
-import com.nhom3.server.dao.AuctionDAOImpl;
-import com.nhom3.server.dao.ItemDAO;
-import com.nhom3.server.dao.ItemDAOImpl;
 import com.nhom3.shared.model.auction.Auction;
+import com.nhom3.shared.model.auction.StatusOfAuction;
 import com.nhom3.shared.model.item.Item;
+import com.nhom3.shared.model.item.ItemType;
+import com.nhom3.shared.model.user.Bidder;
 import com.nhom3.shared.model.user.Seller;
 import com.nhom3.shared.model.user.User;
-import com.nhom3.client.network.ServerConnection;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.shared.network.payload.AuctionListResponsePayload;
+import com.nhom3.shared.network.payload.ItemActionPayload;
 import com.nhom3.shared.network.payload.SellerIdPayload;
+import com.nhom3.shared.network.payload.SellerItemsResponsePayload;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.HBox;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
+        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class ManageItemController {
 
     @FXML private TextField txtSearch;
@@ -44,256 +58,247 @@ public class ManageItemController {
     @FXML private TableColumn<Item, Double> colCurHighest;
     @FXML private TableColumn<Item, Void> colAction;
 
-    private ObservableList<Item> itemList = FXCollections.observableArrayList();
-    private Map<Integer, String> itemStatusMap = new HashMap<>();
+    private final ObservableList<Item> itemList = FXCollections.observableArrayList();
+    private final Map<Integer, String> itemStatusMap = new HashMap<>();
+    private Item pendingDeleteItem;
+    private Item pendingViewItem;
+
     private static ManageItemController instance;
+
     public static ManageItemController getInstance() {
         return instance;
     }
+
     @FXML
     public void initialize() {
         instance = this;
-        // 1. Khởi tạo dữ liệu cho ComboBox Lọc
-        cbCategory.setItems(FXCollections.observableArrayList("Tất cả", "ART", "ELECTRONICS", "VEHICLE"));
+        cbCategory.setItems(FXCollections.observableArrayList("Tat ca", "ART", "ELECTRONICS", "VEHICLE"));
+        setupTableColumns();
+        setupActionColumn();
+        setupSearchAndFilter();
+        loadSellerItems();
+    }
 
-        // 2. Cài đặt các cột cho TableView bám sát thuộc tính của class Item
-        // Lấy giá trị ID từ class Item
+    public void loadSellerItems() {
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        if (currentUser instanceof Seller) {
+            try {
+                SellerIdPayload payload = new SellerIdPayload(currentUser.getId());
+                ServerConnection.getInstance().sendMessage(new Packet(PacketType.LOAD_SELLER_ITEMS, payload));
+            } catch (Exception e) {
+                e.printStackTrace();
+                showAlert(Alert.AlertType.ERROR, "Loi mang", "Khong the tai danh sach san pham!");
+            }
+        }
+    }
+
+    public void handleLoadItemsResult(List<SellerItemsResponsePayload.SellerItemDTO> dtoList) {
+        if (dtoList == null) {
+            return;
+        }
+
+        List<Item> realItems = new java.util.ArrayList<>();
+        itemStatusMap.clear();
+        for (SellerItemsResponsePayload.SellerItemDTO dto : dtoList) {
+            ItemType type = ItemType.valueOf(dto.type);
+            Item item = type.createItem(dto.id, dto.name, dto.startPrice);
+            item.setCurHighest(dto.curHighest);
+            realItems.add(item);
+            if (dto.status != null && !dto.status.isEmpty()) {
+                itemStatusMap.put(dto.id, dto.status);
+            }
+        }
+        itemList.setAll(realItems);
+        tableItems.refresh();
+    }
+
+    public void handleDeleteItemResult(boolean success, String message) {
+        showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
+                success ? "Thanh cong" : "That bai", message);
+        if (success && pendingDeleteItem != null) {
+            itemList.remove(pendingDeleteItem);
+        }
+        pendingDeleteItem = null;
+    }
+
+    public void handleConfirmPaymentResult(boolean success, String message) {
+        showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
+                success ? "Thanh cong" : "That bai", message);
+        if (success) {
+            loadSellerItems();
+        }
+    }
+
+    public void handleLoadAuctionByItemResult(List<AuctionListResponsePayload.AuctionDTO> dtoList) {
+        if (pendingViewItem == null) {
+            return;
+        }
+
+        Auction auction = null;
+        if (dtoList != null && !dtoList.isEmpty()) {
+            auction = toAuction(dtoList.get(0));
+        }
+        openDetailWindow(pendingViewItem, auction, getAuctionStatus(pendingViewItem));
+        pendingViewItem = null;
+    }
+
+    private void setupTableColumns() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
-        colId.setCellFactory(tc -> new TableCell<Item, Integer>() {
+        colId.setCellFactory(tc -> new TableCell<>() {
             @Override
             protected void updateItem(Integer id, boolean empty) {
                 super.updateItem(id, empty);
-                if (empty || id == null) {
-                    setText(null);
-                } else {
-                    setText(String.format("SP-%04d", id));
-                }
+                setText(empty || id == null ? null : String.format("SP-%04d", id));
             }
         });
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colType.setCellValueFactory(new PropertyValueFactory<>("type"));
-        
-        // Format hiển thị tiền tệ cho Giá khởi điểm
         colStartPrice.setCellValueFactory(new PropertyValueFactory<>("startPrice"));
-        colStartPrice.setCellFactory(tc -> new TableCell<Item, Double>() {
+        colCurHighest.setCellValueFactory(new PropertyValueFactory<>("curHighest"));
+        colStartPrice.setCellFactory(tc -> moneyCell());
+        colCurHighest.setCellFactory(tc -> moneyCell());
+    }
+
+    private TableCell<Item, Double> moneyCell() {
+        return new TableCell<>() {
             @Override
             protected void updateItem(Double price, boolean empty) {
                 super.updateItem(price, empty);
-                if (empty || price == null) {
-                    setText(null);
-                } else {
-                    setText(String.format("%,.0f VNĐ", price));
-                }
+                setText(empty || price == null ? null : String.format("%,.0f VND", price));
             }
-        });
-
-        // Format hiển thị tiền tệ cho Giá hiện tại
-        colCurHighest.setCellValueFactory(new PropertyValueFactory<>("curHighest"));
-        colCurHighest.setCellFactory(colStartPrice.getCellFactory());
-
-        // Cột Thao tác (Tạo nút Edit/Delete trực tiếp)
-        setupActionColumn();
-
-        // Thiết lập chức năng tìm kiếm và lọc
-        setupSearchAndFilter();
-
-        // 3. Load dữ liệu Item của Seller hiện tại vào bảng
-        loadSellerItems();
+        };
     }
 
-    // Hàm tìm kiếm dữ liệu item
     private void setupSearchAndFilter() {
-        FilteredList<Item> filteredData = new FilteredList<>(itemList, b -> true);
-        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredData.setPredicate(item -> checkFilter(item, newValue, cbCategory.getValue()));
-        });
-        cbCategory.valueProperty().addListener((observable, oldValue, newValue) -> {
-            filteredData.setPredicate(item -> checkFilter(item, txtSearch.getText(), newValue));
-        });
+        FilteredList<Item> filteredData = new FilteredList<>(itemList, item -> true);
+        txtSearch.textProperty().addListener((observable, oldValue, newValue) ->
+                filteredData.setPredicate(item -> checkFilter(item, newValue, cbCategory.getValue())));
+        cbCategory.valueProperty().addListener((observable, oldValue, newValue) ->
+                filteredData.setPredicate(item -> checkFilter(item, txtSearch.getText(), newValue)));
         SortedList<Item> sortedData = new SortedList<>(filteredData);
         sortedData.comparatorProperty().bind(tableItems.comparatorProperty());
         tableItems.setItems(sortedData);
     }
 
-    // Hàm hỗ trợ kiểm tra điều kiện lọc
     private boolean checkFilter(Item item, String searchText, String category) {
-        // Kiểm tra Phân loại 
-        boolean matchesCategory = true;
-        if (category != null && !category.equals("Tất cả")) {
-            // So sánh loại của item với giá trị trong ComboBox
-            matchesCategory = item.getType().name().equalsIgnoreCase(category);
-        }
-        // Kiểm tra Tìm kiếm 
+        boolean matchesCategory = category == null
+                || "Tat ca".equals(category)
+                || item.getType().name().equalsIgnoreCase(category);
         boolean matchesSearch = true;
         if (searchText != null && !searchText.isEmpty()) {
             String lowerCaseFilter = searchText.toLowerCase();
-            // Tạo chuỗi mã SP để tìm (Ví dụ: "sp-0001")
             String itemCode = String.format("SP-%04d", item.getId()).toLowerCase();
-            // Điều kiện: Tên sản phẩm chứa từ khóa HOẶC Mã SP chứa từ khóa
-            matchesSearch = item.getName().toLowerCase().contains(lowerCaseFilter) || 
-                            itemCode.contains(lowerCaseFilter);
+            matchesSearch = item.getName().toLowerCase().contains(lowerCaseFilter)
+                    || itemCode.contains(lowerCaseFilter);
         }
-        // Item chỉ được hiển thị nếu thỏa mãn CẢ 2 điều kiện
         return matchesCategory && matchesSearch;
-    }
-
-    public void loadSellerItems() { // Đổi thành public để các Pop-up gọi lại được
-        User currentUser = UserSession.getInstance().getLoggedInUser();
-        if (currentUser instanceof Seller) {
-            // GÓI HÀNG GỬI QUA MẠNG
-            SellerIdPayload payload = new SellerIdPayload(currentUser.getId());
-            Packet packet = new Packet(PacketType.LOAD_SELLER_ITEMS, payload);
-            
-            try {
-                ServerConnection.getInstance().sendMessage(packet);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     private void setupActionColumn() {
         colAction.setCellFactory(param -> new TableCell<>() {
-        // Khai báo các nút bấm
-        private final Button btnPublish = new Button("Đăng bán");
-        private final Button btnEdit = new Button("Sửa");
-        private final Button btnDelete = new Button("Xóa");
-        private final Button btnView = new Button("Xem Chi Tiết");
-        private final Button btnConfirmPaid = new Button("Xác Nhận");
-        private final Label lblPaidStatus = new Label("✔ Bán Thành Công");
-        private final HBox pane = new HBox(8, btnPublish, btnEdit, btnDelete, btnView, btnConfirmPaid, lblPaidStatus);
-        {
-            // Styling cơ bản
-            btnPublish.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-cursor: hand;");
-            btnEdit.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-cursor: hand;");
-            btnDelete.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand;");
-            btnView.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-cursor: hand;");
-            pane.setStyle("-fx-alignment: center;");
-            btnConfirmPaid.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
-            lblPaidStatus.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 5 10 5 0;");
-            
-            // Các sự kiện OnAction cho từng nút
-            btnPublish.setOnAction(e -> handlePublish(getTableView().getItems().get(getIndex())));
-            btnEdit.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
-            btnDelete.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));
-            btnView.setOnAction(e -> handleViewDetail(getTableView().getItems().get(getIndex())));
-            btnConfirmPaid.setOnAction(e -> handleConfirmPaid(getTableView().getItems().get(getIndex())));
-        }
+            private final Button btnPublish = new Button("Dang ban");
+            private final Button btnEdit = new Button("Sua");
+            private final Button btnDelete = new Button("Xoa");
+            private final Button btnView = new Button("Xem chi tiet");
+            private final Button btnConfirmPaid = new Button("Xac nhan");
+            private final Label lblPaidStatus = new Label("Da thanh toan");
+            private final HBox pane = new HBox(8, btnPublish, btnEdit, btnDelete,
+                    btnView, btnConfirmPaid, lblPaidStatus);
 
-        @Override
-        protected void updateItem(Void item, boolean empty) {
-            super.updateItem(item, empty);
+            {
+                btnPublish.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-cursor: hand;");
+                btnEdit.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-cursor: hand;");
+                btnDelete.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand;");
+                btnView.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-cursor: hand;");
+                btnConfirmPaid.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-cursor: hand;");
+                lblPaidStatus.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
+                pane.setStyle("-fx-alignment: center;");
 
-            if (empty || getIndex() >= getTableView().getItems().size()) {
-                setGraphic(null);
-            } else {
-                Item currentItem = getTableView().getItems().get(getIndex());
-                boolean hasAuction = checkHasAuction(currentItem); 
-                String status = getAuctionStatus(currentItem);
+                btnPublish.setOnAction(e -> handlePublish(getCurrentRowItem()));
+                btnEdit.setOnAction(e -> handleEdit(getCurrentRowItem()));
+                btnDelete.setOnAction(e -> handleDelete(getCurrentRowItem()));
+                btnView.setOnAction(e -> handleViewDetail(getCurrentRowItem()));
+                btnConfirmPaid.setOnAction(e -> handleConfirmPaid(getCurrentRowItem()));
+            }
 
-                // 1. ẨN TẤT CẢ ĐI TRƯỚC (Bắt buộc phải làm sạch dòng trước khi đắp nút mới)
-                // Lưu ý: Nhớ khai báo biến lblPaidStatus ở phần đầu của setupActionColumn nhé!
-                lblPaidStatus.setVisible(false);  lblPaidStatus.setManaged(false);
-                btnPublish.setVisible(false);     btnPublish.setManaged(false);
-                btnEdit.setVisible(false);        btnEdit.setManaged(false);
-                btnDelete.setVisible(false);      btnDelete.setManaged(false);
-                btnConfirmPaid.setVisible(false); btnConfirmPaid.setManaged(false);
-                btnView.setVisible(false);        btnView.setManaged(false);
-
-                // 2. LOGIC HIỂN THỊ (Sử dụng lại hàm showButtons của bạn)
-                if (status.equals("PAID")) {
-                    // Khi đã thanh toán: Hiện nhãn báo thành công
-                    lblPaidStatus.setVisible(true); lblPaidStatus.setManaged(true);
-                    showButtons(btnView);
-                    
-                } else if (status.equals("FINISHED")) {
-                    // Khi kết thúc: Hiện nút Xác Nhận
-                    btnConfirmPaid.setVisible(true); btnConfirmPaid.setManaged(true);
-                    showButtons(btnView);
-                    
-                } else if (!hasAuction || status.equals("CANCELLED")) {
-                    // Chưa lên sàn hoặc bị Hủy: Hiện bộ 3 nút Edit
-                    showButtons(btnPublish, btnEdit, btnDelete);
-                    
-                } else {
-                    // Đã lên sàn và Đang chạy (OPEN, RUNNING)
-                    showButtons(btnView);
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getIndex() >= getTableView().getItems().size()) {
+                    setGraphic(null);
+                    return;
                 }
 
-                // 3. GIỮ NGUYÊN PHẦN STYLE CŨ CỦA BẠN CHO NÚT XEM
-                btnView.setText("Xem Chi Tiết"); 
-                btnView.setStyle(
-                    "-fx-background-color: #3498db; " +
-                    "-fx-text-fill: white; " +
-                    "-fx-font-weight: bold; " +
-                    "-fx-background-radius: 5; " +
-                    "-fx-padding: 5 15 5 15; " +
-                    "-fx-cursor: hand;"
-                );
+                Item currentItem = getTableView().getItems().get(getIndex());
+                String status = getAuctionStatus(currentItem);
+                hideAll();
 
+                if ("PAID".equals(status)) {
+                    lblPaidStatus.setVisible(true);
+                    lblPaidStatus.setManaged(true);
+                    showButtons(btnView);
+                } else if ("FINISHED".equals(status)) {
+                    showButtons(btnView, btnConfirmPaid);
+                } else if (!hasAuction(currentItem) || "CANCELLED".equals(status)) {
+                    showButtons(btnPublish, btnEdit, btnDelete);
+                } else {
+                    showButtons(btnView);
+                }
                 setGraphic(pane);
             }
-        }
 
-        // Hàm hỗ trợ bật hiển thị nút
-        private void showButtons(Button... buttons) {
-            for (Button b : buttons) {
-                b.setVisible(true);
-                b.setManaged(true);
+            private Item getCurrentRowItem() {
+                return getTableView().getItems().get(getIndex());
             }
-        }
-    });
-}
+
+            private void hideAll() {
+                for (javafx.scene.Node node : pane.getChildren()) {
+                    node.setVisible(false);
+                    node.setManaged(false);
+                }
+            }
+
+            private void showButtons(Button... buttons) {
+                for (Button button : buttons) {
+                    button.setVisible(true);
+                    button.setManaged(true);
+                }
+            }
+        });
+    }
 
     @FXML
     void handleAddNewItem(ActionEvent event) {
         try {
-            // 1. Tải file giao diện add_item.fxml
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/add_item.fxml"));
             Parent root = loader.load();
-            // 2. Tạo một cửa sổ mới cho Pop-up
             Stage popupStage = new Stage();
-            popupStage.setTitle("Thêm Sản Phẩm Mới");
-            // 3. Thiết lập chế độ MODAL (Buộc người dùng xong tác cụ mới đc thoát ra)
+            popupStage.setTitle("Them san pham moi");
             popupStage.initModality(Modality.APPLICATION_MODAL);
-            // 4. Hiển thị cửa sổ
             popupStage.setScene(new Scene(root));
             popupStage.setResizable(false);
-            // 5. Dừng luồng code tại đây và CHỜ cho đến khi cửa sổ Pop-up đóng lại
-            popupStage.showAndWait(); 
-            // 6. CẬP NHẬT LẠI BẢNG DỮ LIỆU (Auto Refresh)
+            popupStage.showAndWait();
             loadSellerItems();
-            tableItems.refresh();
-
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Lỗi: Không tìm thấy file add_item.fxml tại đường dẫn đã chỉ định.");
-            
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Lỗi hệ thống");
-            alert.setHeaderText(null);
-            alert.setContentText("Không thể mở cửa sổ thêm sản phẩm. Vui lòng thử lại sau!");
-            alert.showAndWait();
+            showAlert(Alert.AlertType.ERROR, "Loi he thong", "Khong the mo cua so them san pham!");
         }
     }
 
-
-    // CÁC HÀM XỬ LÝ SỰ KIỆN KHI BẤM NÚT TRONG BẢNG
     private void handlePublish(Item item) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/publish_auction.fxml"));
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/com/nhom3/client/view/publish_auction.fxml"));
             Parent root = loader.load();
-
             PublishAuctionController controller = loader.getController();
-            controller.setItem(item); // Truyền món đồ sang Pop-up
+            controller.setItem(item);
 
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
-            stage.setTitle("Đăng bán sản phẩm");
+            stage.setTitle("Dang ban san pham");
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
-            
-            loadSellerItems(); // Tải lại bảng để cập nhật trạng thái các nút bấm
+            loadSellerItems();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -303,140 +308,119 @@ public class ManageItemController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/add_item.fxml"));
             Parent root = loader.load();
-
-            // 👉 LẤY CONTROLLER VÀ TRUYỀN DỮ LIỆU SANG
             AddItemController controller = loader.getController();
-            controller.setEditingItem(item); 
+            controller.setEditingItem(item);
 
             Stage popupStage = new Stage();
-            popupStage.setTitle("Sửa Thông Tin Sản Phẩm: " + item.getName());
+            popupStage.setTitle("Sua san pham: " + item.getName());
             popupStage.initModality(Modality.APPLICATION_MODAL);
             popupStage.setScene(new Scene(root));
-            popupStage.setResizable(false);           
-            popupStage.showAndWait(); // Dừng chờ người dùng sửa xong  
-            tableItems.refresh(); // Tự động vẽ lại bảng với dữ liệu mới trong RAM
+            popupStage.setResizable(false);
+            popupStage.showAndWait();
+            loadSellerItems();
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println("Lỗi mở Pop-up sửa sản phẩm!");
         }
     }
 
     private void handleDelete(Item item) {
-        // Lấy thông tin người dùng đang đăng nhập
         User currentUser = UserSession.getInstance().getLoggedInUser();
-        // Kiểm tra chắc chắn người dùng là Seller
         if (!(currentUser instanceof Seller)) {
-             Alert alert = new Alert(Alert.AlertType.ERROR, "Bạn không có quyền thực hiện thao tác này!");
-             alert.showAndWait();
-             return;
+            showAlert(Alert.AlertType.ERROR, "Tu choi", "Ban khong co quyen thuc hien thao tac nay!");
+            return;
         }
-        int sellerId = currentUser.getId();
-        // 1. Hiển thị hộp thoại xác nhận 
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Xác nhận xóa");
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+                "Ban co chac chan muon xoa san pham: " + item.getName() + "?",
+                ButtonType.OK, ButtonType.CANCEL);
         alert.setHeaderText(null);
-        alert.setContentText("Bạn có chắc chắn muốn xóa vĩnh viễn sản phẩm: " + item.getName() + "?");
-        
-        // 2. Chờ người dùng bấm nút
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-            // 3. Gọi DAO để xóa dưới Database, truyền cả itemId và sellerId
-            ItemDAO itemDAO = new ItemDAOImpl();
-            boolean isSuccess = itemDAO.deleteItem(item.getId(), sellerId); 
-            if (isSuccess) {
-                // 4. Xóa ngay trên giao diện 
-                itemList.remove(item);
-                System.out.println("Đã xóa thành công: " + item.getName());
-            } else {
-                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                errorAlert.setTitle("Lỗi");
-                errorAlert.setHeaderText(null);
-                errorAlert.setContentText("Không thể xóa sản phẩm. Vui lòng thử lại sau!");
-                errorAlert.showAndWait();
+            pendingDeleteItem = item;
+            try {
+                ItemActionPayload payload = new ItemActionPayload(item.getId(), currentUser.getId());
+                ServerConnection.getInstance().sendMessage(new Packet(PacketType.DELETE_ITEM, payload));
+            } catch (Exception e) {
+                e.printStackTrace();
+                showAlert(Alert.AlertType.ERROR, "Loi mang", "Khong the gui yeu cau xoa san pham!");
             }
         }
     }
 
     private void handleViewDetail(Item item) {
+        pendingViewItem = item;
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/view_item_detail.fxml"));
-            Parent root = loader.load();
-            
-            ViewItemDetailController controller = loader.getController();
-            // 1. Lấy status từ Map
-            String status = getAuctionStatus(item);
-            // 2. THÊM 2 DÒNG NÀY: Lấy Auction từ Database
-            AuctionDAO auctionDAO = new AuctionDAOImpl();
-            Auction auction = auctionDAO.getAuctionByItemId(item.getId());
-            if (auction != null) {
-                auction.setItem(item); 
+            ItemActionPayload payload = new ItemActionPayload(item.getId(), 0);
+            ServerConnection.getInstance().sendMessage(new Packet(PacketType.LOAD_AUCTION_BY_ITEM, payload));
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Loi mang", "Khong the tai chi tiet phien dau gia!");
+        }
+    }
+
+    private void handleConfirmPaid(Item item) {
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+                "Xac nhan da nhan du tien cho san pham: " + item.getName() + "?",
+                ButtonType.YES, ButtonType.NO);
+        alert.setHeaderText(null);
+        if (currentUser != null && alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
+            try {
+                ItemActionPayload payload = new ItemActionPayload(item.getId(), currentUser.getId());
+                ServerConnection.getInstance().sendMessage(new Packet(PacketType.CONFIRM_PAYMENT, payload));
+            } catch (Exception e) {
+                e.printStackTrace();
+                showAlert(Alert.AlertType.ERROR, "Loi mang", "Khong the gui yeu cau xac nhan!");
             }
-            // 3. SỬA DÒNG BÁO LỖI THÀNH DÒNG NÀY: Truyền đủ 3 tham số
+        }
+    }
+
+    private void openDetailWindow(Item item, Auction auction, String status) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/com/nhom3/client/view/view_item_detail.fxml"));
+            Parent root = loader.load();
+            ViewItemDetailController controller = loader.getController();
             controller.setItemData(item, auction, status);
 
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
             stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Chi tiết đấu giá: " + item.getName());
+            stage.setTitle("Chi tiet dau gia: " + item.getName());
             stage.show();
-        } catch (IOException e) { e.printStackTrace(); }
-    }
-
-    private void handleConfirmPaid(Item item) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, 
-            "Bạn xác nhận đã nhận đủ tiền cho sản phẩm: " + item.getName() + "?\nLưu ý: Sau khi xác nhận không thể hoàn tác!", 
-            ButtonType.YES, ButtonType.NO);
-        if (alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
-            AuctionDAO auctionDAO = new AuctionDAOImpl();
-            // 1. Tìm ID của phiên đấu giá thông qua ID của sản phẩm
-            com.nhom3.shared.model.auction.Auction auction = auctionDAO.getAuctionByItemId(item.getId());
-            if (auction != null) {
-                // 2. Gọi Database để cập nhật trạng thái
-                boolean isSuccess = auctionDAO.confirmPayment(auction.getId());
-                if (isSuccess) {
-                    System.out.println("Đã xác nhận thanh toán cho: " + item.getName());
-                    // 3. Tải lại bảng 
-                    loadSellerItems(); 
-                } else {
-                    new Alert(Alert.AlertType.ERROR, "Có lỗi xảy ra khi cập nhật Database!").showAndWait();
-                }
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
-    public void handleLoadItemsResult(List<com.nhom3.shared.network.payload.SellerItemsResponsePayload.SellerItemDTO> dtoList) {
-        if (dtoList == null) return;
 
-        List<Item> realItems = new java.util.ArrayList<>();
-        itemStatusMap.clear();
-
-        for (com.nhom3.shared.network.payload.SellerItemsResponsePayload.SellerItemDTO dto : dtoList) {
-            // 1. Tái tạo lại Object Item tùy theo Type
-            Item item = null;
-            com.nhom3.shared.model.item.ItemType typeEnum = com.nhom3.shared.model.item.ItemType.valueOf(dto.type);
-            item = typeEnum.createItem(dto.id, dto.name, dto.startPrice);
-            if (item != null) {
-                item.setCurHighest(dto.curHighest);
-                realItems.add(item);
-            }
-
-            // 2. Nạp lại Map trạng thái
-            if (dto.status != null && !dto.status.isEmpty()) {
-                itemStatusMap.put(dto.id, dto.status);
-            }
+    private Auction toAuction(AuctionListResponsePayload.AuctionDTO dto) {
+        ItemType type = ItemType.valueOf(dto.itemType);
+        Item item = type.createItem(dto.itemId, dto.itemName, dto.startPrice);
+        item.setCurHighest(dto.curHighest);
+        Auction auction = new Auction(
+                dto.auctionId,
+                item,
+                LocalDateTime.parse(dto.startTime),
+                LocalDateTime.parse(dto.endTime));
+        auction.setStatus(StatusOfAuction.valueOf(dto.status));
+        if (dto.highestBidderId > 0) {
+            auction.setHighestBidder(new Bidder(dto.highestBidderId, null, null));
         }
-
-        // Cập nhật giao diện
-        itemList.setAll(realItems);
-        tableItems.refresh();
+        return auction;
     }
 
-
-    private boolean checkHasAuction(Item item) {
-        // Nếu ID của item này có trong Map, nghĩa là nó đã được đăng bán
+    private boolean hasAuction(Item item) {
         return !getAuctionStatus(item).isEmpty();
     }
 
     private String getAuctionStatus(Item item) {
-        // Lấy trạng thái từ Map, nếu không có thì trả về chuỗi rỗng
         return itemStatusMap.getOrDefault(item.getId(), "");
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

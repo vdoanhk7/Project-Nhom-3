@@ -61,7 +61,7 @@ public class Server {
     public void shutdown() {
         try {
             for (ClientHandler client : connectedClients) {
-                client.interrupt(); // Gửi tín hiệu ngắt luồng
+                client.close();
             }
             clientThreadPool.shutdownNow(); // Dừng toàn bộ ThreadPool
             if (serverSocket != null && !serverSocket.isClosed()) {

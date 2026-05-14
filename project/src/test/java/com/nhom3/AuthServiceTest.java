@@ -87,7 +87,8 @@ public class AuthServiceTest {
 
     @Test
     void updateUser_Success_ShouldReturnTrue() {
-        User mockUser = mock(User.class);
+        // SỬ DỤNG HÀM TẠO USER HỢP LỆ (CÓ EMAIL VÀ SĐT CHUẨN) THAY VÌ USER RỖNG
+        User mockUser = createValidUser();
         when(userDAO.updateUser(mockUser)).thenReturn(true);
 
         boolean result = authService.updateUser(mockUser);
@@ -98,7 +99,8 @@ public class AuthServiceTest {
 
     @Test
     void updateUser_Failure_ShouldReturnFalse() {
-        User mockUser = mock(User.class);
+        // SỬ DỤNG HÀM TẠO USER HỢP LỆ (CÓ EMAIL VÀ SĐT CHUẨN) THAY VÌ USER RỖNG
+        User mockUser = createValidUser();
         when(userDAO.updateUser(mockUser)).thenReturn(false);
 
         boolean result = authService.updateUser(mockUser);

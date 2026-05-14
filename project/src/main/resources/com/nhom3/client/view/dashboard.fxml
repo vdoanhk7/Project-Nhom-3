@@ -140,7 +140,7 @@
                   <DropShadow color="#e74c3c66" offsetY="4.0" />
                </effect>
             </Button>
-            <Button mnemonicParsing="false" onAction="#handleGoToAssetManagement" prefHeight="45.0" prefWidth="200.0" style="-fx-background-color: #2ecc71; -fx-background-radius: 25; -fx-cursor: hand;" text="💼 Quản Lý Sản Phẩm" textFill="WHITE">
+            <Button fx:id="btnGoToAssetManagement" mnemonicParsing="false" onAction="#handleGoToAssetManagement" prefHeight="45.0" prefWidth="200.0" style="-fx-background-color: #2ecc71; -fx-background-radius: 25; -fx-cursor: hand;" text="💼 Quản Lý Sản Phẩm" textFill="WHITE">
                <font><Font name="System Bold" size="15.0" /></font>
                <effect>
                   <DropShadow color="#2ecc7166" offsetY="4.0" />

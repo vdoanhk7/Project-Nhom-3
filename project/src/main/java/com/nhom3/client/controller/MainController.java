@@ -27,10 +27,16 @@ public class MainController {
     @FXML private Button btnManageItem;
     @FXML private Button btnAdminPanel;
 
+    private static MainController instance;
     private long currentNavigationId = 0; // Biến để theo dõi ID của lần điều hướng hiện tại
+
+    public static MainController getInstance() {
+        return instance;
+    }
 
     @FXML
     public void initialize() {
+        instance = this;
         System.out.println("Giao diện chính đã tải thành công!");
         
         // 2. ẨN TẤT CẢ CÁC NÚT ĐỘNG
@@ -98,35 +104,52 @@ public class MainController {
     // CÁC SỰ KIỆN CHUYỂN TRANG (ĐÃ ĐƯỢC RÚT GỌN SIÊU SẠCH)
     @FXML
     void showDashboard(ActionEvent event) {
-        // Tận dụng ngay hàm tiện ích loadPage siêu sạch đã được định nghĩa
-        loadPage("/com/nhom3/client/view/dashboard.fxml");
+        navigateToDashboard();
     }
 
     @FXML
     void showMarket(ActionEvent event) {
-        loadPage("/com/nhom3/client/view/market.fxml");
+        navigateToMarket();
     }
 
     @FXML
     void showPurchaseHistory(ActionEvent event) {
-        loadPage("/com/nhom3/client/view/purchase_history.fxml");
+        navigateToPurchaseHistory();
     }
 
     @FXML
     void showManageItem(ActionEvent event) {
-        loadPage("/com/nhom3/client/view/manage_item.fxml");
+        navigateToManageItem();
     }
 
     @FXML
     void showAdminPanel(ActionEvent event) {
-        currentNavigationId = System.currentTimeMillis(); // Cập nhật ID
-        contentArea.getChildren().clear();
-        contentArea.getChildren().add(new Label("Đang hiển thị: QUẢN TRỊ HỆ THỐNG (ADMIN)"));
+        navigateToAdminPanel();
     }
 
     @FXML
     void showProfile(ActionEvent event) {
         loadPage("/com/nhom3/client/view/profile.fxml");
+    }
+
+    public void navigateToDashboard() {
+        loadPage("/com/nhom3/client/view/dashboard.fxml");
+    }
+
+    public void navigateToMarket() {
+        loadPage("/com/nhom3/client/view/market.fxml");
+    }
+
+    public void navigateToPurchaseHistory() {
+        loadPage("/com/nhom3/client/view/purchase_history.fxml");
+    }
+
+    public void navigateToManageItem() {
+        loadPage("/com/nhom3/client/view/manage_item.fxml");
+    }
+
+    public void navigateToAdminPanel() {
+        loadPage("/com/nhom3/client/view/admin_dashboard.fxml");
     }
 
     // ĐĂNG XUẤT

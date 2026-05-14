@@ -14,6 +14,7 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -33,6 +34,7 @@ public class DashboardController {
     @FXML private TableColumn<DashboardResponsePayload.TopItemDTO, Integer> colItemRank;
     @FXML private TableColumn<DashboardResponsePayload.TopItemDTO, String> colItemName;
     @FXML private TableColumn<DashboardResponsePayload.TopItemDTO, String> colItemPrice;
+    @FXML private Button btnGoToAssetManagement;
 
     // Singleton để ServerHandler gọi về
     private static DashboardController instance;
@@ -43,6 +45,7 @@ public class DashboardController {
     public void initialize() {
         instance = this;
         setupTables();
+        setupQuickActions();
         
         // Vừa vào màn hình là Gửi yêu cầu qua mạng liền
         try {
@@ -63,6 +66,21 @@ public class DashboardController {
         colItemPrice.setCellValueFactory(data -> new SimpleStringProperty(String.format("%,.0f", data.getValue().price)));
     }
 
+    private void setupQuickActions() {
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        if (currentUser == null || btnGoToAssetManagement == null) {
+            return;
+        }
+
+        if (currentUser.getRole() == Role.SELLER) {
+            btnGoToAssetManagement.setText("💼 Quản Lý Sản Phẩm");
+        } else if (currentUser.getRole() == Role.BIDDER) {
+            btnGoToAssetManagement.setText("📦 Lịch Sử Đấu Giá");
+        } else {
+            btnGoToAssetManagement.setText("⚙️ Quản Trị Hệ Thống");
+        }
+    }
+
     // ServerHandler sẽ gọi hàm này khi Database trả kết quả
     public void handleDashboardData(DashboardResponsePayload data) {
         if (data == null) return;
@@ -79,16 +97,29 @@ public class DashboardController {
 
     @FXML
     void handleGoToMarket(ActionEvent event) {
-        showAlert(Alert.AlertType.INFORMATION, "Hướng dẫn", "Vui lòng chọn nút 'Chợ Đấu Giá' ở thanh Menu bên trái để xem các sản phẩm đang lên sàn.");
+        MainController mainController = MainController.getInstance();
+        if (mainController != null) {
+            mainController.navigateToMarket();
+            return;
+        }
+        showAlert(Alert.AlertType.ERROR, "Lỗi điều hướng", "Không thể chuyển sang trang Chợ đấu giá lúc này.");
     }
 
     @FXML
     void handleGoToAssetManagement(ActionEvent event) {
         User currentUser = UserSession.getInstance().getLoggedInUser();
-        if (currentUser != null && currentUser.getRole() == Role.SELLER) {
-            showAlert(Alert.AlertType.INFORMATION, "Hướng dẫn", "Vui lòng chọn nút 'Quản Lý Sản Phẩm' ở thanh Menu bên trái.");
+        MainController mainController = MainController.getInstance();
+        if (currentUser == null || mainController == null) {
+            showAlert(Alert.AlertType.ERROR, "Lỗi điều hướng", "Không thể chuyển trang lúc này.");
+            return;
+        }
+
+        if (currentUser.getRole() == Role.SELLER) {
+            mainController.navigateToManageItem();
+        } else if (currentUser.getRole() == Role.BIDDER) {
+            mainController.navigateToPurchaseHistory();
         } else {
-            showAlert(Alert.AlertType.WARNING, "Từ chối truy cập", "Chỉ tài khoản Người Bán (Seller) mới có thể sử dụng tính năng này!");
+            mainController.navigateToAdminPanel();
         }
     }
 

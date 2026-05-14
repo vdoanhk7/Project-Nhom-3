@@ -60,3 +60,12 @@ CREATE TABLE IF NOT EXISTS auto_bids (
     FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE,
     UNIQUE KEY unique_auto_bid (bidder_id, auction_id) 
 );
+
+-- 6. Bảng activity_logs
+CREATE TABLE IF NOT EXISTS activity_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);

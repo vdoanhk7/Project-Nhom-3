@@ -1,0 +1,243 @@
+2026-05-14 18:16:50 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-14 18:16:50 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-14 18:16:52 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@c74fc2c
+2026-05-14 18:16:52 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-14 18:16:52 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-14 18:16:53 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-14 18:17:00 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-14 18:17:00 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: Pham Tien Dung  đã đăng nhập thành công!
+2026-05-14 18:17:00 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-14 18:17:33 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-14 18:17:44 [virtual-46] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: b
+2026-05-14 18:17:44 [virtual-46] INFO  c.nhom3.server.service.AuthService - Server: b đã đăng nhập thành công!
+2026-05-14 18:17:44 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-14 18:21:53 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-14 18:22:01 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-14 18:23:08 [virtual-47] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-14 18:23:09 [virtual-47] INFO  c.nhom3.server.service.AuthService - Server: Pham Tien Dung  đã đăng nhập thành công!
+2026-05-14 18:23:09 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-14 18:23:35 [Thread-1] ERROR c.n.client.network.ServerConnection - Lỗi khi nhận phản hồi từ server
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:318)
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346)
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796)
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099)
+	at java.base/sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:350)
+	at java.base/sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:393)
+	at java.base/sun.nio.cs.StreamDecoder.lockedRead(StreamDecoder.java:217)
+	at java.base/sun.nio.cs.StreamDecoder.read(StreamDecoder.java:171)
+	at java.base/java.io.InputStreamReader.read(InputStreamReader.java:188)
+	at java.base/java.io.BufferedReader.fill(BufferedReader.java:160)
+	at java.base/java.io.BufferedReader.implReadLine(BufferedReader.java:370)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:347)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:436)
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:86)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-05-14 18:23:35 [Thread-1] ERROR c.n.client.network.ServerConnection - Lỗi khi nhận phản hồi từ server
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:318)
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346)
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796)
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099)
+	at java.base/sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:350)
+	at java.base/sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:393)
+	at java.base/sun.nio.cs.StreamDecoder.lockedRead(StreamDecoder.java:217)
+	at java.base/sun.nio.cs.StreamDecoder.read(StreamDecoder.java:171)
+	at java.base/java.io.InputStreamReader.read(InputStreamReader.java:188)
+	at java.base/java.io.BufferedReader.fill(BufferedReader.java:160)
+	at java.base/java.io.BufferedReader.implReadLine(BufferedReader.java:370)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:347)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:436)
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:86)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-05-14 18:23:35 [Thread-1] ERROR c.n.client.network.ServerConnection - Lỗi khi nhận phản hồi từ server
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:318)
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346)
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796)
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099)
+	at java.base/sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:350)
+	at java.base/sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:393)
+	at java.base/sun.nio.cs.StreamDecoder.lockedRead(StreamDecoder.java:217)
+	at java.base/sun.nio.cs.StreamDecoder.read(StreamDecoder.java:171)
+	at java.base/java.io.InputStreamReader.read(InputStreamReader.java:188)
+	at java.base/java.io.BufferedReader.fill(BufferedReader.java:160)
+	at java.base/java.io.BufferedReader.implReadLine(BufferedReader.java:370)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:347)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:436)
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:86)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-05-14 18:23:35 [Thread-1] ERROR c.nhom3.client.network.ServerHandler - Lỗi mất kết nối. Đang thử kết nối lại...
+java.io.IOException: Lỗi khi nhận phản hồi từ server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:94)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:318)
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346)
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796)
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099)
+	at java.base/sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:350)
+	at java.base/sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:393)
+	at java.base/sun.nio.cs.StreamDecoder.lockedRead(StreamDecoder.java:217)
+	at java.base/sun.nio.cs.StreamDecoder.read(StreamDecoder.java:171)
+	at java.base/java.io.InputStreamReader.read(InputStreamReader.java:188)
+	at java.base/java.io.BufferedReader.fill(BufferedReader.java:160)
+	at java.base/java.io.BufferedReader.implReadLine(BufferedReader.java:370)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:347)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:436)
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:86)
+	... 2 common frames omitted
+2026-05-14 18:23:35 [Thread-1] ERROR c.nhom3.client.network.ServerHandler - Lỗi mất kết nối. Đang thử kết nối lại...
+java.io.IOException: Lỗi khi nhận phản hồi từ server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:94)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:318)
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346)
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796)
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099)
+	at java.base/sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:350)
+	at java.base/sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:393)
+	at java.base/sun.nio.cs.StreamDecoder.lockedRead(StreamDecoder.java:217)
+	at java.base/sun.nio.cs.StreamDecoder.read(StreamDecoder.java:171)
+	at java.base/java.io.InputStreamReader.read(InputStreamReader.java:188)
+	at java.base/java.io.BufferedReader.fill(BufferedReader.java:160)
+	at java.base/java.io.BufferedReader.implReadLine(BufferedReader.java:370)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:347)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:436)
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:86)
+	... 2 common frames omitted
+2026-05-14 18:23:35 [Thread-1] ERROR c.nhom3.client.network.ServerHandler - Lỗi mất kết nối. Đang thử kết nối lại...
+java.io.IOException: Lỗi khi nhận phản hồi từ server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:94)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:318)
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346)
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796)
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099)
+	at java.base/sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:350)
+	at java.base/sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:393)
+	at java.base/sun.nio.cs.StreamDecoder.lockedRead(StreamDecoder.java:217)
+	at java.base/sun.nio.cs.StreamDecoder.read(StreamDecoder.java:171)
+	at java.base/java.io.InputStreamReader.read(InputStreamReader.java:188)
+	at java.base/java.io.BufferedReader.fill(BufferedReader.java:160)
+	at java.base/java.io.BufferedReader.implReadLine(BufferedReader.java:370)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:347)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:436)
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:86)
+	... 2 common frames omitted
+2026-05-14 18:23:42 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:597)
+	at java.base/sun.nio.ch.Net.connect(Net.java:586)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:583)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at java.base/java.net.Socket.connect(Socket.java:686)
+	at java.base/java.net.Socket.<init>(Socket.java:555)
+	at java.base/java.net.Socket.<init>(Socket.java:324)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:44)
+	at com.nhom3.client.App.main(App.java:36)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-14 18:23:44 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:597)
+	at java.base/sun.nio.ch.Net.connect(Net.java:586)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:583)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at java.base/java.net.Socket.connect(Socket.java:686)
+	at java.base/java.net.Socket.<init>(Socket.java:555)
+	at java.base/java.net.Socket.<init>(Socket.java:324)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:44)
+	at com.nhom3.client.App.main(App.java:36)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-14 18:23:46 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:597)
+	at java.base/sun.nio.ch.Net.connect(Net.java:586)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:583)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at java.base/java.net.Socket.connect(Socket.java:686)
+	at java.base/java.net.Socket.<init>(Socket.java:555)
+	at java.base/java.net.Socket.<init>(Socket.java:324)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:44)
+	at com.nhom3.client.App.main(App.java:36)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-14 18:23:48 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:597)
+	at java.base/sun.nio.ch.Net.connect(Net.java:586)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:583)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at java.base/java.net.Socket.connect(Socket.java:686)
+	at java.base/java.net.Socket.<init>(Socket.java:555)
+	at java.base/java.net.Socket.<init>(Socket.java:324)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:44)
+	at com.nhom3.client.App.main(App.java:36)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-14 18:23:50 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:597)
+	at java.base/sun.nio.ch.Net.connect(Net.java:586)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:583)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at java.base/java.net.Socket.connect(Socket.java:686)
+	at java.base/java.net.Socket.<init>(Socket.java:555)
+	at java.base/java.net.Socket.<init>(Socket.java:324)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:44)
+	at com.nhom3.client.App.main(App.java:36)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-14 18:23:52 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:597)
+	at java.base/sun.nio.ch.Net.connect(Net.java:586)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:583)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at java.base/java.net.Socket.connect(Socket.java:686)
+	at java.base/java.net.Socket.<init>(Socket.java:555)
+	at java.base/java.net.Socket.<init>(Socket.java:324)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:44)
+	at com.nhom3.client.App.main(App.java:36)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-14 18:23:54 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:597)
+	at java.base/sun.nio.ch.Net.connect(Net.java:586)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:583)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at java.base/java.net.Socket.connect(Socket.java:686)
+	at java.base/java.net.Socket.<init>(Socket.java:555)
+	at java.base/java.net.Socket.<init>(Socket.java:324)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:44)
+	at com.nhom3.client.App.main(App.java:36)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-14 18:23:54 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-14 18:23:54 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-14 18:23:56 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@c74fc2c
+2026-05-14 18:23:56 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-14 18:23:56 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-14 18:23:56 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-14 18:24:09 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-14 18:24:09 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: Pham Tien Dung  đã đăng nhập thành công!
+2026-05-14 18:24:09 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-14 18:30:44 [virtual-35] ERROR c.nhom3.server.network.ClientHandler - Client ngắt kết nối

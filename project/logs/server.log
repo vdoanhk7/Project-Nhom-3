@@ -1,0 +1,4 @@
+2026-05-14 18:21:42 [com.nhom3.server.DropTable.main()] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-14 18:21:43 [com.nhom3.server.DropTable.main()] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1e01697
+2026-05-14 18:21:43 [com.nhom3.server.DropTable.main()] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-14 18:21:43 [com.nhom3.server.DropTable.main()] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.

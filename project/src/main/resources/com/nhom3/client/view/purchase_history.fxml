@@ -33,10 +33,10 @@
       <TableView fx:id="tableHistory" prefHeight="500.0" style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #bdc3c7;" VBox.vgrow="ALWAYS">
         <columns>
           <TableColumn fx:id="colItemName" prefWidth="250.0" text="Tên Sản Phẩm" />
-          <TableColumn fx:id="colBidAmount" prefWidth="150.0" style="-fx-alignment: CENTER_RIGHT;" text="Mức giá bạn đặt" />
-          <TableColumn fx:id="colBidTime" prefWidth="180.0" style="-fx-alignment: CENTER;" text="Thời gian đặt" />
-          <TableColumn fx:id="colAuctionStatus" prefWidth="150.0" style="-fx-alignment: CENTER;" text="Trạng thái Phiên" />
-          <TableColumn fx:id="colResult" prefWidth="200.0" style="-fx-alignment: CENTER;" text="Kết quả " />
+          <TableColumn fx:id="colBidAmount" prefWidth="150.0" style="-fx-alignment: CENTER_RIGHT;" text="Mức Giá Bạn Đặt" />
+          <TableColumn fx:id="colBidTime" prefWidth="180.0" style="-fx-alignment: CENTER;" text="Thời Gian Đặt" />
+          <TableColumn fx:id="colAuctionStatus" prefWidth="150.0" style="-fx-alignment: CENTER;" text="Trạng Thái Phiên" />
+          <TableColumn fx:id="colResult" prefWidth="200.0" style="-fx-alignment: CENTER;" text="Kết Quả " />
         </columns>
       </TableView>
    </children>

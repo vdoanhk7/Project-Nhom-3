@@ -81,7 +81,7 @@
                   </Label>
                   <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
                      <children>
-                        <Button fx:id="btnShowChart" onAction="#handleToggleChart" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold; -fx-background-radius: 15; -fx-cursor: hand; -fx-padding: 5 15;" text="📊 Chuyển đổi Bảng/Biểu đồ" />
+                        <Button fx:id="btnShowChart" onAction="#handleToggleChart" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold; -fx-background-radius: 15; -fx-cursor: hand; -fx-padding: 5 15;" text="📊 Biểu Đồ Đường Giá " />
                      </children>
                   </HBox>
                </children>

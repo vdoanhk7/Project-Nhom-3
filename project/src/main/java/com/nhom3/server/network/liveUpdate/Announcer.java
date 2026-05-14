@@ -29,14 +29,6 @@ public class Announcer {
         clientInAuctions.get(auctionId).removeIf(observer -> observer.client == client);
     }
 
-    // public void setsUpdateType(int auctionId, int clientId, String type) {
-    //     for (AuctionObserver observer : clientInAuctions.get(auctionId)) {
-    //         if (client.id == clientId) {
-    //             //observer = new ObserverType(client)
-    //         }
-    //     }
-    // }
-
     public void notify(int auctionId, double amount) {
         for (AuctionObserver observer : clientInAuctions.get(auctionId)) {
             try {

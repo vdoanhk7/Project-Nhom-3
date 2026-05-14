@@ -178,7 +178,7 @@ public class PacketDispatcher {
         AuctionDAO adao = new AuctionDAOImpl();
         boolean autoSuccess = adao.saveAutoBidConfig(autoData);
         if (autoSuccess) {
-            auctionService.triggerAutoBids(autoData.getAuctionId());
+            auctionHandler.handleAutoBid(autoData.getAuctionId());
         }
         return new Packet(PacketType.PLACE_AUTO_BID, new ResultPayload(autoSuccess, autoSuccess ? "Hệ thống đã ghi nhận thiết lập Auto-Bid của bạn!" : "Lỗi Database khi cài đặt Auto-Bid!", -1, "", "", "", "", ""));
     }

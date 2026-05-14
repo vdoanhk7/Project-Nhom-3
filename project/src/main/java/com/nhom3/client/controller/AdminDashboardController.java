@@ -1,90 +1,170 @@
 package com.nhom3.client.controller;
 
-import com.nhom3.server.dao.AuctionDAO;
-import com.nhom3.server.dao.AuctionDAOImpl;
-import com.nhom3.server.dao.UserDAO;
-import com.nhom3.server.dao.UserDAOImpl;
-import com.nhom3.shared.model.auction.Auction;
-import com.nhom3.shared.model.user.User;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.application.Platform;
-
+import com.nhom3.client.network.ServerConnection;
+import com.nhom3.shared.network.packet.Packet;
+import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.shared.network.payload.AuctionIdPayload;
+import com.nhom3.shared.network.payload.AuctionListResponsePayload;
+import com.nhom3.shared.network.payload.UserListResponsePayload;
 import java.util.List;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.text.Text;
 
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
+        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class AdminDashboardController {
 
-    // Các thành phần Quản lý Người dùng
-    @FXML private TableView<User> tableUsers;
-    @FXML private TableColumn<User, Integer> colUserId;
-    @FXML private TableColumn<User, String> colUserName;
-    @FXML private TableColumn<User, String> colUserFullName;
-    @FXML private TableColumn<User, String> colUserRole;
+    @FXML private Text txtTotalUsers;
+    @FXML private Text txtActiveAuctions;
+    @FXML private Text txtTotalValue;
 
-    // Các thành phần Quản lý Đấu giá
-    @FXML private TableView<Auction> tableAuctions;
-    @FXML private TableColumn<Auction, Integer> colAuctionId;
-    @FXML private TableColumn<Auction, String> colItemName;
-    @FXML private TableColumn<Auction, Double> colCurrentPrice;
-    @FXML private TableColumn<Auction, String> colStatus;
+    @FXML private TableView<UserListResponsePayload.UserDTO> tableUsers;
+    @FXML private TableColumn<UserListResponsePayload.UserDTO, Integer> colUserId;
+    @FXML private TableColumn<UserListResponsePayload.UserDTO, String> colUserName;
+    @FXML private TableColumn<UserListResponsePayload.UserDTO, String> colUserRole;
+    @FXML private TableColumn<UserListResponsePayload.UserDTO, Void> colUserAction;
 
-    private UserDAO userDAO = new UserDAOImpl();
-    private AuctionDAO auctionDAO = new AuctionDAOImpl();
+    @FXML private TableView<AuctionListResponsePayload.AuctionDTO> tableAuctions;
+    @FXML private TableColumn<AuctionListResponsePayload.AuctionDTO, Integer> colAuctionId;
+    @FXML private TableColumn<AuctionListResponsePayload.AuctionDTO, String> colItemName;
+    @FXML private TableColumn<AuctionListResponsePayload.AuctionDTO, String> colStatus;
+    @FXML private TableColumn<AuctionListResponsePayload.AuctionDTO, Void> colAuctionAction;
+
+    private static AdminDashboardController instance;
+
+    public static AdminDashboardController getInstance() {
+        return instance;
+    }
 
     @FXML
     public void initialize() {
+        instance = this;
         setupUserTable();
         setupAuctionTable();
-
-        // Tải dữ liệu ban đầu
         loadUserData();
         loadAuctionData();
     }
 
+    public void handleLoadUserDataResult(List<UserListResponsePayload.UserDTO> users) {
+        tableUsers.setItems(FXCollections.observableArrayList(users));
+        txtTotalUsers.setText(String.format("%,d", users == null ? 0 : users.size()));
+    }
+
+    public void handleLoadAuctionDataResult(List<AuctionListResponsePayload.AuctionDTO> auctions) {
+        tableAuctions.setItems(FXCollections.observableArrayList(auctions));
+        int count = auctions == null ? 0 : auctions.size();
+        double totalValue = 0;
+        if (auctions != null) {
+            for (AuctionListResponsePayload.AuctionDTO auction : auctions) {
+                totalValue += auction.curHighest;
+            }
+        }
+        txtActiveAuctions.setText(String.format("%,d", count));
+        txtTotalValue.setText(String.format("%,.0f", totalValue));
+    }
+
+    public void handleCancelAuctionResult(boolean success, String message) {
+        showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
+                success ? "Thanh cong" : "That bai", message);
+        if (success) {
+            loadAuctionData();
+        }
+    }
+
     private void setupUserTable() {
-        colUserId.setCellValueFactory(new PropertyValueFactory<>("id"));
-        // Giả sử UserInfo có các thuộc tính này hoặc bạn lấy từ User model
-        colUserName.setCellValueFactory(cellData ->
-                javafx.beans.binding.Bindings.createStringBinding(() -> cellData.getValue().getUserInfo().getUserName()));
-        colUserFullName.setCellValueFactory(cellData ->
-                javafx.beans.binding.Bindings.createStringBinding(() -> cellData.getValue().getUserInfo().getName()));
-        colUserRole.setCellValueFactory(new PropertyValueFactory<>("role"));
+        colUserId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().id).asObject());
+        colUserName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().username));
+        colUserRole.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().role));
+        colUserAction.setCellFactory(column -> new TableCell<>() {
+            private final Button btnInfo = new Button("Xem");
+
+            {
+                btnInfo.setOnAction(event -> {
+                    UserListResponsePayload.UserDTO user = getTableView().getItems().get(getIndex());
+                    showAlert(Alert.AlertType.INFORMATION, "Thong tin nguoi dung",
+                            user.fullName + "\nEmail: " + user.email + "\nPhone: " + user.phone);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : btnInfo);
+            }
+        });
     }
 
     private void setupAuctionTable() {
-        colAuctionId.setCellValueFactory(new PropertyValueFactory<>("id"));
-        colItemName.setCellValueFactory(cellData ->
-                javafx.beans.binding.Bindings.createStringBinding(() -> cellData.getValue().getItem().getName()));
-        colCurrentPrice.setCellValueFactory(cellData ->
-                javafx.beans.binding.Bindings.createDoubleBinding(() -> cellData.getValue().getItem().getCurHighest()).asObject());
-        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+        colAuctionId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().auctionId).asObject());
+        colItemName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().itemName));
+        colStatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().status));
+        colAuctionAction.setCellFactory(column -> new TableCell<>() {
+            private final Button btnCancel = new Button("Huy phien");
+
+            {
+                btnCancel.setOnAction(event -> {
+                    AuctionListResponsePayload.AuctionDTO auction = getTableView().getItems().get(getIndex());
+                    try {
+                        ServerConnection.getInstance().sendMessage(
+                                new Packet(PacketType.CANCEL_AUCTION, new AuctionIdPayload(auction.auctionId)));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        showAlert(Alert.AlertType.ERROR, "Loi mang", "Khong the gui yeu cau huy phien!");
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                    return;
+                }
+                AuctionListResponsePayload.AuctionDTO auction = getTableView().getItems().get(getIndex());
+                btnCancel.setDisable("FINISHED".equals(auction.status)
+                        || "PAID".equals(auction.status)
+                        || "CANCELLED".equals(auction.status));
+                setGraphic(btnCancel);
+            }
+        });
     }
 
     private void loadUserData() {
+        try {
+            ServerConnection.getInstance().sendMessage(new Packet(PacketType.LOAD_USERS, null));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void loadAuctionData() {
-        List<Auction> auctions = auctionDAO.getActiveAuctions(); // Tận dụng hàm sẵn có [cite: 504, 547]
-        tableAuctions.setItems(FXCollections.observableArrayList(auctions));
+        try {
+            ServerConnection.getInstance().sendMessage(new Packet(PacketType.LOAD_ACTIVE_AUCTIONS, null));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     private void handleLogout() {
-        // Logic quay lại màn hình Login [cite: 5]
-        System.out.println("Admin đã đăng xuất.");
+        System.out.println("Admin da dang xuat.");
     }
 
-    @FXML
-    private void handleCancelAuction() {
-        Auction selected = tableAuctions.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            // Gọi hàm hủy phiên nếu phát hiện gian lận [cite: 27, 40]
-            // boolean success = auctionDAO.updateStatus(selected.getId(), "CANCELLED");
-            System.out.println("Admin đã hủy phiên: " + selected.getId());
-            loadAuctionData(); // Refresh lại bảng
-        }
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

@@ -1,9 +1,11 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.UserSession;
-import com.nhom3.server.service.AuthService;
 import com.nhom3.shared.model.user.User;
-
+import com.nhom3.shared.network.packet.Packet;
+import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.shared.network.payload.ChangePasswordPayload;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -11,6 +13,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.stage.Stage;
 
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
+        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class ChangePasswordController {
 
     @FXML private PasswordField txtOldPass;
@@ -18,7 +23,17 @@ public class ChangePasswordController {
     @FXML private PasswordField txtConfirmPass;
     @FXML private Button btnCancel;
 
-    // Khi bấm nút "Cập nhật"
+    private static ChangePasswordController instance;
+
+    public static ChangePasswordController getInstance() {
+        return instance;
+    }
+
+    @FXML
+    public void initialize() {
+        instance = this;
+    }
+
     @FXML
     void handleSavePassword(ActionEvent event) {
         String oldPass = txtOldPass.getText();
@@ -26,54 +41,54 @@ public class ChangePasswordController {
         String confirmPass = txtConfirmPass.getText();
 
         if (oldPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng nhập đầy đủ thông tin vào các ô!");
+            showAlert(Alert.AlertType.WARNING, "Canh bao", "Vui long nhap day du thong tin!");
+            return;
+        }
+
+        if (!newPass.equals(confirmPass)) {
+            showAlert(Alert.AlertType.ERROR, "Loi nhap lieu", "Mat khau xac nhan khong khop!");
+            return;
+        }
+
+        if (newPass.equals(oldPass)) {
+            showAlert(Alert.AlertType.WARNING, "Thong bao", "Mat khau moi phai khac mat khau cu!");
             return;
         }
 
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (currentUser == null) {
-            showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không tìm thấy phiên đăng nhập. Vui lòng đăng nhập lại!");
+            showAlert(Alert.AlertType.ERROR, "Loi", "Khong tim thay phien dang nhap!");
             return;
         }
 
-        String currentSavedPass = currentUser.getUserInfo().getPassword();
-        if (!currentSavedPass.equals(oldPass)) {
-            showAlert(Alert.AlertType.ERROR, "Lỗi xác thực", "Mật khẩu hiện tại không chính xác!");
-            return;
-        }
-
-        if (!newPass.equals(confirmPass)) {
-            showAlert(Alert.AlertType.ERROR, "Lỗi nhập liệu", "Mật khẩu xác nhận không khớp!");
-            return;
-        }
-
-        if (newPass.equals(oldPass)) {
-            showAlert(Alert.AlertType.WARNING, "Thông báo", "Mật khẩu mới phải khác với mật khẩu cũ!");
-            return;
-        }
-
-        AuthService authService = new AuthService(); 
-        
-        boolean isSuccess = authService.changePassword(currentUser.getId(), newPass);
-
-        if (isSuccess) {
-            currentUser.getUserInfo().setPassword(newPass);
-            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Mật khẩu đã được thay đổi thành công!");
-            closeWindow();
-        } else {
-            showAlert(Alert.AlertType.ERROR, "Lỗi Database", "Không thể cập nhật mật khẩu vào hệ thống. Vui lòng thử lại!");
+        try {
+            ChangePasswordPayload payload =
+                    new ChangePasswordPayload(currentUser.getId(), oldPass, newPass);
+            ServerConnection.getInstance().sendMessage(new Packet(PacketType.CHANGE_PASSWORD, payload));
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Loi mang", "Khong the gui yeu cau doi mat khau!");
         }
     }
 
-    // Hàm hỗ trợ: 
+    public void handleChangePasswordResult(boolean success, String message) {
+        showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
+                success ? "Thanh cong" : "That bai", message);
+        if (success) {
+            closeWindow();
+        }
+    }
+
     @FXML
     void handleCancel(ActionEvent event) {
         closeWindow();
     }
+
     private void closeWindow() {
         Stage stage = (Stage) btnCancel.getScene().getWindow();
         stage.close();
     }
+
     private void showAlert(Alert.AlertType type, String title, String content) {
         Alert alert = new Alert(type);
         alert.setTitle(title);

@@ -174,7 +174,11 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public Auction getAuctionByItemId(int itemId) {
         // Lấy phiên đấu giá mới nhất của sản phẩm này
-        String sql = "SELECT * FROM auctions WHERE item_id = ? ORDER BY id DESC LIMIT 1";
+        String sql = "SELECT a.*, i.id AS item_id, i.name AS item_name, i.item_type, "
+                + "i.start_price, i.cur_highest "
+                + "FROM auctions a "
+                + "JOIN items i ON a.item_id = i.id "
+                + "WHERE a.item_id = ? ORDER BY a.id DESC LIMIT 1";
 
         try (Connection conn = DbConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -182,11 +186,24 @@ public class AuctionDAOImpl implements AuctionDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 int id = rs.getInt("id");
+                com.nhom3.shared.model.item.ItemType type =
+                        com.nhom3.shared.model.item.ItemType.valueOf(rs.getString("item_type"));
+                Item item = type.createItem(
+                        rs.getInt("item_id"),
+                        rs.getString("item_name"),
+                        rs.getDouble("start_price"));
+                item.setCurHighest(rs.getDouble("cur_highest"));
                 java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                 java.time.LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
                 // Khởi tạo Auction (Truyền null cho thuộc tính Item để tránh query vòng lặp, vì
                 // bên giao diện ta chỉ cần lấy thời gian)
-                return new Auction(id, null, start, end);
+                Auction auction = new Auction(id, item, start, end);
+                auction.setStatus(StatusOfAuction.valueOf(rs.getString("status")));
+                int highestBidderId = rs.getInt("highest_bidder_id");
+                if (!rs.wasNull()) {
+                    auction.setHighestBidder(new Bidder(highestBidderId, null, null));
+                }
+                return auction;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -411,12 +428,12 @@ public class AuctionDAOImpl implements AuctionDAO {
     public LocalDateTime getEndTime(int auctionId) {
         String sql = "SELECT end_time FROM auctions WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
-
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, auctionId);
-            if (rs.next()) {
-                return rs.getTimestamp("end_time").toLocalDateTime();
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getTimestamp("end_time").toLocalDateTime();
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

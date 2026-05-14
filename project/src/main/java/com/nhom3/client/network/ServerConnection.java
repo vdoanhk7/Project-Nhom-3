@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter; 
 
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
@@ -40,8 +41,8 @@ public class ServerConnection {
     public void connect() throws IOException {
         try {
             socket = new Socket(SERVER_HOST, SERVER_PORT);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+            out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
             logger.info("Kết nối đến server thành công tại {}:{}", SERVER_HOST, SERVER_PORT);
         } catch (IOException e) {
             logger.error("Lỗi kết nối đến server: ", e);

@@ -2,6 +2,7 @@ package com.nhom3.server.network.liveUpdate;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import com.nhom3.server.network.ClientHandler;
 import java.io.IOException;
 
@@ -22,11 +23,20 @@ public class Announcer {
 
     public void addObserver(int auctionId, ClientHandler client) {
         AuctionObserver observer = new ScreenObserver(client);
-        clientInAuctions.get(auctionId).add(observer);
+        clientInAuctions
+                .computeIfAbsent(auctionId, key -> new CopyOnWriteArraySet<>())
+                .add(observer);
     }
 
     public void removeObserver(int auctionId, ClientHandler client) {
-        clientInAuctions.get(auctionId).removeIf(observer -> observer.client == client);
+        Set<AuctionObserver> observers = clientInAuctions.get(auctionId);
+        if (observers == null) {
+            return;
+        }
+        observers.removeIf(observer -> observer.client == client);
+        if (observers.isEmpty()) {
+            clientInAuctions.remove(auctionId, observers);
+        }
     }
 
     // public void setsUpdateType(int auctionId, int clientId, String type) {
@@ -38,7 +48,11 @@ public class Announcer {
     // }
 
     public void notify(int auctionId, double amount) {
-        for (AuctionObserver observer : clientInAuctions.get(auctionId)) {
+        Set<AuctionObserver> observers = clientInAuctions.get(auctionId);
+        if (observers == null || observers.isEmpty()) {
+            return;
+        }
+        for (AuctionObserver observer : observers) {
             try {
                 observer.update(amount);
             } catch (IOException e) {

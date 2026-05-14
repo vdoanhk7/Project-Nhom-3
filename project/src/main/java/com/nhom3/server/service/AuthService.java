@@ -43,4 +43,8 @@ public class AuthService {
     public boolean changePassword(int userId, String newPassword) {
         return userDAO.updatePassword(userId, newPassword);
     }
+
+    public boolean changePassword(int userId, String oldPassword, String newPassword) {
+        return userDAO.changePassword(userId, oldPassword, newPassword);
+    }
 }

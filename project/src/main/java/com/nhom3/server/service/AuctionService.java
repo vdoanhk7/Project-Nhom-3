@@ -250,6 +250,8 @@ public class AuctionService {
                             try {
                                 bidPlaced = placeBidInternal(auction, autoBidTx);
                                 if (bidPlaced) {
+                                    com.nhom3.server.network.liveUpdate.Announcer.getInstance()
+                                            .notify(auctionId, nextBidAmount);
                                     break; // Chỉ 1 Bot được đặt trong nhịp này. Thoát vòng lặp For.
                                 }
                             } catch (IllegalStateException e) {

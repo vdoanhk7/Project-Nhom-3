@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,7 @@ import com.nhom3.server.service.AuctionService;
 import com.nhom3.server.service.AuthService;
 import com.nhom3.shared.network.packet.Packet;
 
-public class ClientHandler extends Thread {
+public class ClientHandler implements Runnable {
     private final Socket clientSocket;
     private final AuthService authService;
     private final AuctionService auctionService;
@@ -25,11 +26,16 @@ public class ClientHandler extends Thread {
         this.clientSocket = socket;
         this.authService = new AuthService();
         this.auctionService = new AuctionService();
-        this.dispatcher = new PacketDispatcher(this.authService, this.auctionService);
+        this.dispatcher = new PacketDispatcher(this.authService, this.auctionService, this);
+    }
+
+    public void close() throws IOException {
+        clientSocket.close();
     }
 
     public synchronized void send(Packet packet) throws IOException {
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+        BufferedWriter out = new BufferedWriter(
+                new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
         Gson gson = new Gson();
         out.write(gson.toJson(packet));
         out.newLine();
@@ -39,7 +45,8 @@ public class ClientHandler extends Thread {
     public void run() {
         Logger logger = LoggerFactory.getLogger(ClientHandler.class);
         try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
             String line;
             Gson gson = new Gson();
 

@@ -10,7 +10,7 @@ import javafx.stage.Stage;
 
 public class App extends Application {
     // Nhận và xử lý phản hồi từ server trong thread riêng
-    public static ServerHandler serverHandler = new ServerHandler();
+    public static final ServerHandler serverHandler = new ServerHandler();
 
     @Override
     public void start(Stage primaryStage) throws Exception {

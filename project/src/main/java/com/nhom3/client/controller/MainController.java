@@ -27,10 +27,16 @@ public class MainController {
     @FXML private Button btnManageItem;
     @FXML private Button btnAdminPanel;
 
+    private static MainController instance;
     private long currentNavigationId = 0; // Biến để theo dõi ID của lần điều hướng hiện tại
+
+    public static MainController getInstance() {
+        return instance;
+    }
 
     @FXML
     public void initialize() {
+        instance = this;
         System.out.println("Giao diện chính đã tải thành công!");
         
         // 2. ẨN TẤT CẢ CÁC NÚT ĐỘNG
@@ -42,7 +48,7 @@ public class MainController {
         User currentUser = UserSession.getInstance().getLoggedInUser();
         
         if (currentUser != null) {
-            lblUserName.setText("Xin chào, " + currentUser.getUserInfo().getName());
+            lblUserName.setText(buildGreeting(currentUser));
 
             if (currentUser instanceof Admin) {
                 btnAdminPanel.setVisible(true); btnAdminPanel.setManaged(true);
@@ -61,34 +67,34 @@ public class MainController {
         // 1. Tạo ID mới mỗi lần bấm nút
         currentNavigationId = System.currentTimeMillis();
         final long thisLoadId = currentNavigationId;
+        
         // 2. Hiện vòng xoay
         ProgressIndicator spinner = new ProgressIndicator();
         spinner.setMaxSize(50, 50);
         contentArea.getChildren().clear();
         contentArea.getChildren().add(spinner);
-        // 3. Tải ngầm FXML
+        
+        // 3. Tải ngầm FXML an toàn trên luồng giao diện
         Thread loadThread = new Thread(() -> {
-            try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-                Parent view = loader.load();               
-                // 4. Cập nhật UI nếu ID vẫn khớp (Nghĩa là user chưa bấm nút khác)
-                javafx.application.Platform.runLater(() -> {
+            javafx.application.Platform.runLater(() -> {
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+                    Parent view = loader.load();               
+                    // Cập nhật UI nếu ID vẫn khớp (Nghĩa là user chưa bấm nút khác)
                     if (thisLoadId == currentNavigationId) {
                         contentArea.getChildren().clear();
                         contentArea.getChildren().add(view);
                     }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-                javafx.application.Platform.runLater(() -> {
+                } catch (Exception e) {
+                    e.printStackTrace();
                     if (thisLoadId == currentNavigationId) {
                         contentArea.getChildren().clear();
                         Label lblError = new Label("Lỗi: Không thể tải giao diện!");
                         lblError.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
                         contentArea.getChildren().add(lblError);
                     }
-                });
-            }
+                }
+            });
         });
 
         loadThread.setDaemon(true); 
@@ -98,35 +104,56 @@ public class MainController {
     // CÁC SỰ KIỆN CHUYỂN TRANG (ĐÃ ĐƯỢC RÚT GỌN SIÊU SẠCH)
     @FXML
     void showDashboard(ActionEvent event) {
-        // Tận dụng ngay hàm tiện ích loadPage siêu sạch đã được định nghĩa
-        loadPage("/com/nhom3/client/view/dashboard.fxml");
+        navigateToDashboard();
     }
 
     @FXML
     void showMarket(ActionEvent event) {
-        loadPage("/com/nhom3/client/view/market.fxml");
+        navigateToMarket();
     }
 
     @FXML
     void showPurchaseHistory(ActionEvent event) {
-        loadPage("/com/nhom3/client/view/purchase_history.fxml");
+        navigateToPurchaseHistory();
     }
 
     @FXML
     void showManageItem(ActionEvent event) {
-        loadPage("/com/nhom3/client/view/manage_item.fxml");
+        navigateToManageItem();
     }
 
     @FXML
     void showAdminPanel(ActionEvent event) {
-        currentNavigationId = System.currentTimeMillis(); // Cập nhật ID
-        contentArea.getChildren().clear();
-        contentArea.getChildren().add(new Label("Đang hiển thị: QUẢN TRỊ HỆ THỐNG (ADMIN)"));
+        navigateToAdminPanel();
     }
 
     @FXML
     void showProfile(ActionEvent event) {
         loadPage("/com/nhom3/client/view/profile.fxml");
+    }
+
+    public void navigateToDashboard() {
+        loadPage("/com/nhom3/client/view/dashboard.fxml");
+    }
+
+    public void navigateToMarket() {
+        loadPage("/com/nhom3/client/view/market.fxml");
+    }
+
+    public void navigateToPurchaseHistory() {
+        loadPage("/com/nhom3/client/view/purchase_history.fxml");
+    }
+
+    public void navigateToManageItem() {
+        loadPage("/com/nhom3/client/view/manage_item.fxml");
+    }
+
+    public void navigateToAdminPanel() {
+        loadPage("/com/nhom3/client/view/admin_dashboard.fxml");
+    }
+
+    private String buildGreeting(User user) {
+        return "Xin chào " + user.getRole().name() + ", " + user.getUserInfo().getName();
     }
 
     // ĐĂNG XUẤT

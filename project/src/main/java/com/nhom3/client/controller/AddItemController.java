@@ -58,37 +58,54 @@ public class AddItemController {
         String priceText = txtStartPrice.getText().trim();
 
         if (name.isEmpty() || type == null || priceText.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Thieu thong tin",
-                    "Vui long dien day du cac truong!");
+            showAlert(Alert.AlertType.WARNING, "Thiếu thông tin", "Vui lòng điền đầy đủ các trường!");
+            return;
+        }
+
+        double startPriceVal;
+        try {
+            startPriceVal = Double.parseDouble(priceText);
+        } catch (NumberFormatException e) {
+            showAlert(Alert.AlertType.ERROR, "Lỗi định dạng", "Giá khởi điểm phải là một số hợp lệ!");
             return;
         }
 
         User currentUser = UserSession.getInstance().getLoggedInUser();
-        if (!(currentUser instanceof Seller seller)) {
-            showAlert(Alert.AlertType.ERROR, "Loi quyen han",
-                    "Chi nguoi ban (Seller) moi duoc them san pham!");
+        if (!(currentUser instanceof Seller)) {
+            showAlert(Alert.AlertType.ERROR, "Lỗi quyền hạn", "Chỉ người bán (Seller) mới được thêm sản phẩm!");
             return;
         }
+        Seller seller = (Seller) currentUser;
 
         try {
-            int itemId = editingItem == null ? 0 : editingItem.getId();
-            double startPrice = Double.parseDouble(priceText);
+            ItemPayload payload = new ItemPayload(
+                    editingItem == null ? 0 : editingItem.getId(),
+                    seller.getId(),
+                    name,
+                    type,
+                    startPriceVal
+            );
             PacketType packetType = editingItem == null ? PacketType.SAVE_ITEM : PacketType.UPDATE_ITEM;
-            ItemPayload payload = new ItemPayload(itemId, seller.getId(), name, type, startPrice);
-            ServerConnection.getInstance().sendMessage(new Packet(packetType, payload));
-        } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.ERROR, "Loi nhap lieu", "Gia khoi diem phai la so!");
+            Packet packet = new Packet(packetType, payload);
+            
+            ServerConnection.getInstance().sendMessage(packet);
         } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "Loi mang", "Khong the gui yeu cau luu san pham!");
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể kết nối đến máy chủ để lưu sản phẩm!");
         }
     }
 
     public void handleItemMutationResult(PacketType type, boolean success, String message) {
-        showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
-                success ? "Thanh cong" : "That bai", message);
-        if (success) {
-            closeWindow();
-        }
+        javafx.application.Platform.runLater(() -> {
+            showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR, 
+                     success ? "Thành công" : "Lỗi Server", message);
+            if (success) {
+                closeWindow();
+                if (ManageItemController.getInstance() != null) {
+                    ManageItemController.getInstance().loadSellerItems();
+                }
+            }
+        });
     }
 
     @FXML

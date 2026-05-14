@@ -119,9 +119,7 @@ public class MainController {
 
     @FXML
     void showAdminPanel(ActionEvent event) {
-        currentNavigationId = System.currentTimeMillis(); // Cập nhật ID
-        contentArea.getChildren().clear();
-        contentArea.getChildren().add(new Label("Đang hiển thị: QUẢN TRỊ HỆ THỐNG (ADMIN)"));
+        loadPage("/com/nhom3/client/view/admin_dashboard.fxml");
     }
 
     @FXML

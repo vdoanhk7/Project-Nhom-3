@@ -18,7 +18,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
-import javafx.scene.chart.LineChart;
+import javafx.scene.chart.BarChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -42,7 +42,7 @@ public class ViewItemDetailController {
     @FXML private TextField txtBidNote; // Ô nhập ghi chú
     @FXML private Button btnPlaceBid;     // Nút "Đặt giá"
 
-    @FXML private LineChart<String, Number> priceHistoryChart;
+    @FXML private BarChart<String, Number> priceHistoryChart;
     @FXML private Button btnShowChart;
     private XYChart.Series<String, Number> priceSeries; // Biến giữ dữ liệu đường giá
 
@@ -496,10 +496,25 @@ public class ViewItemDetailController {
         priceSeries.getData().clear();
         if (history == null) return;
 
-        for (int i = history.size() - 1; i >= 0; i--) {
+        // Giới hạn chỉ hiển thị 15 cột để to rõ và không bị rối
+        int maxPoints = 15;
+        int startIndex = Math.min(history.size() - 1, maxPoints - 1);
+
+        for (int i = startIndex; i >= 0; i--) {
             BidTransaction bid = history.get(i);
             String time = bid.getBidTime().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
-            priceSeries.getData().add(new XYChart.Data<>(time, bid.getAmount()));
+            
+            String bidderName = "Ẩn danh";
+            if (bid.getBidder() != null && bid.getBidder().getUserInfo() != null && bid.getBidder().getUserInfo().getName() != null) {
+                bidderName = bid.getBidder().getUserInfo().getName();
+                String[] parts = bidderName.split(" ");
+                if (parts.length > 0) {
+                    bidderName = parts[parts.length - 1]; // Chỉ lấy Tên cuối cùng cho gọn
+                }
+            }
+            
+            String category = bidderName + "\n" + time;
+            priceSeries.getData().add(new XYChart.Data<>(category, bid.getAmount()));
         }
     }
 

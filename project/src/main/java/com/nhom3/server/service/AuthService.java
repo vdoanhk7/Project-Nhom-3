@@ -7,6 +7,8 @@ import com.nhom3.server.dao.UserDAOImpl;
 import com.nhom3.shared.model.user.User;
 
 public class AuthService {
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+    private static final String PHONE_REGEX = "^0\\d{9}$";
     private final UserDAO userDAO;
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
@@ -28,6 +30,7 @@ public class AuthService {
         return user;
     }
     public boolean register(User user) {
+        validateRegistrationData(user);
         boolean success = userDAO.register(user);
         if (success) {
             log.info("Server: " + user.getUserInfo().getName() + " đã đăng ký thành công với vai trò " + user.getRole() + "!");
@@ -42,5 +45,22 @@ public class AuthService {
     }
     public boolean changePassword(int userId, String newPassword) {
         return userDAO.updatePassword(userId, newPassword);
+    }
+
+    private void validateRegistrationData(User user) {
+        if (user == null || user.getUserInfo() == null || user.getUserContact() == null) {
+            throw new IllegalArgumentException("Dữ liệu đăng ký không hợp lệ!");
+        }
+
+        String email = user.getUserContact().getEmail();
+        String phone = user.getUserContact().getPhoneNumber();
+
+        if (email == null || !email.matches(EMAIL_REGEX)) {
+            throw new IllegalArgumentException("Email phải đúng định dạng hợp lệ.");
+        }
+
+        if (phone == null || !phone.matches(PHONE_REGEX)) {
+            throw new IllegalArgumentException("Số điện thoại phải gồm đúng 10 số và bắt đầu bằng số 0");
+        }
     }
 }

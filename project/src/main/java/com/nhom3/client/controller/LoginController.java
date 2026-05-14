@@ -1,5 +1,6 @@
 package com.nhom3.client.controller;
 
+import javafx.animation.PauseTransition;
 import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.user.User;
@@ -14,15 +15,17 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class LoginController {
 
     @FXML private TextField txtUsername;
     @FXML private PasswordField txtPassword;
+    @FXML private Label lblMessage;
 
     // Lưu lại instance hiện tại để luồng mạng (ServerHandler) có thể gọi tới
     private static LoginController instance;
@@ -31,6 +34,9 @@ public class LoginController {
     @FXML
     public void initialize() {
         instance = this; // Gán thể hiện hiện tại
+        clearMessage();
+        txtUsername.textProperty().addListener((observable, oldValue, newValue) -> clearMessage());
+        txtPassword.textProperty().addListener((observable, oldValue, newValue) -> clearMessage());
     }
 
     public static LoginController getInstance() {
@@ -43,7 +49,7 @@ public class LoginController {
         String password = txtPassword.getText();
 
         if (username.isEmpty() || password.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
+            showMessage("Vui lòng nhập đầy đủ tài khoản và mật khẩu!", false);
             return;
         }
 
@@ -61,7 +67,7 @@ public class LoginController {
             // Tạm thời vô hiệu hóa nút bấm/hiện loading ở đây (tùy bạn phát triển thêm)
             
         } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể kết nối đến Server!");
+            showMessage("Không thể kết nối đến Server!", false);
         }
     }
 
@@ -72,7 +78,7 @@ public class LoginController {
             System.out.println(">> Đăng nhập thành công: " + user.getUserInfo().getName());
             goToMainLayout();
         } else {
-            showAlert(Alert.AlertType.ERROR, "Thất bại", "Sai tên đăng nhập hoặc mật khẩu!");
+            showMessage("Sai tên đăng nhập hoặc mật khẩu!", false);
         }
     }
 
@@ -87,12 +93,23 @@ public class LoginController {
         }
     }
 
-    private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+    private void showMessage(String content, boolean success) {
+        if (lblMessage == null) {
+            return;
+        }
+        lblMessage.setText(content);
+        lblMessage.setStyle(success ? "-fx-text-fill: #27ae60; -fx-font-weight: bold;" : "-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+        lblMessage.setVisible(true);
+        lblMessage.setManaged(true);
+    }
+
+    private void clearMessage() {
+        if (lblMessage == null) {
+            return;
+        }
+        lblMessage.setText("");
+        lblMessage.setVisible(false);
+        lblMessage.setManaged(false);
     }
 
     // Sự kiện khi bấm nút "Đăng ký ngay"

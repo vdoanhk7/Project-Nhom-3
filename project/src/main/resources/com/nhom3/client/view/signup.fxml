@@ -94,6 +94,8 @@
                <RadioButton fx:id="radioSeller" text="Người bán (Seller)" textFill="#34495e" toggleGroup="$roleGroup" />
            </HBox>
        </VBox>
+
+       <Label fx:id="lblMessage" managed="false" textFill="#e74c3c" visible="false" wrapText="true" />
        
        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSignup" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-padding: 10; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5;" text="ĐĂNG KÝ NGAY">
            <VBox.margin>

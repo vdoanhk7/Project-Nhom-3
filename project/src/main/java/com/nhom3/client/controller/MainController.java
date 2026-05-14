@@ -48,7 +48,7 @@ public class MainController {
         User currentUser = UserSession.getInstance().getLoggedInUser();
         
         if (currentUser != null) {
-            lblUserName.setText("Xin chào, " + currentUser.getUserInfo().getName());
+            lblUserName.setText(buildGreeting(currentUser));
 
             if (currentUser instanceof Admin) {
                 btnAdminPanel.setVisible(true); btnAdminPanel.setManaged(true);
@@ -150,6 +150,10 @@ public class MainController {
 
     public void navigateToAdminPanel() {
         loadPage("/com/nhom3/client/view/admin_dashboard.fxml");
+    }
+
+    private String buildGreeting(User user) {
+        return "Xin chào " + user.getRole().name() + ", " + user.getUserInfo().getName();
     }
 
     // ĐĂNG XUẤT

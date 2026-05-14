@@ -108,9 +108,18 @@ public class PacketDispatcher {
         UserInfo info = new UserInfo(regData.getUsername(), regData.getPassword(), regData.getFullName());
         UserContact contact = new UserContact(regData.getEmail(), regData.getPhone());              
         User newUser = "SELLER".equals(regData.getRole()) ? new Seller(0, info, contact) : new Bidder(0, info, contact);
-        
-        boolean isRegSuccess = authService.register(newUser);
-        ResultPayload regResult = new ResultPayload(isRegSuccess, isRegSuccess ? "Đăng ký thành công" : "Tên đăng nhập đã tồn tại hoặc lỗi hệ thống", -1, "", "", "", "", "");
+
+        boolean isRegSuccess;
+        String message;
+        try {
+            isRegSuccess = authService.register(newUser);
+            message = isRegSuccess ? "Đăng ký thành công" : "Tên đăng nhập đã tồn tại hoặc lỗi hệ thống";
+        } catch (IllegalArgumentException e) {
+            isRegSuccess = false;
+            message = e.getMessage();
+        }
+
+        ResultPayload regResult = new ResultPayload(isRegSuccess, message, -1, "", "", "", "", "");
         return new Packet(PacketType.REGISTER, regResult);
     }
 
@@ -247,7 +256,7 @@ public class PacketDispatcher {
 
     private Packet handleChangePassword(Packet request, Gson gson) {
         ChangePasswordPayload payload = gson.fromJson(request.getPayload(), ChangePasswordPayload.class);
-        boolean success = authService.changePassword(
+        boolean success = new UserDAOImpl().changePassword(
                 payload.getUserId(), payload.getOldPassword(), payload.getNewPassword());
         return new Packet(PacketType.CHANGE_PASSWORD, new ResultPayload(success,
                 success ? "Mật khẩu đã được thay đổi thành công!"

@@ -14,6 +14,14 @@
          <font><Font name="System Bold" size="20.0" /></font>
       </Label>
 
+      <HBox alignment="CENTER_LEFT" spacing="18.0">
+         <children>
+            <Label text="Hình thức đăng bán:" textFill="#7f8c8d" />
+            <RadioButton fx:id="rbPublishNow" mnemonicParsing="false" text="Đăng bán trực tiếp" />
+            <RadioButton fx:id="rbSchedule" mnemonicParsing="false" text="Đăng bán hẹn giờ" />
+         </children>
+      </HBox>
+
       <GridPane hgap="10.0" vgap="15.0">
         <columnConstraints>
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="120.0" />

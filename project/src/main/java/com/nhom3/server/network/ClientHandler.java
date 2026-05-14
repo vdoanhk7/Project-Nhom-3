@@ -52,6 +52,12 @@ public class ClientHandler implements Runnable {
 
             while ((line = in.readLine()) != null) {
                 Packet request = gson.fromJson(line, Packet.class);
+                
+                // FIX: Bảo vệ chống Null Pointer Exception khi chuỗi JSON rỗng hoặc không hợp lệ
+                if (request == null || request.getType() == null) {
+                    continue; 
+                }
+                
                 System.out.println("[SERVER - RAW RECEIVE] Vừa nhận được gói tin loại: " + request.getType());
 
                 // Sử dụng Dispatcher thay vì Switch Case khổng lồ

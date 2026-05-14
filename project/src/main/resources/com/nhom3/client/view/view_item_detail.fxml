@@ -2,7 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.chart.CategoryAxis?>
-<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
@@ -101,10 +101,10 @@
                      </columnResizePolicy>
                   </TableView>
 
-                  <BarChart fx:id="priceHistoryChart" animated="true" legendVisible="false" horizontalGridLinesVisible="true" verticalGridLinesVisible="false" style="-fx-background-color: white; -fx-cursor: hand; -fx-padding: 10;" visible="false" barGap="2" categoryGap="10">
+                  <LineChart fx:id="priceHistoryChart" animated="true" legendVisible="false" horizontalGridLinesVisible="true" verticalGridLinesVisible="false" style="-fx-background-color: white; -fx-cursor: hand; -fx-padding: 10;" visible="false">
                      <xAxis><CategoryAxis label="Lượt đặt giá (Người đặt - Thời gian)" side="BOTTOM" tickLabelRotation="-45.0" /></xAxis>
                      <yAxis><NumberAxis label="Giá (VNĐ)" side="LEFT" forceZeroInRange="false" /></yAxis>
-                  </BarChart>
+                  </LineChart>
                </children>
             </StackPane>
          </children>

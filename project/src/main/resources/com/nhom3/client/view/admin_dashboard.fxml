@@ -65,6 +65,11 @@
                         </TableView>
                     </VBox>
                 </Tab>
+                <Tab text="System Log">
+                    <VBox spacing="10" style="-fx-padding: 15;">
+                        <TextArea fx:id="txtSystemLogs" editable="false" wrapText="true" VBox.vgrow="ALWAYS" style="-fx-font-family: 'Consolas', monospace;" />
+                    </VBox>
+                </Tab>
             </tabs>
         </TabPane>
     </children>

@@ -70,6 +70,7 @@ public class PacketDispatcher {
         handlers.put(PacketType.LOAD_DASHBOARD, this::handleLoadDashboard);
         handlers.put(PacketType.AUCTION_SUBSCRIBE, this::handleAuctionSubscribe);
         handlers.put(PacketType.DELETE_USER, this::handleDeleteUser);
+        handlers.put(PacketType.GET_SYSTEM_LOGS, this::handleGetSystemLogs);
     }
 
     public Packet dispatch(Packet request, Gson gson) {
@@ -420,8 +421,29 @@ public class PacketDispatcher {
         UserIdPayload payload = gson.fromJson(request.getPayload(), UserIdPayload.class);
         UserDAO userDAO = new UserDAOImpl();
         boolean success = userDAO.deleteUser(payload.getUserId());
+        
         return new Packet(PacketType.DELETE_USER, new ResultPayload(success,
                 success ? "Đã xóa tài khoản thành công!" : "Lỗi: Không thể xóa tài khoản!",
                 -1, "", "", "", "", ""));
+    }
+
+    private Packet handleGetSystemLogs(Packet request, Gson gson) {
+        StringBuilder logs = new StringBuilder();
+        try {
+            java.io.File file = new java.io.File("logs/server.log");
+            if (file.exists()) {
+                try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(file))) {
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        logs.append(line).append("\n");
+                    }
+                }
+            } else {
+                logs.append("Không tìm thấy file log hệ thống (logs/server.log).\n");
+            }
+        } catch (Exception e) {
+            logs.append("Lỗi đọc file log: ").append(e.getMessage());
+        }
+        return new Packet(PacketType.SYSTEM_LOGS_RESPONSE, new SystemLogResponsePayload(logs.toString()));
     }
 }

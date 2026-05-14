@@ -39,6 +39,9 @@ public class AdminDashboardController {
     @FXML private TableColumn<AuctionListResponsePayload.AuctionDTO, String> colStatus;
     @FXML private TableColumn<AuctionListResponsePayload.AuctionDTO, Void> colAuctionAction;
 
+    // System Log fields
+    @FXML private javafx.scene.control.TextArea txtSystemLogs;
+
     private static AdminDashboardController instance;
 
     public static AdminDashboardController getInstance() {
@@ -52,7 +55,33 @@ public class AdminDashboardController {
         setupAuctionTable();
         loadUserData();
         loadAuctionData();
+        
+        loadSystemLogs();
+        javafx.animation.Timeline timeline = new javafx.animation.Timeline(new javafx.animation.KeyFrame(
+            javafx.util.Duration.seconds(3),
+            ev -> loadSystemLogs()
+        ));
+        timeline.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        timeline.play();
     }
+
+    // Removed activity log methods
+
+    private void loadSystemLogs() {
+        try {
+            ServerConnection.getInstance().sendMessage(new Packet(PacketType.GET_SYSTEM_LOGS, null));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    public void handleSystemLogsResult(String logs) {
+        txtSystemLogs.setText(logs);
+    }
+
+    // Duplicates removed
 
     public void handleLoadUserDataResult(List<UserListResponsePayload.UserDTO> users) {
         tableUsers.setItems(FXCollections.observableArrayList(users));

@@ -20,6 +20,7 @@ import com.nhom3.server.dao.UserDAO;
 import com.nhom3.server.service.AuthService;
 import com.nhom3.shared.model.user.Role;
 import com.nhom3.shared.model.user.User;
+import com.nhom3.shared.model.user.UserContact;
 import com.nhom3.shared.model.user.UserInfo;
 
 public class AuthServiceTest {
@@ -63,11 +64,7 @@ public class AuthServiceTest {
 
     @Test
     void register_Success_ShouldReturnTrue() {
-        User mockUser = mock(User.class);
-        UserInfo mockUserInfo = mock(UserInfo.class);
-        when(mockUserInfo.getName()).thenReturn("Test User");
-        when(mockUser.getUserInfo()).thenReturn(mockUserInfo);
-        when(mockUser.getRole()).thenReturn(Role.BIDDER);
+        User mockUser = createValidUser();
 
         when(userDAO.register(mockUser)).thenReturn(true);
 
@@ -79,7 +76,7 @@ public class AuthServiceTest {
 
     @Test
     void register_Failure_ShouldReturnFalse() {
-        User mockUser = mock(User.class);
+        User mockUser = createValidUser();
         when(userDAO.register(mockUser)).thenReturn(false);
 
         boolean result = authService.register(mockUser);
@@ -128,5 +125,20 @@ public class AuthServiceTest {
 
         assertFalse(result);
         verify(userDAO).updatePassword(1, "newPass");
+    }
+
+    private User createValidUser() {
+        User mockUser = mock(User.class);
+        UserInfo mockUserInfo = mock(UserInfo.class);
+        UserContact mockUserContact = mock(UserContact.class);
+
+        when(mockUserInfo.getName()).thenReturn("Test User");
+        when(mockUserContact.getEmail()).thenReturn("test@example.com");
+        when(mockUserContact.getPhoneNumber()).thenReturn("0123456789");
+        when(mockUser.getUserInfo()).thenReturn(mockUserInfo);
+        when(mockUser.getUserContact()).thenReturn(mockUserContact);
+        when(mockUser.getRole()).thenReturn(Role.BIDDER);
+
+        return mockUser;
     }
 }

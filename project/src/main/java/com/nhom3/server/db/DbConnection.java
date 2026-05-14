@@ -45,10 +45,13 @@ public class DbConnection {
         config.setJdbcUrl(readConfig(
                 "AUCTION_DB_URL",
                 "auction.db.url",
-                "jdbc:mysql://localhost:3306/auction_db?useSSL=false"
-                        + "&allowPublicKeyRetrieval=true&serverTimezone=Asia/Bangkok"));
-        config.setUsername(readConfig("AUCTION_DB_USER", "auction.db.user", "root"));
-        config.setPassword(readConfig("AUCTION_DB_PASSWORD", "auction.db.password", ""));
+                "jdbc:mysql://mysql-1ee2c3cd-project3vn.k.aivencloud.com:19643/defaultdb"
+                        + "?sslMode=REQUIRED"));
+        config.setUsername(readConfig("AUCTION_DB_USER", "auction.db.user", "avnadmin"));
+        config.setPassword(readConfig(
+                "AUCTION_DB_PASSWORD",
+                "auction.db.password",
+                "AVNS_fgz_8u1cKk_gLZIoE_H"));
         config.setDriverClassName(readConfig(
                 "AUCTION_DB_DRIVER", "auction.db.driver", "com.mysql.cj.jdbc.Driver"));
 

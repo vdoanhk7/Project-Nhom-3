@@ -4,6 +4,7 @@ import com.nhom3.shared.network.payload.BidHistoryResponsePayload;
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Bidder;
 import com.nhom3.shared.model.user.User;
+import com.nhom3.client.utils.MoneyInputFormatter;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;
@@ -23,7 +24,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -59,7 +59,6 @@ public class ViewItemDetailController {
     private static ViewItemDetailController instance;
     private double pendingBidAmount = 0; // Lưu tạm số tiền đang định đặt
     private javafx.scene.layout.VBox autoBidInfoBox; // Hộp giao diện hiển thị thông tin Auto-bid
-    private boolean isFormattingBidAmount = false;
     //Tự động cập nhật thời gian
     private void refreshState() {
         if (currentAuction == null) return;
@@ -125,7 +124,7 @@ public class ViewItemDetailController {
         priceHistoryChart.setVisible(false);
         priceHistoryChart.setManaged(false);
 
-        setupBidAmountFormatter();
+        MoneyInputFormatter.install(txtBidAmount);
     }
 
     public void setItemData(Item item, Auction auction, String status) {
@@ -236,71 +235,6 @@ public class ViewItemDetailController {
         return time.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm - dd/MM"));
     }
 
-    private void setupBidAmountFormatter() {
-        if (txtBidAmount == null) {
-            return;
-        }
-
-        txtBidAmount.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (isFormattingBidAmount) {
-                return;
-            }
-
-            String digitsOnly = newValue.replaceAll("[^\\d]", "");
-            if (digitsOnly.isEmpty()) {
-                if (!newValue.isEmpty()) {
-                    isFormattingBidAmount = true;
-                    txtBidAmount.clear();
-                    isFormattingBidAmount = false;
-                }
-                return;
-            }
-
-            String formattedValue = formatWithThousandsSeparator(digitsOnly);
-            if (formattedValue.equals(newValue)) {
-                return;
-            }
-
-            int digitsBeforeCaret = countDigits(newValue.substring(0, Math.min(txtBidAmount.getCaretPosition(), newValue.length())));
-
-            isFormattingBidAmount = true;
-            txtBidAmount.setText(formattedValue);
-            txtBidAmount.positionCaret(calculateCaretPosition(formattedValue, digitsBeforeCaret));
-            isFormattingBidAmount = false;
-        });
-    }
-
-    private String formatWithThousandsSeparator(String digitsOnly) {
-        return String.format("%,d", new BigInteger(digitsOnly));
-    }
-
-    private int countDigits(String value) {
-        int digitCount = 0;
-        for (int i = 0; i < value.length(); i++) {
-            if (Character.isDigit(value.charAt(i))) {
-                digitCount++;
-            }
-        }
-        return digitCount;
-    }
-
-    private int calculateCaretPosition(String formattedValue, int digitCount) {
-        if (digitCount <= 0) {
-            return 0;
-        }
-
-        int seenDigits = 0;
-        for (int i = 0; i < formattedValue.length(); i++) {
-            if (Character.isDigit(formattedValue.charAt(i))) {
-                seenDigits++;
-                if (seenDigits == digitCount) {
-                    return i + 1;
-                }
-            }
-        }
-        return formattedValue.length();
-    }
-
     // QUYẾT ĐỊNH HIỂN THỊ TUỲ VÀO VAI TRÒ
     private void setupDynamicUI() {
         if (boxBidderActions == null) return;
@@ -348,7 +282,9 @@ public class ViewItemDetailController {
         TextField txtMaxAmount = new TextField();
         txtMaxAmount.setPromptText("VD: 20000000");
         TextField txtIncrement = new TextField();
-        txtIncrement.setText("50000"); // Bước giá mặc định
+        MoneyInputFormatter.install(txtMaxAmount);
+        MoneyInputFormatter.install(txtIncrement);
+        txtIncrement.setText(MoneyInputFormatter.formatAmount(50000)); // Bước giá mặc định
 
         grid.add(new Label("Giới hạn giá cao nhất (VNĐ):"), 0, 0);
         grid.add(txtMaxAmount, 1, 0);
@@ -361,8 +297,8 @@ public class ViewItemDetailController {
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == btnSetup) {
                 try {
-                    double maxAmt = Double.parseDouble(txtMaxAmount.getText().replace(",", ""));
-                    double incAmt = Double.parseDouble(txtIncrement.getText().replace(",", ""));
+                    double maxAmt = MoneyInputFormatter.parseAmount(txtMaxAmount.getText());
+                    double incAmt = MoneyInputFormatter.parseAmount(txtIncrement.getText());
                     
                     if (maxAmt <= currentAuction.getItem().getCurHighest()) {
                         showAlert(Alert.AlertType.ERROR, "Lỗi", "Giá tối đa phải lớn hơn giá hiện tại!");
@@ -404,7 +340,7 @@ public class ViewItemDetailController {
         }
         
         try {
-            double bidAmount = Double.parseDouble(input.replace(",", ""));      
+            double bidAmount = MoneyInputFormatter.parseAmount(input);
             double currentHighest = currentAuction.getItem().getCurHighest();  
             double minStep = 50000; 
             double validMinPrice = currentHighest + minStep;
@@ -433,7 +369,7 @@ public class ViewItemDetailController {
             System.out.println("[Client] Đã gửi yêu cầu đặt giá: " + bidAmount);
 
         } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.ERROR, "Lỗi nhập liệu", "Vui lòng chỉ nhập các con số (VD: 5500000)");
+            showAlert(Alert.AlertType.ERROR, "Lỗi nhập liệu", "Vui lòng chỉ nhập số tiền hợp lệ (VD: 5500000 hoặc 5.500.000)");
         } catch (Exception e) {
             e.printStackTrace(); 
             showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi yêu cầu đặt giá.");

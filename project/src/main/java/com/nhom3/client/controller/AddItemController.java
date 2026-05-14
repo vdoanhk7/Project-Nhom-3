@@ -66,18 +66,15 @@ public class AddItemController {
             return;
         }
         Seller seller = (Seller) currentUser;
-
-        ItemDAO itemDAO = new ItemDAOImpl();
         // 3. Chia luồng xử lí
         // Chế đọ thêm mới
         if (editingItem == null) {
             com.nhom3.shared.model.item.ItemType typeEnum = com.nhom3.shared.model.item.ItemType.valueOf(type);
             // Tạo Item mới (ID = 0 để DB tự tăng)
             Item newItem = typeEnum.createItem(0, name, startPrice);
-            boolean isSuccess = itemDAO.saveItem(newItem, seller.getId());
+            ItemService itemService = new ItemService();
+            boolean isSuccess = itemService.createItem(seller, newItem);
             if (isSuccess) {
-                ItemService itemService = new ItemService();
-                itemService.createItem(seller, newItem);
                 showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã thêm sản phẩm mới vào kho!");
                 closeWindow();
             } else {
@@ -89,6 +86,7 @@ public class AddItemController {
             editingItem.setName(name);
             editingItem.setStartPrice(startPrice);
             editingItem.setCurHighest(startPrice); 
+            ItemDAO itemDAO = new ItemDAOImpl();
             boolean isSuccess = itemDAO.updateItem(editingItem);
             if (isSuccess) {
                 showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã cập nhật thông tin sản phẩm!");

@@ -2,8 +2,11 @@ package com.nhom3.client.controller;
 
 import java.util.List;
 
+import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.item.Item;
+import com.nhom3.shared.model.user.Role;
+import com.nhom3.shared.model.user.User;
 import com.nhom3.server.dao.AuctionDAO;
 import com.nhom3.server.dao.AuctionDAOImpl;
 
@@ -135,7 +138,7 @@ public class MarketController {
         lblPrice.setStyle("-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #e74c3c;");
 
         // Nút bấm
-        Button btnBid = new Button("Vào Đấu Giá");
+        Button btnBid = new Button(getActionButtonText());
         btnBid.setMaxWidth(Double.MAX_VALUE);
         btnBid.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
 
@@ -144,6 +147,14 @@ public class MarketController {
 
         card.getChildren().addAll(imgPlaceholder, lblName, lblType, lblPrice, btnBid);
         return card;
+    }
+
+    private String getActionButtonText() {
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        if (currentUser != null && currentUser.getRole() == Role.BIDDER) {
+            return "Vào đấu giá";
+        }
+        return "Xem phiên đấu giá";
     }
 
     // Hàm mở Modal Chi tiết

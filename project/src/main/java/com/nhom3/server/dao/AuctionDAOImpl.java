@@ -30,7 +30,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 "JOIN auctions a ON i.id = a.item_id " +
                 "SET i.cur_highest = ? " +
                 "WHERE a.id = ? " +
-                "AND i.cur_highest < ? " +
+                "AND ? >= i.cur_highest + a.bid_step " +
                 "AND a.status = 'RUNNING'";
 
         String sqlAuction = "UPDATE auctions SET highest_bidder_id = ? WHERE id = ?";
@@ -114,7 +114,7 @@ public class AuctionDAOImpl implements AuctionDAO {
 
     @Override
     public boolean createAuction(Auction auction) {
-        String sql = "INSERT INTO auctions (item_id, start_time, end_time, status) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO auctions (item_id, start_time, end_time, bid_step, status) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DbConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
@@ -122,7 +122,8 @@ public class AuctionDAOImpl implements AuctionDAO {
             stmt.setInt(1, auction.getItem().getId());
             stmt.setTimestamp(2, Timestamp.valueOf(auction.getStartTime()));
             stmt.setTimestamp(3, Timestamp.valueOf(auction.getEndTime()));
-            stmt.setString(4, auction.getStatus().name());
+            stmt.setDouble(4, auction.getBidStep());
+            stmt.setString(5, auction.getStatus().name());
 
             int affectedRows = stmt.executeUpdate();
 
@@ -198,6 +199,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 // Khởi tạo Auction (Truyền null cho thuộc tính Item để tránh query vòng lặp, vì
                 // bên giao diện ta chỉ cần lấy thời gian)
                 Auction auction = new Auction(id, item, start, end);
+                auction.setBidStep(readBidStep(rs));
                 auction.setStatus(StatusOfAuction.valueOf(rs.getString("status")));
                 int highestBidderId = rs.getInt("highest_bidder_id");
                 if (!rs.wasNull()) {
@@ -275,6 +277,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                     java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                     java.time.LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
                     Auction auction = new Auction(id, item, start, end);
+                    auction.setBidStep(readBidStep(rs));
 
                     java.time.LocalDateTime now = java.time.LocalDateTime.now();
                     if (now.isBefore(start)) {
@@ -335,7 +338,7 @@ public class AuctionDAOImpl implements AuctionDAO {
         // Ta tạo một bảng ảo "my_bids" chỉ chứa mức giá CAO NHẤT (MAX) của user này cho
         // từng auction_id
         String sql = "SELECT a.id AS auction_id, a.highest_bidder_id, a.start_time, a.end_time, a.status, " +
-                "i.id AS item_id, i.name AS item_name, i.item_type, i.start_price, i.cur_highest, " +
+                "a.bid_step, i.id AS item_id, i.name AS item_name, i.item_type, i.start_price, i.cur_highest, " +
                 "my_bids.max_amount AS amount, my_bids.last_bid_time AS bid_time " +
                 "FROM ( " +
                 "    SELECT auction_id, MAX(amount) AS max_amount, MAX(bid_time) AS last_bid_time " +
@@ -364,6 +367,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                 LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
                 Auction auction = new Auction(rs.getInt("auction_id"), item, start, end);
+                auction.setBidStep(readBidStep(rs));
 
                 // TÍNH TOÁN LẠI TRẠNG THÁI BẰNG JAVA
                 String dbStatus = rs.getString("status");
@@ -570,14 +574,30 @@ public class AuctionDAOImpl implements AuctionDAO {
                 LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                 LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
                 Auction auction = new Auction(auctionId, item, start, end);
+                auction.setBidStep(readBidStep(rs));
                 auction.setStatus(StatusOfAuction.valueOf(rs.getString("status")));
-                auction.setHighestBidder(new Bidder(rs.getInt("highest_bidder_id"), null, null));
+                int highestBidderId = rs.getInt("highest_bidder_id");
+                if (!rs.wasNull()) {
+                    auction.setHighestBidder(new Bidder(highestBidderId, null, null));
+                }
                 return auction;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private double readBidStep(ResultSet rs) {
+        try {
+            double bidStep = rs.getDouble("bid_step");
+            if (!rs.wasNull() && bidStep > 0) {
+                return bidStep;
+            }
+        } catch (Exception e) {
+            // Older result sets/tests may not contain bid_step; keep existing behavior.
+        }
+        return Auction.DEFAULT_BID_STEP;
     }
 
     @Override

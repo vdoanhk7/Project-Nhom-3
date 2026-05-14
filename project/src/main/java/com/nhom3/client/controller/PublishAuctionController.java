@@ -1,6 +1,7 @@
 package com.nhom3.client.controller;
 
 import com.nhom3.shared.model.item.Item;
+import com.nhom3.client.utils.MoneyInputFormatter;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -18,6 +19,7 @@ public class PublishAuctionController {
     @FXML private RadioButton rbSchedule;
     @FXML private DatePicker dpStartDate, dpEndDate;
     @FXML private TextField txtStartTime, txtEndTime;
+    @FXML private TextField txtBidStep;
 
     private Item currentItem;
     private static PublishAuctionController instance;
@@ -31,6 +33,7 @@ public class PublishAuctionController {
         rbSchedule.setToggleGroup(publishModeGroup);
         rbSchedule.setSelected(true);
         publishModeGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> updatePublishModeUI());
+        MoneyInputFormatter.install(txtBidStep);
         updatePublishModeUI();
     }
 
@@ -43,6 +46,7 @@ public class PublishAuctionController {
         dpEndDate.setValue(LocalDate.now().plusDays(1)); // Mặc định kết thúc sau 1 ngày
         txtStartTime.setText("08:00");
         txtEndTime.setText("22:00");
+        txtBidStep.setText(MoneyInputFormatter.formatAmount(com.nhom3.shared.model.auction.Auction.DEFAULT_BID_STEP));
         updatePublishModeUI();
     }
 
@@ -66,9 +70,15 @@ public class PublishAuctionController {
                 return;
             }
 
+            double bidStep = MoneyInputFormatter.parseAmount(txtBidStep.getText());
+            if (bidStep <= 0) {
+                showAlert("Lỗi", "Bước giá phải lớn hơn 0!");
+                return;
+            }
+
             // --- BẮT ĐẦU GỬI MẠNG ---
             com.nhom3.shared.network.payload.PublishAuctionPayload payload = new com.nhom3.shared.network.payload.PublishAuctionPayload(
-                currentItem.getId(), start.toString(), end.toString()
+                currentItem.getId(), start.toString(), end.toString(), bidStep
             );
             com.nhom3.shared.network.packet.Packet packet = new com.nhom3.shared.network.packet.Packet(com.nhom3.shared.network.packet.PacketType.PUBLISH_AUCTION, payload);
             
@@ -77,7 +87,7 @@ public class PublishAuctionController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert("Lỗi định dạng", "Vui lòng nhập giờ đúng định dạng HH:mm (VD: 08:30)");
+            showAlert("Lỗi định dạng", "Vui lòng nhập giờ đúng định dạng HH:mm và bước giá hợp lệ.");
         }
     }
 

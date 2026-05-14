@@ -1,6 +1,7 @@
 package com.nhom3.client.controller;
 
 import com.nhom3.client.network.ServerConnection;
+import com.nhom3.client.utils.MoneyInputFormatter;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Seller;
@@ -36,17 +37,13 @@ public class AddItemController {
     public void initialize() {
         instance = this;
         cbType.setItems(FXCollections.observableArrayList("ART", "ELECTRONICS", "VEHICLE"));
-        txtStartPrice.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.matches("\\d*")) {
-                txtStartPrice.setText(newValue.replaceAll("[^\\d]", ""));
-            }
-        });
+        MoneyInputFormatter.install(txtStartPrice);
     }
 
     public void setEditingItem(Item item) {
         editingItem = item;
         txtName.setText(item.getName());
-        txtStartPrice.setText(String.format("%.0f", item.getStartPrice()));
+        txtStartPrice.setText(MoneyInputFormatter.formatAmount(item.getStartPrice()));
         cbType.setValue(item.getType().name());
         cbType.setDisable(true);
     }
@@ -64,9 +61,9 @@ public class AddItemController {
 
         double startPriceVal;
         try {
-            startPriceVal = Double.parseDouble(priceText);
+            startPriceVal = MoneyInputFormatter.parseAmount(priceText);
         } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.ERROR, "Lỗi định dạng", "Giá khởi điểm phải là một số hợp lệ!");
+            showAlert(Alert.AlertType.ERROR, "Lỗi định dạng", "Giá khởi điểm phải là một số hợp lệ (VD: 50000 hoặc 50.000)!");
             return;
         }
 

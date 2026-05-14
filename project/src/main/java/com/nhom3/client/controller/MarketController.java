@@ -96,6 +96,7 @@ public class MarketController {
                 item,
                 LocalDateTime.parse(dto.startTime),
                 LocalDateTime.parse(dto.endTime));
+        auction.setBidStep(dto.bidStep);
                 
         auction.setStatus(StatusOfAuction.valueOf(dto.status));
         

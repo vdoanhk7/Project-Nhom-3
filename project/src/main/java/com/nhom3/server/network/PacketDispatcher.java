@@ -282,6 +282,7 @@ public class PacketDispatcher {
             LocalDateTime endTime = LocalDateTime.parse(pubData.getEndTime());
             Item dummyItem = new Art(pubData.getItemId(), "", 0);
             Auction newAuction = new Auction(0, dummyItem, startTime, endTime);
+            newAuction.setBidStep(pubData.getBidStep());
 
             isPubSuccess = auctionService.createAuction(newAuction);
             pubMsg = isPubSuccess ? "Đăng bán thành công!" : "Lỗi lưu Database!";
@@ -306,6 +307,7 @@ public class PacketDispatcher {
             purDtoList.add(new PurchaseHistoryResponsePayload.HistoryDTO(
                 a.getId(), a.getItem().getId(), a.getItem().getName(), amount, timeStr, a.getStatus().name(), topBidderId,
                 a.getItem().getType().name(), a.getItem().getStartPrice(), a.getItem().getCurHighest(),
+                a.getBidStep(),
                 a.getStartTime().toString(), a.getEndTime().toString()
             ));
         }
@@ -319,12 +321,17 @@ public class PacketDispatcher {
         if (autoSuccess) {
             auctionHandler.handleAutoBid(autoData.getAuctionId());
         }
-        return new Packet(PacketType.PLACE_AUTO_BID, new ResultPayload(autoSuccess, autoSuccess ? "Hệ thống đã ghi nhận thiết lập Auto-Bid của bạn!" : "Lỗi Database khi cài đặt Auto-Bid!", -1, "", "", "", "", ""));
+        return new Packet(PacketType.PLACE_AUTO_BID, new ResultPayload(autoSuccess, message, -1, "", "", "", "", ""));
     }
 
     private Packet handleCheckAutoBid(Packet request, Gson gson) {
         AutoBidPayload checkReq = gson.fromJson(request.getPayload(), AutoBidPayload.class);
-        AutoBidPayload existingConfig = new AuctionDAOImpl().getUserAutoBid(checkReq.getAuctionId(), checkReq.getUserId());
+        AuctionDAOImpl dao = new AuctionDAOImpl();
+        AutoBidPayload existingConfig = dao.getUserAutoBid(checkReq.getAuctionId(), checkReq.getUserId());
+        Auction auction = dao.getAuctionById(checkReq.getAuctionId());
+        if (existingConfig != null && auction != null && existingConfig.getIncrement() < auction.getBidStep()) {
+            existingConfig = null;
+        }
         return new Packet(PacketType.CHECK_AUTO_BID, existingConfig);
     }
 
@@ -379,6 +386,7 @@ public class PacketDispatcher {
                 item != null ? item.getType().name() : "",
                 item != null ? item.getStartPrice() : 0,
                 item != null ? item.getCurHighest() : 0,
+                auction.getBidStep(),
                 auction.getStartTime() != null ? auction.getStartTime().toString() : "",
                 auction.getEndTime() != null ? auction.getEndTime().toString() : "",
                 auction.getStatus() != null ? auction.getStatus().name() : "",

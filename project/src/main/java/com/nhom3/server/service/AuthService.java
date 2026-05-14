@@ -42,6 +42,7 @@ public class AuthService {
     }
     
     public boolean updateUser(User user) {
+        validateUserContact(user);
         return userDAO.updateUser(user);
     }
     
@@ -53,6 +54,14 @@ public class AuthService {
     private void validateRegistrationData(User user) {
         if (user == null || user.getUserInfo() == null || user.getUserContact() == null) {
             throw new IllegalArgumentException("Dữ liệu đăng ký không hợp lệ!");
+        }
+
+        validateUserContact(user);
+    }
+
+    private void validateUserContact(User user) {
+        if (user == null || user.getUserContact() == null) {
+            throw new IllegalArgumentException("Thông tin liên hệ không hợp lệ!");
         }
 
         String email = user.getUserContact().getEmail();

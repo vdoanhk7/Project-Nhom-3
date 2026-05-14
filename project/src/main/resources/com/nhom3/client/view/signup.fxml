@@ -8,107 +8,145 @@
 <?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" prefHeight="750.0" prefWidth="400.0" spacing="12.0" style="-fx-background-color: #ffffff;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.SignupController">
-    <padding>
-        <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
-    </padding>
+<HBox prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.SignupController">
    <children>
-       
-       <Label text="✨ TẠO TÀI KHOẢN" textFill="#2ecc71">
-           <font>
-               <Font name="System Bold" size="22.0" />
-           </font>
-       </Label>
-       <Label text="Điền thông tin để tham gia đấu giá" textFill="#7f8c8d">
-           <VBox.margin>
-               <Insets bottom="15.0" />
-           </VBox.margin>
-       </Label>
-       
-       <VBox spacing="5.0">
-           <Label text="Họ và tên:" textFill="#34495e">
-            <font>
-               <Font name="System Bold" size="12.0" />
-            </font></Label>
-           <TextField fx:id="txtFullName" promptText="VD: Nguyễn Văn A..." style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
-       </VBox>
+      <!-- PHẦN BÊN TRÁI: BANNER MINH HỌA -->
+      <!-- Đổi màu Gradient sang tone Tím - Hồng Đỏ (Modern Tech/Art vibe) -->
+      <VBox alignment="CENTER" prefWidth="400.0" spacing="15.0" style="-fx-background-color: linear-gradient(to right bottom, #8e44ad, #e74c3c);" HBox.hgrow="ALWAYS">
+         <children>
+            <Label prefHeight="79.0" prefWidth="72.0" text="✨" textFill="WHITE">
+               <font><Font size="64.0" /></font>
+               <effect>
+                  <DropShadow color="#00000033" offsetY="5.0" radius="5.0" />
+               </effect>
+            </Label>
+            <Label text="THAM GIA NGAY" textFill="WHITE">
+               <font>
+                  <Font name="System Bold" size="32.0" />
+               </font>
+               <effect>
+                  <DropShadow color="#0000004d" offsetY="2.0" radius="3.0" />
+               </effect>
+            </Label>
+            <Label text="Bắt đầu hành trình săn tìm siêu phẩm!" textFill="#f5eef8">
+               <font>
+                  <Font size="15.0" />
+               </font>
+            </Label>
+         </children>
+         <effect>
+            <DropShadow color="#0000004d" height="0.0" radius="14.5" width="40.0" />
+         </effect>
+      </VBox>
 
-       <VBox spacing="5.0">
-           <Label text="Email:" textFill="#34495e">
-            <font>
-               <Font name="System Bold" size="12.0" />
-            </font></Label>
-           <TextField fx:id="txtEmail" promptText="Nhập địa chỉ email..." style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
-       </VBox>
+      <!-- PHẦN BÊN PHẢI: FORM ĐĂNG KÝ -->
+      <VBox alignment="CENTER" prefWidth="500.0" spacing="15.0" style="-fx-background-color: #ffffff;">
+         <padding>
+            <Insets bottom="30.0" left="40.0" right="40.0" top="30.0" />
+         </padding>
+         <children>
+            <VBox alignment="CENTER" spacing="5.0">
+               <children>
+                  <Label text="TẠO TÀI KHOẢN MỚI" textFill="#2c3e50">
+                     <font>
+                        <Font name="System Bold" size="24.0" />
+                     </font>
+                  </Label>
+                  <Label text="Một chút thời gian để hoàn tất" textFill="#7f8c8d" />
+               </children>
+               <VBox.margin>
+                  <Insets bottom="10.0" />
+               </VBox.margin>
+            </VBox>
 
-       <VBox spacing="5.0">
-           <Label text="Số điện thoại:" textFill="#34495e">
-            <font>
-               <Font name="System Bold" size="12.0" />
-            </font></Label>
-           <TextField fx:id="txtPhone" promptText="Nhập số điện thoại liên lạc..." style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
-       </VBox>
-   
-       <VBox spacing="5.0">
-           <Label text="Tên đăng nhập:" textFill="#34495e">
-            <font>
-               <Font name="System Bold" size="12.0" />
-            </font></Label>
-           <TextField fx:id="txtUsername" promptText="Nhập tên đăng nhập..." style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
-       </VBox>
-       
-       <VBox spacing="5.0">
-           <Label text="Mật khẩu:" textFill="#34495e">
-            <font>
-               <Font name="System Bold" size="12.0" />
-            </font></Label>
-           <PasswordField fx:id="txtPassword" promptText="Nhập mật khẩu..." style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
-       </VBox>
-   
-       <VBox spacing="5.0">
-           <Label text="Xác nhận mật khẩu:" textFill="#34495e">
-            <font>
-               <Font name="System Bold" size="12.0" />
-            </font></Label>
-           <PasswordField fx:id="txtConfirmPassword" promptText="Nhập lại mật khẩu..." style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
-       </VBox>
+            <!-- Hàng 1: Họ tên & Username -->
+            <HBox spacing="15.0">
+               <children>
+                  <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                     <Label text="Họ và tên" textFill="#34495e"><font><Font name="System Bold" size="12.0" /></font></Label>
+                     <TextField fx:id="txtFullName" prefHeight="40.0" promptText="Nguyễn Văn A" style="-fx-background-color: #f4f6f9; -fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;" />
+                  </VBox>
+                  <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                     <Label text="Tên đăng nhập" textFill="#34495e"><font><Font name="System Bold" size="12.0" /></font></Label>
+                     <TextField fx:id="txtUsername" prefHeight="40.0" promptText="user123" style="-fx-background-color: #f4f6f9; -fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;" />
+                  </VBox>
+               </children>
+            </HBox>
 
-       <VBox spacing="5.0">
-           <Label text="Vai trò của bạn:" textFill="#34495e">
-            <font>
-               <Font name="System Bold" size="12.0" />
-            </font></Label>
-           <HBox spacing="20.0">
-               <padding>
-                   <Insets bottom="5.0" top="5.0" />
-               </padding>
-               <RadioButton fx:id="radioBidder" selected="true" text="Người mua (Bidder)" textFill="#34495e">
-                   <toggleGroup>
-                       <ToggleGroup fx:id="roleGroup" />
-                   </toggleGroup>
-               </RadioButton>
-               <RadioButton fx:id="radioSeller" text="Người bán (Seller)" textFill="#34495e" toggleGroup="$roleGroup" />
-           </HBox>
-       </VBox>
+            <!-- Hàng 2: Mật khẩu -->
+            <HBox spacing="15.0">
+               <children>
+                  <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                     <Label text="Mật khẩu" textFill="#34495e"><font><Font name="System Bold" size="12.0" /></font></Label>
+                     <PasswordField fx:id="txtPassword" prefHeight="40.0" promptText="••••••••" style="-fx-background-color: #f4f6f9; -fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;" />
+                  </VBox>
+                  <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                     <Label text="Xác nhận mật khẩu" textFill="#34495e"><font><Font name="System Bold" size="12.0" /></font></Label>
+                     <PasswordField fx:id="txtConfirmPassword" prefHeight="40.0" promptText="••••••••" style="-fx-background-color: #f4f6f9; -fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;" />
+                  </VBox>
+               </children>
+            </HBox>
 
-       <Label fx:id="lblMessage" managed="false" textFill="#e74c3c" visible="false" wrapText="true" />
-       
-       <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSignup" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-padding: 10; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5;" text="ĐĂNG KÝ NGAY">
-           <VBox.margin>
-               <Insets top="15.0" />
-           </VBox.margin>
-       </Button>
-       
-       <HBox alignment="CENTER" spacing="5.0">
-           <VBox.margin>
-               <Insets top="10.0" />
-           </VBox.margin>
-           <Label text="Đã có tài khoản?" textFill="#7f8c8d" />
-           <Hyperlink onAction="#goToLogin" style="-fx-font-weight: bold;" text="Đăng nhập" textFill="#3498db" />
-       </HBox>
+            <!-- Hàng 3: Email & SĐT -->
+            <HBox spacing="15.0">
+               <children>
+                  <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                     <Label text="Email" textFill="#34495e"><font><Font name="System Bold" size="12.0" /></font></Label>
+                     <TextField fx:id="txtEmail" prefHeight="40.0" promptText="email@gmail.com" style="-fx-background-color: #f4f6f9; -fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;" />
+                  </VBox>
+                  <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                     <Label text="Số điện thoại" textFill="#34495e"><font><Font name="System Bold" size="12.0" /></font></Label>
+                     <TextField fx:id="txtPhone" prefHeight="40.0" promptText="0987654321" style="-fx-background-color: #f4f6f9; -fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;" />
+                  </VBox>
+               </children>
+            </HBox>
+
+            <!-- Vai trò -->
+            <VBox spacing="8.0" style="-fx-background-color: #f8f9fa; -fx-padding: 10; -fx-border-color: #ecf0f1; -fx-border-radius: 8; -fx-background-radius: 8;">
+               <children>
+                  <Label text="Bạn muốn tham gia với vai trò gì?" textFill="#34495e">
+                     <font><Font name="System Bold" size="12.0" /></font>
+                  </Label>
+                  <HBox spacing="30.0">
+                     <children>
+                        <RadioButton fx:id="radioBidder" selected="true" text="🛒 Người mua (Bidder)" textFill="#2c3e50">
+                           <toggleGroup>
+                              <ToggleGroup fx:id="roleGroup" />
+                           </toggleGroup>
+                           <font><Font name="System Bold" size="12.0" /></font>
+                        </RadioButton>
+                        <RadioButton fx:id="radioSeller" text="🏪 Người bán (Seller)" textFill="#2c3e50" toggleGroup="$roleGroup">
+                           <font><Font name="System Bold" size="12.0" /></font>
+                        </RadioButton>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+
+            <Label fx:id="lblMessage" managed="false" textFill="#e74c3c" visible="false" wrapText="true" />
+
+            <!-- Nút đăng ký đổi sang dải màu Tím - Đỏ tương ứng với Banner -->
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSignup" prefHeight="45.0" style="-fx-background-color: linear-gradient(to right, #8e44ad, #e74c3c); -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 15px;" text="ĐĂNG KÝ NGAY">
+               <VBox.margin>
+                  <Insets top="10.0" />
+               </VBox.margin>
+               <effect>
+                  <DropShadow color="#8e44ad66" offsetY="4.0" />
+               </effect>
+            </Button>
+
+            <HBox alignment="CENTER" spacing="5.0">
+               <children>
+                  <Label text="Đã có tài khoản?" textFill="#7f8c8d" />
+                  <Hyperlink onAction="#goToLogin" style="-fx-font-weight: bold;" text="Đăng nhập tại đây" textFill="#8e44ad" />
+               </children>
+            </HBox>
+         </children>
+      </VBox>
    </children>
-</VBox>
+</HBox>

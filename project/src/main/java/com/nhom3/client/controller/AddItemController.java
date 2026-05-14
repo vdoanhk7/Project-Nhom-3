@@ -62,28 +62,28 @@ public class AddItemController {
             return;
         }
 
-        double startPrice;
+        double startPriceVal;
         try {
-            startPrice = Double.parseDouble(priceText); // FIX: Đã lấy giá trị từ TextField
+            startPriceVal = Double.parseDouble(priceText);
         } catch (NumberFormatException e) {
             showAlert(Alert.AlertType.ERROR, "Lỗi định dạng", "Giá khởi điểm phải là một số hợp lệ!");
             return;
         }
 
         User currentUser = UserSession.getInstance().getLoggedInUser();
-        if (!(currentUser instanceof Seller seller)) {
+        if (!(currentUser instanceof Seller)) {
             showAlert(Alert.AlertType.ERROR, "Lỗi quyền hạn", "Chỉ người bán (Seller) mới được thêm sản phẩm!");
             return;
         }
+        Seller seller = (Seller) currentUser;
 
-        // FIX: Xóa việc gọi DB trực tiếp. Thay vào đó, đóng gói dữ liệu và gửi qua Server bằng Socket.
         try {
             ItemPayload payload = new ItemPayload(
                     editingItem == null ? 0 : editingItem.getId(),
                     seller.getId(),
                     name,
                     type,
-                    startPrice
+                    startPriceVal
             );
             PacketType packetType = editingItem == null ? PacketType.SAVE_ITEM : PacketType.UPDATE_ITEM;
             Packet packet = new Packet(packetType, payload);
@@ -95,7 +95,6 @@ public class AddItemController {
         }
     }
 
-    // Server sẽ gửi phản hồi về và ClientPacketDispatcher sẽ gọi hàm này
     public void handleItemMutationResult(PacketType type, boolean success, String message) {
         javafx.application.Platform.runLater(() -> {
             showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR, 

@@ -29,6 +29,7 @@ public class AuthService {
         }
         return user;
     }
+    
     public boolean register(User user) {
         validateRegistrationData(user);
         boolean success = userDAO.register(user);
@@ -38,13 +39,15 @@ public class AuthService {
             log.info("Server: Đăng ký thất bại. Tài khoản có thể đã tồn tại.");
         }
         return success;
-        
     }
+    
     public boolean updateUser(User user) {
         return userDAO.updateUser(user);
     }
-    public boolean changePassword(int userId, String newPassword) {
-        return userDAO.updatePassword(userId, newPassword);
+    
+    // FIX: Bổ sung tham số oldPassword để đồng bộ với cách gọi từ PacketDispatcher
+    public boolean changePassword(int userId, String oldPassword, String newPassword) {
+        return userDAO.changePassword(userId, oldPassword, newPassword);
     }
 
     private void validateRegistrationData(User user) {

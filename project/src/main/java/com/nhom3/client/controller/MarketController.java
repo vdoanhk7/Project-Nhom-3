@@ -17,8 +17,6 @@ import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
 import com.nhom3.shared.network.payload.AuctionListResponsePayload;
 
-// Đã xóa 2 import sai của Server (AuctionDAO, AuctionDAOImpl)
-
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -85,12 +83,9 @@ public class MarketController {
                 allActiveAuctions.add(toAuction(dto));
             }
         }
-        
-        // FIX: Bắt buộc gọi vẽ lại màn hình trên luồng JavaFX
         javafx.application.Platform.runLater(this::filterMarket);
     }
 
-    // FIX: Đã thêm hàm toAuction còn thiếu để dịch từ gói tin mạng sang Object
     private Auction toAuction(AuctionListResponsePayload.AuctionDTO dto) {
         ItemType type = ItemType.valueOf(dto.itemType);
         Item item = type.createItem(dto.itemId, dto.itemName, dto.startPrice);
@@ -165,7 +160,6 @@ public class MarketController {
         Label lblPrice = new Label(String.format("%,.0f VND", item.getCurHighest()));
         lblPrice.setStyle("-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #e74c3c;");
 
-        // Nút bấm
         Button btnBid = new Button(getActionButtonText());
         btnBid.setMaxWidth(Double.MAX_VALUE);
         btnBid.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; "
@@ -184,7 +178,6 @@ public class MarketController {
         return "Xem phiên đấu giá";
     }
 
-    // Hàm mở Modal Chi tiết
     public void openItemDetail(Item item, Auction auction, Runnable onWindowClosed) {
         try {
             FXMLLoader loader = new FXMLLoader(

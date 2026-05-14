@@ -80,12 +80,22 @@ public class AdminDashboardController {
         }
     }
 
+    public void handleDeleteUserResult(boolean success, String message) {
+        showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
+                success ? "Thành công" : "Thất bại", message);
+        if (success) {
+            loadUserData();
+        }
+    }
+
     private void setupUserTable() {
         colUserId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().id).asObject());
         colUserName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().username));
         colUserRole.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().role));
         colUserAction.setCellFactory(column -> new TableCell<>() {
             private final Button btnInfo = new Button("Xem");
+            private final Button btnDelete = new Button("Xóa");
+            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(5, btnInfo, btnDelete);
 
             {
                 btnInfo.setOnAction(event -> {
@@ -93,12 +103,40 @@ public class AdminDashboardController {
                     showAlert(Alert.AlertType.INFORMATION, "Thong tin nguoi dung",
                             user.fullName + "\nEmail: " + user.email + "\nPhone: " + user.phone);
                 });
+
+                btnDelete.setStyle("-fx-background-color: #ff4d4d; -fx-text-fill: white;");
+                btnDelete.setOnAction(event -> {
+                    UserListResponsePayload.UserDTO user = getTableView().getItems().get(getIndex());
+                    
+                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+                    confirm.setTitle("Xác nhận xóa");
+                    confirm.setHeaderText(null);
+                    confirm.setContentText("Bạn có chắc chắn muốn xóa tài khoản '" + user.username + "' không?");
+                    
+                    if (confirm.showAndWait().orElse(javafx.scene.control.ButtonType.CANCEL) == javafx.scene.control.ButtonType.OK) {
+                        try {
+                            ServerConnection.getInstance().sendMessage(
+                                new Packet(PacketType.DELETE_USER, new com.nhom3.shared.network.payload.UserIdPayload(user.id))
+                            );
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi yêu cầu xóa tài khoản!");
+                        }
+                    }
+                });
             }
 
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                setGraphic(empty ? null : btnInfo);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    UserListResponsePayload.UserDTO user = getTableView().getItems().get(getIndex());
+                    // Vô hiệu hóa nút xóa nếu là tài khoản ADMIN hiện tại (hoặc có thể chặn xóa ADMIN nói chung)
+                    btnDelete.setDisable("ADMIN".equals(user.role));
+                    setGraphic(pane);
+                }
             }
         });
     }
@@ -153,11 +191,6 @@ public class AdminDashboardController {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    @FXML
-    private void handleLogout() {
-        System.out.println("Admin da dang xuat.");
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {

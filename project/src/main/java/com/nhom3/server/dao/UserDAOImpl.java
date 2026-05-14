@@ -162,4 +162,104 @@ public class UserDAOImpl implements UserDAO {
         }
         return users;
     }
+
+    @Override
+    public boolean deleteUser(int userId) {
+        Connection conn = null;
+        try {
+            conn = DbConnection.getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. Tìm tất cả các phiên đấu giá mà user này đang giữ top 1 (highest_bidder_id)
+            String sqlGetAuctions = "SELECT a.id AS auction_id, a.item_id, i.start_price " +
+                                    "FROM auctions a JOIN items i ON a.item_id = i.id " +
+                                    "WHERE a.highest_bidder_id = ?";
+            PreparedStatement stmtGet = conn.prepareStatement(sqlGetAuctions);
+            stmtGet.setInt(1, userId);
+            ResultSet rsAuctions = stmtGet.executeQuery();
+            
+            List<Object[]> auctionsList = new ArrayList<>();
+            while (rsAuctions.next()) {
+                auctionsList.add(new Object[]{rsAuctions.getInt("auction_id"), 
+                                              rsAuctions.getInt("item_id"), 
+                                              rsAuctions.getDouble("start_price")});
+            }
+            stmtGet.close();
+            
+            // 2. Tìm người đặt giá cao thứ hai (loại bỏ user chuẩn bị xóa) và cập nhật lại
+            String sqlGetNextBid = "SELECT bidder_id, amount FROM bid_transactions " +
+                                   "WHERE auction_id = ? AND bidder_id != ? " +
+                                   "ORDER BY amount DESC, bid_time ASC LIMIT 1";
+            PreparedStatement stmtNextBid = conn.prepareStatement(sqlGetNextBid);
+            
+            String sqlUpdateAuction = "UPDATE auctions SET highest_bidder_id = ? WHERE id = ?";
+            String sqlUpdateAuctionNull = "UPDATE auctions SET highest_bidder_id = NULL WHERE id = ?";
+            String sqlUpdateItem = "UPDATE items SET cur_highest = ? WHERE id = ?";
+            
+            PreparedStatement stmtUpdateAuction = conn.prepareStatement(sqlUpdateAuction);
+            PreparedStatement stmtUpdateAuctionNull = conn.prepareStatement(sqlUpdateAuctionNull);
+            PreparedStatement stmtUpdateItem = conn.prepareStatement(sqlUpdateItem);
+
+            for (Object[] data : auctionsList) {
+                int auctionId = (int) data[0];
+                int itemId = (int) data[1];
+                double startPrice = (double) data[2];
+                
+                stmtNextBid.setInt(1, auctionId);
+                stmtNextBid.setInt(2, userId);
+                ResultSet rsNext = stmtNextBid.executeQuery();
+                
+                if (rsNext.next()) {
+                    // Nếu có người đứng thứ hai, thay thế top 1 bằng người này
+                    int nextBidder = rsNext.getInt("bidder_id");
+                    double nextAmount = rsNext.getDouble("amount");
+                    
+                    stmtUpdateAuction.setInt(1, nextBidder);
+                    stmtUpdateAuction.setInt(2, auctionId);
+                    stmtUpdateAuction.executeUpdate();
+                    
+                    stmtUpdateItem.setDouble(1, nextAmount);
+                    stmtUpdateItem.setInt(2, itemId);
+                    stmtUpdateItem.executeUpdate();
+                } else {
+                    // Nếu không còn ai đấu giá, reset về giá gốc và null bidder
+                    stmtUpdateAuctionNull.setInt(1, auctionId);
+                    stmtUpdateAuctionNull.executeUpdate();
+                    
+                    stmtUpdateItem.setDouble(1, startPrice);
+                    stmtUpdateItem.setInt(2, itemId);
+                    stmtUpdateItem.executeUpdate();
+                }
+                rsNext.close();
+            }
+            stmtNextBid.close();
+            stmtUpdateAuction.close();
+            stmtUpdateAuctionNull.close();
+            stmtUpdateItem.close();
+
+            // 3. Tiến hành xóa tài khoản khỏi CSDL
+            String sql = "DELETE FROM users WHERE id = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            int rowsAffected = stmt.executeUpdate();
+            stmt.close();
+            
+            conn.commit();
+            return rowsAffected > 0;
+            
+        } catch (Exception e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException ex) { ex.printStackTrace(); }
+            }
+        }
+    }
 }

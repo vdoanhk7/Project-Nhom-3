@@ -124,7 +124,7 @@ public class MainController {
 
     @FXML
     void showAdminPanel(ActionEvent event) {
-        navigateToAdminPanel();
+        loadPage("/com/nhom3/client/view/admin_dashboard.fxml");
     }
 
     @FXML

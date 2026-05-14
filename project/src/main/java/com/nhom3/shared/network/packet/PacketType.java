@@ -24,7 +24,8 @@ public enum PacketType {
     LOAD_PURCHASE_HISTORY("load purchase history"),
     SCREEN_NOTIFY("screen notify"),
     AUCTION_SUBSCRIBE("auction subscribe"),
-    LOAD_DASHBOARD("load dashboard");
+    LOAD_DASHBOARD("load dashboard"),
+    DELETE_USER("delete user");
 
 
     private String message;

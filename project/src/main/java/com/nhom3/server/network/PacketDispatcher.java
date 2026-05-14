@@ -69,6 +69,7 @@ public class PacketDispatcher {
         handlers.put(PacketType.CANCEL_AUTO_BID, this::handleCancelAutoBid);
         handlers.put(PacketType.LOAD_DASHBOARD, this::handleLoadDashboard);
         handlers.put(PacketType.AUCTION_SUBSCRIBE, this::handleAuctionSubscribe);
+        handlers.put(PacketType.DELETE_USER, this::handleDeleteUser);
     }
 
     public Packet dispatch(Packet request, Gson gson) {
@@ -392,5 +393,14 @@ public class PacketDispatcher {
                 user.getRole() != null ? user.getRole().name() : "",
                 user.getUserContact() != null ? user.getUserContact().getEmail() : "",
                 user.getUserContact() != null ? user.getUserContact().getPhoneNumber() : "");
+    }
+
+    private Packet handleDeleteUser(Packet request, Gson gson) {
+        UserIdPayload payload = gson.fromJson(request.getPayload(), UserIdPayload.class);
+        UserDAO userDAO = new UserDAOImpl();
+        boolean success = userDAO.deleteUser(payload.getUserId());
+        return new Packet(PacketType.DELETE_USER, new ResultPayload(success,
+                success ? "Đã xóa tài khoản thành công!" : "Lỗi: Không thể xóa tài khoản!",
+                -1, "", "", "", "", ""));
     }
 }

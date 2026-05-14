@@ -44,6 +44,7 @@ public class ClientPacketDispatcher {
         handlers.put(PacketType.LOAD_DASHBOARD, this::handleLoadDashboard);
         handlers.put(PacketType.SCREEN_NOTIFY, this::handleScreenNotify);
         handlers.put(PacketType.AUCTION_SUBSCRIBE, this::handleAuctionSubscribe);
+        handlers.put(PacketType.DELETE_USER, this::handleDeleteUser);
     }
 
     public void dispatch(Packet response, Gson gson) {
@@ -283,5 +284,15 @@ public class ClientPacketDispatcher {
 
     private void handleAuctionSubscribe(Packet response, Gson gson) {
         // Subscription acknowledgement. No UI update needed.
+    }
+
+    private void handleDeleteUser(Packet response, Gson gson) {
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        try {
+            if (AdminDashboardController.getInstance() != null) {
+                AdminDashboardController.getInstance().handleDeleteUserResult(
+                        result.getResult(), result.getMessage());
+            }
+        } catch (Exception e) { e.printStackTrace(); }
     }
 }

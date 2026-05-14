@@ -91,12 +91,14 @@ public class PacketDispatcher {
         LoginPayload login = gson.fromJson(request.getPayload(), LoginPayload.class);
         logger.info("Yêu cầu đăng nhập từ: " + login.getUsername());
         User user = authService.login(login.getUsername(), login.getPassword());
-        
+
         ResultPayload resultPayload;
         if (user != null) {
             String uEmail = user.getUserContact() != null ? user.getUserContact().getEmail() : "";
             String uPhone = user.getUserContact() != null ? user.getUserContact().getPhoneNumber() : "";
-            resultPayload = new ResultPayload(true, "Đăng nhập thành công", user.getId(), user.getUserInfo().getUserName(), user.getUserInfo().getName(), user.getRole().name(), uEmail, uPhone);
+            resultPayload = new ResultPayload(true, "Đăng nhập thành công", user.getId(),
+                    user.getUserInfo().getUserName(), user.getUserInfo().getName(), user.getRole().name(), uEmail,
+                    uPhone);
         } else {
             resultPayload = new ResultPayload(false, "Sai tài khoản hoặc mật khẩu", -1, "", "", "", "", "");
         }
@@ -107,7 +109,7 @@ public class PacketDispatcher {
         RegisterPayload regData = gson.fromJson(request.getPayload(), RegisterPayload.class);
         logger.info("Yêu cầu ĐĂNG KÝ từ user: " + regData.getUsername());
         UserInfo info = new UserInfo(regData.getUsername(), regData.getPassword(), regData.getFullName());
-        UserContact contact = new UserContact(regData.getEmail(), regData.getPhone());              
+        UserContact contact = new UserContact(regData.getEmail(), regData.getPhone());
         User newUser = "SELLER".equals(regData.getRole()) ? new Seller(0, info, contact) : new Bidder(0, info, contact);
 
         boolean isRegSuccess;
@@ -125,7 +127,7 @@ public class PacketDispatcher {
     }
 
     private Packet handlePlaceBid(Packet request, Gson gson) {
-        BidPayload bidData = gson.fromJson(request.getPayload(), BidPayload.class);                 
+        BidPayload bidData = gson.fromJson(request.getPayload(), BidPayload.class);
         logger.info("Nhận yêu cầu Đặt giá: " + bidData.getAmount() + " từ User ID: " + bidData.getUserId());
         ResultPayload bidResultPayload = auctionHandler.handleBid(bidData);
         return new Packet(PacketType.PLACE_BID, bidResultPayload);
@@ -135,27 +137,30 @@ public class PacketDispatcher {
         AuctionIdPayload reqData = gson.fromJson(request.getPayload(), AuctionIdPayload.class);
         AuctionDAO dao = new AuctionDAOImpl();
         List<BidTransaction> dbHistory = dao.getBidHistory(reqData.getAuctionId());
-        
+
         List<BidHistoryResponsePayload.SimpleBid> simpleList = new ArrayList<>();
         for (BidTransaction b : dbHistory) {
             String bName = b.getBidder() != null ? b.getBidder().getUserInfo().getName() : "Ẩn danh";
-            simpleList.add(new BidHistoryResponsePayload.SimpleBid(b.getAmount(), b.getBidTime().toString(), b.getNote(), bName));
+            simpleList.add(new BidHistoryResponsePayload.SimpleBid(b.getAmount(), b.getBidTime().toString(),
+                    b.getNote(), bName));
         }
-        return new Packet(PacketType.LOAD_BID_HISTORY, new BidHistoryResponsePayload(reqData.getAuctionId(), simpleList));
+        return new Packet(PacketType.LOAD_BID_HISTORY,
+                new BidHistoryResponsePayload(reqData.getAuctionId(), simpleList));
     }
 
     private Packet handleLoadSellerItems(Packet request, Gson gson) {
         SellerIdPayload sellerReq = gson.fromJson(request.getPayload(), SellerIdPayload.class);
         ItemDAO itemDAO = new ItemDAOImpl();
         AuctionDAO auctionDAOForSeller = new AuctionDAOImpl();
-        
+
         List<Item> itemsFromDb = itemDAO.getItemsBySellerId(sellerReq.getSellerId());
         Map<Integer, String> statusMap = auctionDAOForSeller.getAuctionStatusBySeller(sellerReq.getSellerId());
-        
+
         List<SellerItemsResponsePayload.SellerItemDTO> dtoList = new ArrayList<>();
         for (Item itm : itemsFromDb) {
             String stt = statusMap.getOrDefault(itm.getId(), "");
-            dtoList.add(new SellerItemsResponsePayload.SellerItemDTO(itm.getId(), itm.getName(), itm.getType().name(), itm.getStartPrice(), itm.getCurHighest(), stt));
+            dtoList.add(new SellerItemsResponsePayload.SellerItemDTO(itm.getId(), itm.getName(), itm.getType().name(),
+                    itm.getStartPrice(), itm.getCurHighest(), stt));
         }
         return new Packet(PacketType.LOAD_SELLER_ITEMS, new SellerItemsResponsePayload(dtoList));
     }
@@ -299,18 +304,18 @@ public class PacketDispatcher {
         BidderIdPayload bidderReq = gson.fromJson(request.getPayload(), BidderIdPayload.class);
         AuctionDAO auctionDAOForHist = new AuctionDAOImpl();
         List<Auction> dbHistoryList = auctionDAOForHist.getMyBidHistory(bidderReq.getBidderId());
-        
+
         List<PurchaseHistoryResponsePayload.HistoryDTO> purDtoList = new ArrayList<>();
         for (Auction a : dbHistoryList) {
             double amount = a.getBidHistory().isEmpty() ? 0 : a.getBidHistory().get(0).getAmount();
             String timeStr = a.getBidHistory().isEmpty() ? "" : a.getBidHistory().get(0).getBidTime().toString();
             int topBidderId = a.getHighestBidder() != null ? a.getHighestBidder().getId() : -1;
             purDtoList.add(new PurchaseHistoryResponsePayload.HistoryDTO(
-                a.getId(), a.getItem().getId(), a.getItem().getName(), amount, timeStr, a.getStatus().name(), topBidderId,
-                a.getItem().getType().name(), a.getItem().getStartPrice(), a.getItem().getCurHighest(),
-                a.getBidStep(),
-                a.getStartTime().toString(), a.getEndTime().toString()
-            ));
+                    a.getId(), a.getItem().getId(), a.getItem().getName(), amount, timeStr, a.getStatus().name(),
+                    topBidderId,
+                    a.getItem().getType().name(), a.getItem().getStartPrice(), a.getItem().getCurHighest(),
+                    a.getBidStep(),
+                    a.getStartTime().toString(), a.getEndTime().toString()));
         }
         return new Packet(PacketType.LOAD_PURCHASE_HISTORY, new PurchaseHistoryResponsePayload(purDtoList));
     }
@@ -318,23 +323,11 @@ public class PacketDispatcher {
     private Packet handlePlaceAutoBid(Packet request, Gson gson) {
         AutoBidPayload autoData = gson.fromJson(request.getPayload(), AutoBidPayload.class);
         AuctionDAO adao = new AuctionDAOImpl();
-        boolean autoSuccess = false;
-        String message = "Lỗi Database khi cài đặt Auto-Bid!";
-        Auction auction = adao.getAuctionById(autoData.getAuctionId());
-        if (auction == null) {
-            message = "Không tìm thấy phiên đấu giá!";
-        } else if (autoData.getIncrement() < auction.getBidStep()) {
-            message = "Bước giá Auto-Bid phải lớn hơn hoặc bằng bước giá seller đã đặt ("
-                    + String.format("%,.0f VNĐ", auction.getBidStep()) + ").";
-        } else if (autoData.getMaxAmount() <= auction.getItem().getCurHighest()) {
-            message = "Giới hạn giá cao nhất phải lớn hơn giá hiện tại!";
-        } else {
-            autoSuccess = adao.saveAutoBidConfig(autoData);
-            if (autoSuccess) {
-                auctionService.triggerAutoBids(autoData.getAuctionId());
-                message = "Hệ thống đã ghi nhận thiết lập Auto-Bid của bạn!";
-            }
+        boolean autoSuccess = adao.saveAutoBidConfig(autoData);
+        if (autoSuccess) {
+            auctionHandler.handleAutoBid(autoData.getAuctionId());
         }
+        String message = autoSuccess ? "Thiết lập Auto-Bid thành công!" : "Lỗi hệ thống khi thiết lập Auto-Bid!";
         return new Packet(PacketType.PLACE_AUTO_BID, new ResultPayload(autoSuccess, message, -1, "", "", "", "", ""));
     }
 
@@ -352,7 +345,10 @@ public class PacketDispatcher {
     private Packet handleCancelAutoBid(Packet request, Gson gson) {
         AutoBidPayload cancelData = gson.fromJson(request.getPayload(), AutoBidPayload.class);
         boolean cancelSuccess = new AuctionDAOImpl().cancelAutoBid(cancelData.getAuctionId(), cancelData.getUserId());
-        return new Packet(PacketType.CANCEL_AUTO_BID, new ResultPayload(cancelSuccess, cancelSuccess ? "Đã tắt hệ thống Đấu giá tự động!" : "Lỗi hệ thống khi tắt Auto-Bid!", -1, "", "", "", "", ""));
+        return new Packet(PacketType.CANCEL_AUTO_BID,
+                new ResultPayload(cancelSuccess,
+                        cancelSuccess ? "Đã tắt hệ thống Đấu giá tự động!" : "Lỗi hệ thống khi tắt Auto-Bid!", -1, "",
+                        "", "", "", ""));
     }
 
     private Packet handleLoadDashboard(Packet request, Gson gson) {
@@ -364,10 +360,9 @@ public class PacketDispatcher {
     private Packet handleAuctionSubscribe(Packet request, Gson gson) {
         AuctionSubscribePayload subscribePayload = gson.fromJson(request.getPayload(), AuctionSubscribePayload.class);
         Packet k = new Packet(PacketType.AUCTION_SUBSCRIBE, new ResultPayload(true, "", -1, "", "", "", "", ""));
-        if (subscribePayload.isSub()){
+        if (subscribePayload.isSub()) {
             announcer.addObserver(subscribePayload.getAuctionId(), currentClient);
-        }
-        else {
+        } else {
             announcer.removeObserver(subscribePayload.getAuctionId(), currentClient);
         }
         return k;

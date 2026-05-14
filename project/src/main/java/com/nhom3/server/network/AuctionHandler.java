@@ -1,6 +1,7 @@
 package com.nhom3.server.network;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,6 +15,7 @@ import com.nhom3.server.service.AuctionService;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.model.user.Bidder;
+import com.nhom3.shared.network.payload.AutoBidPayload;
 import com.nhom3.shared.network.payload.BidPayload;
 import com.nhom3.shared.network.payload.ResultPayload;
 
@@ -27,7 +29,7 @@ public class AuctionHandler {
     private final Announcer announcer;
     private final ExecutorService[] auctionThreads;
 
-    public static AuctionHandler getInstance() {
+    public synchronized static AuctionHandler getInstance() {
         if (instance == null) {
             instance = new AuctionHandler();
         }
@@ -70,7 +72,8 @@ public class AuctionHandler {
                 return bidResultPayload;
             } catch (Exception e) {
                 logger.error("Lỗi đặt giá", e);
-                ResultPayload bidResultPayload = new ResultPayload(false, "Lỗi hệ thống máy chủ!", -1, "", "", "", "", "");
+                ResultPayload bidResultPayload = new ResultPayload(false, "Lỗi hệ thống máy chủ!", -1, "", "", "", "",
+                        "");
                 return bidResultPayload;
             }
         };
@@ -80,6 +83,65 @@ public class AuctionHandler {
             logger.error("Lỗi đặt giá", e);
             ResultPayload bidResultPayload = new ResultPayload(false, "Lỗi hệ thống máy chủ!", -1, "", "", "", "", "");
             return bidResultPayload;
+        }
+    }
+
+    public void handleAutoBid(int auctionId) {
+        Runnable autoBidTask = () -> {
+            try {
+                Auction currentAuction = dao.getAuctionById(auctionId);
+                if (currentAuction == null)
+                    throw new IllegalStateException("Không tìm thấy phiên đấu giá này!");
+                List<AutoBidPayload> autoBids = dao.getActiveAutoBids(auctionId);
+                if (autoBids.isEmpty())
+                    return;
+
+                double currentHighest = currentAuction.getItem().getCurHighest();
+                int highestBidderId = currentAuction.getHighestBidderId();
+
+                if (autoBids.size() == 1) {
+                    if (autoBids.get(0).getUserId() == highestBidderId)
+                        return;
+                    else if (autoBids.get(0).getMaxAmount() < currentHighest) {
+                        dao.cancelAutoBid(auctionId, autoBids.get(0).getUserId());
+                    } else {
+                        double maxAmount = autoBids.get(0).getMaxAmount();
+                        double intendedAmount = currentHighest + autoBids.get(0).getIncrement();
+                        if (intendedAmount > maxAmount)
+                            intendedAmount = maxAmount;
+                        Bidder bidder = new Bidder(autoBids.get(0).getUserId(), null, null);
+                        BidTransaction newBid = new BidTransaction(0, bidder, intendedAmount, LocalDateTime.now(),
+                                "Đặt giá qua AutoBid");
+                        boolean isBidSuccess = auctionService.placeBid(currentAuction, newBid);
+
+                        if (isBidSuccess) {
+                            announcer.notify(auctionId, intendedAmount);
+                        }
+                    }
+                } else {
+                    int winner = autoBids.get(0).getMaxAmount() > autoBids.get(1).getMaxAmount() ? 0 : 1;
+                    int loser = winner ^ 1; // XOR để ra id autobid còn lại
+                    double maxAmount = autoBids.get(winner).getMaxAmount();
+                    double intendedAmount = autoBids.get(loser).getMaxAmount() + autoBids.get(winner).getIncrement();
+                    if (intendedAmount > maxAmount)
+                        intendedAmount = maxAmount;
+                    Bidder bidder = new Bidder(autoBids.get(winner).getUserId(), null, null);
+                    BidTransaction newBid = new BidTransaction(0, bidder, intendedAmount, LocalDateTime.now(),
+                            "Đặt giá qua mạng");
+                    boolean isBidSuccess = auctionService.placeBid(currentAuction, newBid);
+                    if (isBidSuccess) {
+                        announcer.notify(auctionId, intendedAmount);
+                    }
+                }
+            } catch (IllegalStateException e) {
+                logger.error("Lỗi đặt autobid", e);
+            }
+        };
+
+        try {
+            auctionThreads[auctionId % AUCTION_SHARDS].submit(autoBidTask);
+        } catch (Exception e) {
+            logger.error("Lỗi đặt giá", e);
         }
     }
 }

@@ -39,14 +39,6 @@ public class Announcer {
         }
     }
 
-    // public void setsUpdateType(int auctionId, int clientId, String type) {
-    //     for (AuctionObserver observer : clientInAuctions.get(auctionId)) {
-    //         if (client.id == clientId) {
-    //             //observer = new ObserverType(client)
-    //         }
-    //     }
-    // }
-
     public void notify(int auctionId, double amount) {
         Set<AuctionObserver> observers = clientInAuctions.get(auctionId);
         if (observers == null || observers.isEmpty()) {

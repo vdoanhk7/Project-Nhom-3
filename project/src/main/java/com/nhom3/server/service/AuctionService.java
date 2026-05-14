@@ -9,28 +9,14 @@ import com.nhom3.server.dao.AuctionDAOImpl;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.model.auction.StatusOfAuction;
-import com.nhom3.shared.network.payload.AutoBidPayload;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import com.nhom3.server.network.AuctionHandler;
 
 public class AuctionService {
     private final AuctionDAO auctionDAO;
     private static final int SNIPE_THRESHOLD_SECONDS = 30;
     private static final int EXTENSION_MINUTES = 2;
     private static final Logger log = LoggerFactory.getLogger(AuctionService.class);
-
-        // Bộ lập lịch để tạo khoảng trễ (Delay) giữa các lần Bot tự động đặt giá
-    private static final ScheduledExecutorService autoBidScheduler = Executors.newScheduledThreadPool(10);
-
-    // Khóa đồng bộ theo từng Auction ID
-    private static final Map<Integer, Object> auctionLocks = new ConcurrentHashMap<>();
-
-    // Cờ đánh dấu xem phiên này đang có Bot nào "chuẩn bị" đặt giá hay không (Chống spam request)
-    private static final Map<Integer, Boolean> isAutoBidProcessing = new ConcurrentHashMap<>();
+    private static final AuctionHandler auctionHandler = AuctionHandler.getInstance();
 
     public AuctionService() {
         this.auctionDAO = new AuctionDAOImpl();
@@ -152,22 +138,13 @@ public class AuctionService {
         }
     }
 
-    private Object getLock(int auctionId) {
-        return auctionLocks.computeIfAbsent(auctionId, k -> new Object());
-    }
-
     // Hàm gọi từ ClientHandler khi có người bấm Đặt giá thủ công
     public boolean placeBid(Auction auction, BidTransaction bid) {
-        synchronized (getLock(auction.getId())) {
-            // Thực hiện đặt giá
             boolean isSuccess = placeBidInternal(auction, bid);
-            
-            // Dù người thật vừa đặt, hãy gọi Bot kiểm tra xem có cần đáp trả không
             if (isSuccess) {
-                triggerAutoBids(auction.getId());
+                auctionHandler.handleAutoBid(auction.getId());
             }
             return isSuccess;
-        }
     }
 
     // Logic cốt lõi ghi vào DB
@@ -200,79 +177,5 @@ public class AuctionService {
             return true;
         }
         return false;
-    }
-
-    // BỘ MÁY XỬ LÝ AUTO-BID TỰ ĐỘNG (NHẢY GIÁ TỪ TỪ)
-    public void triggerAutoBids(int auctionId) {
-        // Nếu đã có 1 luồng Bot đang đếm ngược chờ đặt giá cho phiên này, thì bỏ qua không tạo thêm luồng để tránh loạn giá
-        if (isAutoBidProcessing.getOrDefault(auctionId, false)) {
-            return;
-        }
-
-        // Đánh dấu là Bot đang suy nghĩ
-        isAutoBidProcessing.put(auctionId, true);
-
-        // Hẹn giờ 1.5 giây sau Bot mới tung đòn đáp trả (Tạo hiệu ứng giá nhảy liên tục chân thực)
-        autoBidScheduler.schedule(() -> {
-            synchronized (getLock(auctionId)) {
-                try {
-                    Auction auction = auctionDAO.getAuctionById(auctionId);
-                    if (auction == null) return;
-                    
-                    List<AutoBidPayload> autoBids = auctionDAO.getActiveAutoBids(auctionId);
-                    if (autoBids.isEmpty()) return;
-
-                    double currentHighest = auction.getItem().getCurHighest();
-                    int highestBidderId = auction.getHighestBidderId();
-
-                    boolean bidPlaced = false;
-
-                    // Chỉ cho 1 Bot hợp lệ nhảy vào đáp trả ở nhịp này
-                    for (AutoBidPayload config : autoBids) {
-                        // Bỏ qua Bot của người đang dẫn đầu
-                        if (config.getUserId() == highestBidderId) continue;
-
-                        double nextBidAmount;
-                        if (highestBidderId <= 0) {
-                            // Yêu cầu 1: Chưa có ai đấu giá -> Đặt bằng giá khởi điểm
-                            nextBidAmount = auction.getItem().getStartPrice();
-                        } else {
-                            // Yêu cầu 2: Đã có người đặt -> Đặt bằng giá cao nhất + Bước giá
-                            nextBidAmount = currentHighest + config.getIncrement();
-                        }
-
-                        // Yêu cầu 3: Người có maxAmount cao hơn sẽ trụ lại (Chỉ đặt nếu giá tính toán <= Ví tiền cài đặt)
-                        if (nextBidAmount <= config.getMaxAmount()) {
-                            com.nhom3.shared.model.user.Bidder botBidder = new com.nhom3.shared.model.user.Bidder(config.getUserId(), null, null);
-                            BidTransaction autoBidTx = new BidTransaction(0, botBidder, nextBidAmount, LocalDateTime.now(), "🤖 Auto-Bid");
-
-                            // Thực hiện đặt giá
-                            try {
-                                bidPlaced = placeBidInternal(auction, autoBidTx);
-                                if (bidPlaced) {
-                                    com.nhom3.server.network.liveUpdate.Announcer.getInstance()
-                                            .notify(auctionId, nextBidAmount);
-                                    break; // Chỉ 1 Bot được đặt trong nhịp này. Thoát vòng lặp For.
-                                }
-                            } catch (IllegalStateException e) {
-                                // Nếu Bot lỡ tự đặt đè lên chính nó, bỏ qua không làm sập hệ thống
-                                bidPlaced = false;
-                            }
-                        }
-                    }
-
-                    // Nếu ở nhịp này có Bot vừa đặt giá thành công, ta GỌI LẠI CHÍNH HÀM NÀY
-                    // Để 1.5 giây sau, các Bot khác có cơ hội đáp trả lại Bot vừa rồi.
-                    if (bidPlaced) {
-                        isAutoBidProcessing.put(auctionId, false); // Mở khóa cờ
-                        triggerAutoBids(auctionId); // Kích hoạt nhịp tiếp theo
-                    }
-
-                } finally {
-                    // Đảm bảo cờ luôn được tắt dù có lỗi xảy ra
-                    isAutoBidProcessing.put(auctionId, false);
-                }
-            }
-        }, 1500, TimeUnit.MILLISECONDS); // Delay 1.5 giây (1500 mili-giây)
     }
 }

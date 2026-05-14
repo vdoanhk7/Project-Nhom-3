@@ -209,6 +209,7 @@ public class PurchaseHistoryController {
             } catch (Exception e) {}
 
             Auction auction = new Auction(dto.auctionId, item, start, end); 
+            auction.setBidStep(dto.bidStep);
             
             try { auction.setStatus(StatusOfAuction.valueOf(dto.status)); } 
             catch (Exception e) { auction.setStatus(StatusOfAuction.OPEN); }

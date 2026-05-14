@@ -26,20 +26,20 @@ INSERT INTO items (id, seller_id, name, start_price, cur_highest, item_type) VAL
 
 -- Thêm Auctions (Phiên đấu giá)
 -- Phiên 1: Đã kết thúc (FINISHED)
-INSERT INTO auctions (id, item_id, start_time, end_time, status, highest_bidder_id) VALUES
-(1, 2, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY), 'FINISHED', 4);
+INSERT INTO auctions (id, item_id, start_time, end_time, bid_step, status, highest_bidder_id) VALUES
+(1, 2, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY), 500000, 'FINISHED', 4);
 
 -- Phiên 2: Đang diễn ra (RUNNING)
-INSERT INTO auctions (id, item_id, start_time, end_time, status, highest_bidder_id) VALUES
-(2, 4, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 2 DAY), 'RUNNING', 5);
+INSERT INTO auctions (id, item_id, start_time, end_time, bid_step, status, highest_bidder_id) VALUES
+(2, 4, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 2 DAY), 250000, 'RUNNING', 5);
 
 -- Phiên 3: Chưa bắt đầu (OPEN)
-INSERT INTO auctions (id, item_id, start_time, end_time, status, highest_bidder_id) VALUES
-(3, 1, DATE_ADD(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 5 DAY), 'OPEN', NULL);
+INSERT INTO auctions (id, item_id, start_time, end_time, bid_step, status, highest_bidder_id) VALUES
+(3, 1, DATE_ADD(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 5 DAY), 200000, 'OPEN', NULL);
 
 -- Phiên 4: Mới mở, đang chạy (RUNNING) - chưa có ai trả giá
-INSERT INTO auctions (id, item_id, start_time, end_time, status, highest_bidder_id) VALUES
-(4, 3, DATE_SUB(NOW(), INTERVAL 2 HOUR), DATE_ADD(NOW(), INTERVAL 3 DAY), 'RUNNING', NULL);
+INSERT INTO auctions (id, item_id, start_time, end_time, bid_step, status, highest_bidder_id) VALUES
+(4, 3, DATE_SUB(NOW(), INTERVAL 2 HOUR), DATE_ADD(NOW(), INTERVAL 3 DAY), 1000000, 'RUNNING', NULL);
 
 -- Thêm Lịch sử trả giá (Bid Transactions)
 -- Cho Laptop Gaming (Auction 1 - FINISHED)

@@ -34,7 +34,7 @@ import java.util.List;
 public class ViewItemDetailController {
 
     @FXML private Label lblItemName, lblItemType, lblStatusBadge;
-    @FXML private Label lblCurrentPrice, lblStartPrice;
+    @FXML private Label lblCurrentPrice, lblStartPrice, lblBidStep;
     @FXML private Label lblTimeTitle, lblCountdown, lblTimeRange;
     @FXML private HBox boxSellerActions; // Vùng chứa nút của Seller (Hiện tại chưa dùng đến)
     @FXML private HBox boxBidderActions; // Vùng chứa ô nhập tiền và nút Đặt giá
@@ -134,6 +134,7 @@ public class ViewItemDetailController {
         lblCurrentPrice.setText(String.format("%,.0f VNĐ", item.getCurHighest()));
         this.currentAuction = auction;
         if (auction == null) {
+            lblBidStep.setText("Bước giá: --");
             lblStatusBadge.setText("CHƯA ĐĂNG BÁN");
             lblStatusBadge.setStyle("-fx-background-color: #95a5a6;");
             lblCountdown.setText("--:--:--");
@@ -141,6 +142,8 @@ public class ViewItemDetailController {
             lblTimeRange.setText("");
             return;
         }
+        lblBidStep.setText("Bước giá: " + formatMoney(auction.getBidStep()));
+        updateBidInputHint();
         if ("PAID".equals(status)) {
             setupPaidState(auction);
         } else if ("CANCELLED".equals(status)) {
@@ -268,7 +271,9 @@ public class ViewItemDetailController {
         // Tạo cửa sổ Dialog
         Dialog<com.nhom3.shared.network.payload.AutoBidPayload> dialog = new Dialog<>();
         dialog.setTitle("Cài đặt Đấu giá tự động (Auto-Bid)");
-        dialog.setHeaderText("Hệ thống sẽ tự động thay mặt bạn trả giá cao hơn\nngười khác (cộng thêm Bước giá) cho đến khi đạt Mức tối đa.");
+        double sellerBidStep = currentAuction.getBidStep();
+        dialog.setHeaderText("Bước giá tự động phải từ " + formatMoney(sellerBidStep)
+                + " trở lên và không vượt quá giới hạn giá cao nhất.");
 
         // Nút OK và Cancel
         ButtonType btnSetup = new ButtonType("Lưu Cài Đặt", ButtonBar.ButtonData.OK_DONE);
@@ -284,12 +289,14 @@ public class ViewItemDetailController {
         TextField txtIncrement = new TextField();
         MoneyInputFormatter.install(txtMaxAmount);
         MoneyInputFormatter.install(txtIncrement);
-        txtIncrement.setText(MoneyInputFormatter.formatAmount(50000)); // Bước giá mặc định
+        txtIncrement.setText(MoneyInputFormatter.formatAmount(sellerBidStep));
 
         grid.add(new Label("Giới hạn giá cao nhất (VNĐ):"), 0, 0);
         grid.add(txtMaxAmount, 1, 0);
         grid.add(new Label("Bước giá mỗi lần tự tăng (VNĐ):"), 0, 1);
         grid.add(txtIncrement, 1, 1);
+        grid.add(new Label("Bước giá seller yêu cầu:"), 0, 2);
+        grid.add(new Label(formatMoney(sellerBidStep)), 1, 2);
 
         dialog.getDialogPane().setContent(grid);
 
@@ -302,6 +309,11 @@ public class ViewItemDetailController {
                     
                     if (maxAmt <= currentAuction.getItem().getCurHighest()) {
                         showAlert(Alert.AlertType.ERROR, "Lỗi", "Giá tối đa phải lớn hơn giá hiện tại!");
+                        return null;
+                    }
+                    if (incAmt < sellerBidStep) {
+                        showAlert(Alert.AlertType.ERROR, "Lỗi",
+                                "Bước giá Auto-Bid phải lớn hơn hoặc bằng " + formatMoney(sellerBidStep) + "!");
                         return null;
                     }
                     return new com.nhom3.shared.network.payload.AutoBidPayload(currentUser.getId(), currentAuction.getId(), maxAmt, incAmt);
@@ -342,13 +354,13 @@ public class ViewItemDetailController {
         try {
             double bidAmount = MoneyInputFormatter.parseAmount(input);
             double currentHighest = currentAuction.getItem().getCurHighest();  
-            double minStep = 50000; 
+            double minStep = currentAuction.getBidStep();
             double validMinPrice = currentHighest + minStep;
             
             if (bidAmount < validMinPrice) {
                 showAlert(Alert.AlertType.ERROR, "Giá không hợp lệ", 
                     "Số tiền trả giá phải lớn hơn hoặc bằng " + String.format("%,.0f VNĐ", validMinPrice) + 
-                    "\n(Bao gồm giá hiện tại + Bước giá 50k)");
+                    "\n(Bao gồm giá hiện tại + bước giá " + formatMoney(minStep) + ")");
                 return;
             }
 
@@ -407,6 +419,7 @@ public class ViewItemDetailController {
             // Cập nhật giao diện lập tức
             currentAuction.getItem().setCurHighest(pendingBidAmount);
             lblCurrentPrice.setText(String.format("%,.0f VNĐ", pendingBidAmount));
+            updateBidInputHint();
             txtBidAmount.clear();    
             txtBidNote.clear();
             txtBidAmount.requestFocus();
@@ -488,6 +501,7 @@ public class ViewItemDetailController {
                 if (realHighest > currentAuction.getItem().getCurHighest()) {
                     currentAuction.getItem().setCurHighest(realHighest);
                     lblCurrentPrice.setText(String.format("%,.0f VNĐ", realHighest));
+                    updateBidInputHint();
                 }
             }
             if (priceHistoryChart.isVisible()) {
@@ -528,8 +542,20 @@ public class ViewItemDetailController {
         if (highestPrice > currentAuction.getItem().getCurHighest()) {
             currentAuction.getItem().setCurHighest(highestPrice);
             lblCurrentPrice.setText(String.format("%,.0f VNĐ", highestPrice));
+            updateBidInputHint();
         }
         loadBidHistory();
+    }
+
+    private void updateBidInputHint() {
+        if (currentAuction == null || txtBidAmount == null) return;
+
+        double nextMinBid = currentAuction.getItem().getCurHighest() + currentAuction.getBidStep();
+        txtBidAmount.setPromptText("Tối thiểu " + formatMoney(nextMinBid));
+    }
+
+    private String formatMoney(double amount) {
+        return String.format("%,.0f VNĐ", amount);
     }
 
     private void subscribeToAuction(boolean subscribe) {

@@ -45,6 +45,7 @@
                      <font><Font name="System Bold" size="28.0" /></font>
                   </Label>
                   <Label fx:id="lblStartPrice" text="Khởi điểm: 1,000,000 VNĐ" textFill="#7f8c8d" />
+                  <Label fx:id="lblBidStep" text="Bước giá: 50,000 VNĐ" textFill="#7f8c8d" />
                </children>
             </VBox>
 

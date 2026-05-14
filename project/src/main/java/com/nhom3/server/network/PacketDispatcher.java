@@ -319,7 +319,8 @@ public class PacketDispatcher {
         if (autoSuccess) {
             auctionHandler.handleAutoBid(autoData.getAuctionId());
         }
-        return new Packet(PacketType.PLACE_AUTO_BID, new ResultPayload(autoSuccess, autoSuccess ? "Hệ thống đã ghi nhận thiết lập Auto-Bid của bạn!" : "Lỗi Database khi cài đặt Auto-Bid!", -1, "", "", "", "", ""));
+        String message = autoSuccess ? "Hệ thống đã ghi nhận thiết lập Auto-Bid của bạn!" : "Lỗi Database khi cài đặt Auto-Bid!";
+        return new Packet(PacketType.PLACE_AUTO_BID, new ResultPayload(autoSuccess, message, -1, "", "", "", "", ""));
     }
 
     private Packet handleCheckAutoBid(Packet request, Gson gson) {

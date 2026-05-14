@@ -8,9 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Auction extends Entity{
+    public static final double DEFAULT_BID_STEP = 50000;
+
     private Item item;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private double bidStep;
     private Bidder highestBidder;
     private StatusOfAuction status;
     private List<BidTransaction> bidHistory;
@@ -20,6 +23,7 @@ public class Auction extends Entity{
         this.item = item;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.bidStep = DEFAULT_BID_STEP;
         this.status = StatusOfAuction.OPEN;
         this.bidHistory = new ArrayList<>();
         
@@ -40,6 +44,9 @@ public class Auction extends Entity{
         this.endTime = endTime;
     }
 
+    public void setBidStep(double bidStep) {
+        this.bidStep = bidStep;
+    }
 
     public void setHighestBidder(Bidder highestBidder) {
         this.highestBidder = highestBidder;
@@ -61,6 +68,10 @@ public class Auction extends Entity{
 
     public LocalDateTime getEndTime() {
         return endTime;
+    }
+
+    public double getBidStep() {
+        return bidStep;
     }
 
     public Bidder getHighestBidder() {

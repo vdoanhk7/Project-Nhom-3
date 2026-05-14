@@ -49,6 +49,7 @@ public abstract class IntegrationTestBase {
                     "item_id INT NOT NULL," +
                     "start_time DATETIME NOT NULL," +
                     "end_time DATETIME NOT NULL," +
+                    "bid_step DOUBLE NOT NULL DEFAULT 50000," +
                     "status VARCHAR(20) NOT NULL DEFAULT 'OPEN'," +
                     "highest_bidder_id INT," +
                     "FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE," +

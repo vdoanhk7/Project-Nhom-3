@@ -59,6 +59,9 @@ public class AuctionService {
             log.warn("Từ chối tạo: Thời gian kết thúc ({}) trước thời gian bắt đầu ({}).", auction.getEndTime(), auction.getStartTime());
             throw new IllegalArgumentException("Thời gian kết thúc phải sau thời gian bắt đầu!");
         }
+        if (auction.getBidStep() <= 0) {
+            throw new IllegalArgumentException("Bước giá phải lớn hơn 0!");
+        }
 
         // Một sản phẩm không thể có 2 phiên đấu giá chạy cùng lúc
         Auction existingAuction = auctionDAO.getAuctionByItemId(auction.getItem().getId());
@@ -181,6 +184,15 @@ public class AuctionService {
             throw new IllegalStateException("Bạn đang là người dẫn đầu, không cần đặt thêm nhé!");
         }
 
+        double currentHighest = auction.getItem().getCurHighest();
+        double requiredMinBid = currentHighest + auction.getBidStep();
+        if (bid.getAmount() < requiredMinBid) {
+            throw new IllegalStateException("Số tiền trả giá phải lớn hơn hoặc bằng "
+                    + String.format("%,.0f VNĐ", requiredMinBid)
+                    + " (giá hiện tại + bước giá "
+                    + String.format("%,.0f VNĐ", auction.getBidStep()) + ").");
+        }
+
         boolean isSuccess = auctionDAO.updateHighestBid(auction.getId(), bid.getBidder().getId(), bid.getAmount());
         
         if (isSuccess) {
@@ -223,6 +235,7 @@ public class AuctionService {
                     if (autoBids.isEmpty()) return;
 
                     double currentHighest = auction.getItem().getCurHighest();
+                    double sellerBidStep = auction.getBidStep();
                     int highestBidderId = auction.getHighestBidderId();
 
                     boolean bidPlaced = false;
@@ -231,15 +244,9 @@ public class AuctionService {
                     for (AutoBidPayload config : autoBids) {
                         // Bỏ qua Bot của người đang dẫn đầu
                         if (config.getUserId() == highestBidderId) continue;
+                        if (config.getIncrement() < sellerBidStep) continue;
 
-                        double nextBidAmount;
-                        if (highestBidderId <= 0) {
-                            // Yêu cầu 1: Chưa có ai đấu giá -> Đặt bằng giá khởi điểm
-                            nextBidAmount = auction.getItem().getStartPrice();
-                        } else {
-                            // Yêu cầu 2: Đã có người đặt -> Đặt bằng giá cao nhất + Bước giá
-                            nextBidAmount = currentHighest + config.getIncrement();
-                        }
+                        double nextBidAmount = currentHighest + config.getIncrement();
 
                         // Yêu cầu 3: Người có maxAmount cao hơn sẽ trụ lại (Chỉ đặt nếu giá tính toán <= Ví tiền cài đặt)
                         if (nextBidAmount <= config.getMaxAmount()) {

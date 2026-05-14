@@ -11,4 +11,5 @@ public interface UserDAO {
     boolean updatePassword(int userId, String newPassword);
     boolean changePassword(int userId, String oldPassword, String newPassword);
     List<User> getAllUsers();
+    boolean deleteUser(int userId);
 }

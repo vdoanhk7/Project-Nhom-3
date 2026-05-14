@@ -10,19 +10,6 @@
 
 <VBox prefHeight="700.0" prefWidth="1000.0" spacing="20" style="-fx-background-color: #f0f3f6;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.AdminDashboardController">
     <children>
-        <HBox alignment="CENTER" prefHeight="100.0" style="-fx-background-color: linear-gradient(to right, #2980b9, #3498db); -fx-background-radius: 0 0 20 20;">
-            <children>
-                <VBox alignment="CENTER">
-                    <Text fill="WHITE" style="-fx-font-size: 28px; -fx-font-weight: bold;" text="HỆ THỐNG QUẢN TRỊ ĐẤU GIÁ" />
-                    <Text fill="WHITE" style="-fx-font-size: 14px;" text="Bảng điều khiển dành cho Quản trị viên hệ thống" />
-                </VBox>
-                <Region HBox.hgrow="ALWAYS" />
-                <Button onAction="#handleLogout" style="-fx-background-color: #ffffff; -fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-background-radius: 10;" text="Đăng xuất">
-                    <HBox.margin>
-                        <Insets right="20.0" />
-                    </HBox.margin></Button>
-            </children>
-        </HBox>
 
         <HBox spacing="20">
             <padding><Insets left="20" right="20" /></padding>

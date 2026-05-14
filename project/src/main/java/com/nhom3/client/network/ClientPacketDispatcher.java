@@ -26,12 +26,24 @@ public class ClientPacketDispatcher {
         handlers.put(PacketType.PLACE_BID, this::handlePlaceBid);
         handlers.put(PacketType.LOAD_BID_HISTORY, this::handleLoadBidHistory);
         handlers.put(PacketType.LOAD_SELLER_ITEMS, this::handleLoadSellerItems);
+        handlers.put(PacketType.LOAD_ACTIVE_AUCTIONS, this::handleLoadActiveAuctions);
+        handlers.put(PacketType.LOAD_AUCTION_BY_ITEM, this::handleLoadAuctionByItem);
+        handlers.put(PacketType.SAVE_ITEM, this::handleItemMutation);
+        handlers.put(PacketType.UPDATE_ITEM, this::handleItemMutation);
+        handlers.put(PacketType.DELETE_ITEM, this::handleDeleteItem);
+        handlers.put(PacketType.CONFIRM_PAYMENT, this::handleConfirmPayment);
+        handlers.put(PacketType.CANCEL_AUCTION, this::handleCancelAuction);
+        handlers.put(PacketType.UPDATE_PROFILE, this::handleUpdateProfile);
+        handlers.put(PacketType.CHANGE_PASSWORD, this::handleChangePassword);
+        handlers.put(PacketType.LOAD_USERS, this::handleLoadUsers);
         handlers.put(PacketType.PUBLISH_AUCTION, this::handlePublishAuction);
         handlers.put(PacketType.LOAD_PURCHASE_HISTORY, this::handleLoadPurchaseHistory);
         handlers.put(PacketType.PLACE_AUTO_BID, this::handlePlaceAutoBid);
         handlers.put(PacketType.CHECK_AUTO_BID, this::handleCheckAutoBid);
         handlers.put(PacketType.CANCEL_AUTO_BID, this::handleCancelAutoBid);
         handlers.put(PacketType.LOAD_DASHBOARD, this::handleLoadDashboard);
+        handlers.put(PacketType.SCREEN_NOTIFY, this::handleScreenNotify);
+        handlers.put(PacketType.AUCTION_SUBSCRIBE, this::handleAuctionSubscribe);
     }
 
     public void dispatch(Packet response, Gson gson) {
@@ -109,6 +121,97 @@ public class ClientPacketDispatcher {
         } catch (Exception e) { e.printStackTrace(); }
     }
 
+    private void handleLoadActiveAuctions(Packet response, Gson gson) {
+        AuctionListResponsePayload payload =
+                gson.fromJson(response.getPayload(), AuctionListResponsePayload.class);
+        try {
+            if (MarketController.getInstance() != null) {
+                MarketController.getInstance().handleLoadActiveAuctionsResult(payload.getAuctions());
+            }
+            if (AdminDashboardController.getInstance() != null) {
+                AdminDashboardController.getInstance().handleLoadAuctionDataResult(payload.getAuctions());
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void handleLoadAuctionByItem(Packet response, Gson gson) {
+        AuctionListResponsePayload payload =
+                gson.fromJson(response.getPayload(), AuctionListResponsePayload.class);
+        try {
+            if (ManageItemController.getInstance() != null) {
+                ManageItemController.getInstance().handleLoadAuctionByItemResult(payload.getAuctions());
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void handleItemMutation(Packet response, Gson gson) {
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        try {
+            if (AddItemController.getInstance() != null) {
+                AddItemController.getInstance().handleItemMutationResult(
+                        response.getType(), result.getResult(), result.getMessage());
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void handleDeleteItem(Packet response, Gson gson) {
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        try {
+            if (ManageItemController.getInstance() != null) {
+                ManageItemController.getInstance().handleDeleteItemResult(
+                        result.getResult(), result.getMessage());
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void handleConfirmPayment(Packet response, Gson gson) {
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        try {
+            if (ManageItemController.getInstance() != null) {
+                ManageItemController.getInstance().handleConfirmPaymentResult(
+                        result.getResult(), result.getMessage());
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void handleCancelAuction(Packet response, Gson gson) {
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        try {
+            if (AdminDashboardController.getInstance() != null) {
+                AdminDashboardController.getInstance().handleCancelAuctionResult(
+                        result.getResult(), result.getMessage());
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void handleUpdateProfile(Packet response, Gson gson) {
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        try {
+            if (ProfileController.getInstance() != null) {
+                ProfileController.getInstance().handleUpdateProfileResult(result);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void handleChangePassword(Packet response, Gson gson) {
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        try {
+            if (ChangePasswordController.getInstance() != null) {
+                ChangePasswordController.getInstance().handleChangePasswordResult(
+                        result.getResult(), result.getMessage());
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void handleLoadUsers(Packet response, Gson gson) {
+        UserListResponsePayload payload = gson.fromJson(response.getPayload(), UserListResponsePayload.class);
+        try {
+            if (AdminDashboardController.getInstance() != null) {
+                AdminDashboardController.getInstance().handleLoadUserDataResult(payload.getUsers());
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
     private void handlePublishAuction(Packet response, Gson gson) {
         ResultPayload pubRes = gson.fromJson(response.getPayload(), ResultPayload.class);
         try {
@@ -167,5 +270,18 @@ public class ClientPacketDispatcher {
                 DashboardController.getInstance().handleDashboardData(dashResult);
             }
         } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void handleScreenNotify(Packet response, Gson gson) {
+        ScreenNotifyPayload notifyPayload = gson.fromJson(response.getPayload(), ScreenNotifyPayload.class);
+        try {
+            if (ViewItemDetailController.getInstance() != null) {
+                ViewItemDetailController.getInstance().handleScreenNotify(notifyPayload.getHighestPrice());
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void handleAuctionSubscribe(Packet response, Gson gson) {
+        // Subscription acknowledgement. No UI update needed.
     }
 }

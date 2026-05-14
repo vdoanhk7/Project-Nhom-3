@@ -9,6 +9,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
+        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class PublishAuctionController {
     @FXML private Label lblItemName;
     @FXML private RadioButton rbPublishNow;

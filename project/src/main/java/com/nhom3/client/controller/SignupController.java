@@ -20,6 +20,9 @@ import javafx.scene.control.TextInputControl;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
+        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class SignupController {
     private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     private static final String PHONE_REGEX = "^0\\d{9}$";

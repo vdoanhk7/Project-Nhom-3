@@ -19,6 +19,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
+        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class DashboardController {
 
     @FXML private Label lblTotalUsers;

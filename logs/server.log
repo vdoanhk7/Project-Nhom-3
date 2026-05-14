@@ -241,3 +241,34 @@ java.net.ConnectException: Connection refused: connect
 2026-05-14 18:24:09 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: Pham Tien Dung  đã đăng nhập thành công!
 2026-05-14 18:24:09 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
 2026-05-14 18:30:44 [virtual-35] ERROR c.nhom3.server.network.ClientHandler - Client ngắt kết nối
+2026-05-14 18:50:25 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-14 18:50:25 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-14 18:50:27 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@c74fc2c
+2026-05-14 18:50:27 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-14 18:50:27 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-14 18:50:30 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-14 18:50:42 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-14 18:50:42 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: Pham Tien Dung  đã đăng nhập thành công!
+2026-05-14 18:50:42 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-14 18:52:06 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu ĐĂNG KÝ từ user: s
+2026-05-14 18:52:06 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: dưeouif đã đăng ký thành công với vai trò BIDDER!
+2026-05-14 18:52:06 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng ký: true
+2026-05-14 18:52:14 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: s
+2026-05-14 18:52:15 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: dưeouif đã đăng nhập thành công!
+2026-05-14 18:52:15 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-14 18:52:30 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 250000.0 từ User ID: 8
+2026-05-14 18:52:31 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: true
+2026-05-14 18:53:12 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-14 18:53:16 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-14 18:54:00 [virtual-48] INFO  c.n.server.network.PacketDispatcher - Yêu cầu ĐĂNG KÝ từ user: d
+2026-05-14 18:54:01 [virtual-48] INFO  c.nhom3.server.service.AuthService - Server: feg đã đăng ký thành công với vai trò BIDDER!
+2026-05-14 18:54:01 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng ký: true
+2026-05-14 18:54:07 [virtual-48] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: d
+2026-05-14 18:54:07 [virtual-48] INFO  c.nhom3.server.service.AuthService - Server: feg đã đăng nhập thành công!
+2026-05-14 18:54:07 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-14 18:54:16 [virtual-48] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 300000.0 từ User ID: 9
+2026-05-14 18:54:17 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: true
+2026-05-14 18:54:27 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 400000.0 từ User ID: 8
+2026-05-14 18:54:28 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: true
+2026-05-14 18:54:38 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 500000.0 từ User ID: 8
+2026-05-14 18:54:38 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: false

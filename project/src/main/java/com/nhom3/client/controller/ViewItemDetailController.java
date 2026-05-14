@@ -17,7 +17,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
-import javafx.scene.chart.BarChart;
+import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -42,7 +42,7 @@ public class ViewItemDetailController {
     @FXML private TextField txtBidNote; // Ô nhập ghi chú
     @FXML private Button btnPlaceBid;     // Nút "Đặt giá"
 
-    @FXML private BarChart<String, Number> priceHistoryChart;
+    @FXML private LineChart<String, Number> priceHistoryChart;
     @FXML private Button btnShowChart;
     private XYChart.Series<String, Number> priceSeries; // Biến giữ dữ liệu đường giá
 

@@ -46,9 +46,9 @@
                         <TableView fx:id="tableUsers" VBox.vgrow="ALWAYS">
                             <columns>
                                 <TableColumn fx:id="colUserId" text="ID" prefWidth="50" />
-                                <TableColumn fx:id="colUserName" text="Tên đăng nhập" prefWidth="150" />
-                                <TableColumn fx:id="colUserRole" text="Vai trò" prefWidth="100" />
-                                <TableColumn fx:id="colUserAction" text="Thao tác" prefWidth="150" />
+                                <TableColumn fx:id="colUserName" text="Tên Đăng Nhập" prefWidth="150" />
+                                <TableColumn fx:id="colUserRole" text="Vai Trò" prefWidth="100" />
+                                <TableColumn fx:id="colUserAction" text="Thao Tác" prefWidth="150" />
                             </columns>
                         </TableView>
                     </VBox>
@@ -58,9 +58,9 @@
                         <TableView fx:id="tableAuctions" VBox.vgrow="ALWAYS">
                             <columns>
                                 <TableColumn fx:id="colAuctionId" text="ID" prefWidth="50" />
-                                <TableColumn fx:id="colItemName" text="Sản phẩm" prefWidth="250" />
-                                <TableColumn fx:id="colStatus" text="Trạng thái" prefWidth="100" />
-                                <TableColumn fx:id="colAuctionAction" text="Thao tác Admin" prefWidth="200" />
+                                <TableColumn fx:id="colItemName" text="Sản Phẩm" prefWidth="250" />
+                                <TableColumn fx:id="colStatus" text="Trạng Thái" prefWidth="100" />
+                                <TableColumn fx:id="colAuctionAction" text="Thao Tác ADMIN" prefWidth="200" />
                             </columns>
                         </TableView>
                     </VBox>

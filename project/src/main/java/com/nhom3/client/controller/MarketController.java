@@ -53,12 +53,12 @@ public class MarketController {
     @FXML
     public void initialize() {
         instance = this;
-        cbCategory.setItems(FXCollections.observableArrayList("Tat ca", "ART", "ELECTRONICS", "VEHICLE"));
-        cbCategory.setValue("Tat ca");
+        cbCategory.setItems(FXCollections.observableArrayList("Tất Cả", "ART", "ELECTRONICS", "VEHICLE"));
+        cbCategory.setValue("Tất Cả");
 
         btnReload.setOnAction(e -> {
             txtSearch.clear();
-            cbCategory.setValue("Tat ca");
+            cbCategory.setValue("Tất Cả");
             loadMarket();
         });
         txtSearch.textProperty().addListener((observable, oldValue, newValue) -> filterMarket());
@@ -120,7 +120,7 @@ public class MarketController {
 
         for (Auction auction : allActiveAuctions) {
             Item item = auction.getItem();
-            boolean matchCategory = "Tat ca".equals(selectedCategory)
+            boolean matchCategory = "Tất Cả".equals(selectedCategory)
                     || item.getType().name().equalsIgnoreCase(selectedCategory);
             boolean matchSearch = searchText.isEmpty()
                     || item.getName().toLowerCase().contains(searchText);
@@ -174,9 +174,9 @@ public class MarketController {
     private String getActionButtonText() {
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (currentUser != null && currentUser.getRole() == Role.BIDDER) {
-            return "Vào đấu giá";
+            return "Vào Đấu Giá";
         }
-        return "Xem phiên đấu giá";
+        return "Xem Phiên Đấu Giá";
     }
 
     public void openItemDetail(Item item, Auction auction, Runnable onWindowClosed) {

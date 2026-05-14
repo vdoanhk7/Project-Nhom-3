@@ -109,22 +109,22 @@ public class AuthServiceTest {
 
     @Test
     void changePassword_Success_ShouldReturnTrue() {
-        when(userDAO.updatePassword(1, "newPass")).thenReturn(true);
+        when(userDAO.changePassword(1, "oldPass", "newPass")).thenReturn(true);
 
-        boolean result = authService.updatePassword(1,"oldPass" ,"newPass");
+        boolean result = authService.updatePassword(1, "oldPass", "newPass");
 
         assertTrue(result);
-        verify(userDAO).updatePassword(1, "newPass");
+        verify(userDAO).changePassword(1, "oldPass", "newPass");
     }
 
     @Test
     void changePassword_Failure_ShouldReturnFalse() {
-        when(userDAO.updatePassword(1, "newPass")).thenReturn(false);
+        when(userDAO.changePassword(1, "oldPass", "newPass")).thenReturn(false);
 
         boolean result = authService.updatePassword(1, "oldPass", "newPass");
 
         assertFalse(result);
-        verify(userDAO).updatePassword(1, "newPass");
+        verify(userDAO).changePassword(1, "oldPass", "newPass");
     }
 
     private User createValidUser() {

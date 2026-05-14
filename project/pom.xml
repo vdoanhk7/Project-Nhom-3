@@ -52,6 +52,118 @@
             <version>21</version>
         </dependency>
 
+        <!-- JavaFX native cho macOS (Intel) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>21</version>
+            <classifier>mac</classifier>
+        </dependency>
+        <!-- JavaFX native cho macOS (Apple Silicon M1/M2/M3) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>21</version>
+            <classifier>mac-aarch64</classifier>
+        </dependency>
+        <!-- JavaFX native cho Linux -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>21</version>
+            <classifier>linux</classifier>
+        </dependency>
+        <!-- JavaFX native cho Windows -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>21</version>
+            <classifier>win</classifier>
+        </dependency>
+        <!-- JavaFX base native cho macOS (Intel) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-base</artifactId>
+            <version>21</version>
+            <classifier>mac</classifier>
+        </dependency>
+        <!-- JavaFX base native cho macOS (Apple Silicon) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-base</artifactId>
+            <version>21</version>
+            <classifier>mac-aarch64</classifier>
+        </dependency>
+        <!-- JavaFX base native cho Linux -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-base</artifactId>
+            <version>21</version>
+            <classifier>linux</classifier>
+        </dependency>
+        <!-- JavaFX base native cho Windows -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-base</artifactId>
+            <version>21</version>
+            <classifier>win</classifier>
+        </dependency>
+        <!-- JavaFX controls native cho macOS (Intel) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>21</version>
+            <classifier>mac</classifier>
+        </dependency>
+        <!-- JavaFX controls native cho macOS (Apple Silicon) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>21</version>
+            <classifier>mac-aarch64</classifier>
+        </dependency>
+        <!-- JavaFX controls native cho Linux -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>21</version>
+            <classifier>linux</classifier>
+        </dependency>
+        <!-- JavaFX controls native cho Windows -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>21</version>
+            <classifier>win</classifier>
+        </dependency>
+        <!-- JavaFX fxml native cho macOS (Intel) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>21</version>
+            <classifier>mac</classifier>
+        </dependency>
+        <!-- JavaFX fxml native cho macOS (Apple Silicon) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>21</version>
+            <classifier>mac-aarch64</classifier>
+        </dependency>
+        <!-- JavaFX fxml native cho Linux -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>21</version>
+            <classifier>linux</classifier>
+        </dependency>
+        <!-- JavaFX fxml native cho Windows -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>21</version>
+            <classifier>win</classifier>
+        </dependency>
         <!-- Utilities -->
         <dependency>
             <groupId>com.google.code.gson</groupId>

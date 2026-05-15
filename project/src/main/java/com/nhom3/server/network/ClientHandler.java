@@ -15,6 +15,8 @@ import com.google.gson.Gson;
 import com.nhom3.server.service.AuctionService;
 import com.nhom3.server.service.AuthService;
 import com.nhom3.shared.network.packet.Packet;
+import com.nhom3.server.network.liveUpdate.Announcer;
+
 
 public class ClientHandler implements Runnable {
     private final Socket clientSocket;
@@ -69,6 +71,7 @@ public class ClientHandler implements Runnable {
         } finally {
             try {
                 clientSocket.close();
+                Announcer.getInstance().removeClientFromAll(this);
             } catch (IOException ex) {
             }
         }

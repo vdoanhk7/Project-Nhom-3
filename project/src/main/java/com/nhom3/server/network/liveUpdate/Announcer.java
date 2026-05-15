@@ -53,4 +53,10 @@ public class Announcer {
             }
         }
     }
+
+    public void removeClientFromAll(ClientHandler client){
+        for (Set<AuctionObserver> observers : clientInAuctions.values()) {
+            observers.removeIf(observer -> observer.client == client);
+        }
+    }
 }

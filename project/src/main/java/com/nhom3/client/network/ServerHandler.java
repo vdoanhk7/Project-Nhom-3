@@ -28,7 +28,9 @@ public class ServerHandler extends Thread {
             try {
                 String jsonResponse = serverConnection.receiveResponse();
                 Packet response = gson.fromJson(jsonResponse, Packet.class);
-                System.out.println("[CLIENT - RAW RECEIVE] Vừa nhận phản hồi loại: " + response.getType());
+                if (response.getType() != com.nhom3.shared.network.packet.PacketType.SYSTEM_LOGS_RESPONSE) {
+                    System.out.println("[CLIENT - RAW RECEIVE] Vừa nhận phản hồi loại: " + response.getType());
+                }
                 
                 // Sử dụng Dispatcher để xử lý, luôn đảm bảo chạy trên luồng Giao diện (UI Thread)
                 Platform.runLater(() -> {

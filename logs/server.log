@@ -683,3 +683,31 @@ Caused by: java.net.SocketException: Connection reset
 	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:436)
 	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:86)
 	... 2 common frames omitted
+2026-05-16 01:32:57 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-16 01:32:57 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-16 01:32:59 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3cf99c87
+2026-05-16 01:32:59 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-16 01:32:59 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-16 01:33:05 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-16 01:33:19 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-16 01:33:19 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: Pham Tien Dung  đã đăng nhập thành công!
+2026-05-16 01:33:19 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-16 01:36:47 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: b
+2026-05-16 01:36:47 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: Profile VIP đã đăng nhập thành công!
+2026-05-16 01:36:47 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-16 01:36:55 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-16 01:36:55 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-16 01:36:55 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-16 01:37:22 [virtual-35] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 14
+2026-05-16 01:37:23 [virtual-35] INFO  c.n.server.service.AuctionService - Tạo thành công phiên đấu giá ID: 21 cho sản phẩm ID: 14
+2026-05-16 01:37:37 [virtual-35] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 7
+2026-05-16 01:37:37 [virtual-35] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'búa' cho Seller ID: 7
+2026-05-16 01:37:50 [virtual-35] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 26
+2026-05-16 01:37:50 [virtual-35] INFO  c.n.server.service.AuctionService - Tạo thành công phiên đấu giá ID: 22 cho sản phẩm ID: 26
+2026-05-16 01:44:26 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-16 01:44:33 [virtual-50] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-16 01:44:34 [virtual-50] INFO  c.nhom3.server.service.AuthService - Server: Pham Tien Dung đã đăng nhập thành công!
+2026-05-16 01:44:34 [virtual-50] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-16 01:44:34 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-16 01:44:34 [virtual-50] INFO  c.nhom3.server.service.AuthService - Server: Pham Tien Dung đã đăng nhập thành công!
+2026-05-16 01:44:34 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true

@@ -47,6 +47,7 @@ public class AdminDashboardController {
 
     // System Log fields
     @FXML private javafx.scene.control.TextArea txtSystemLogs;
+    private javafx.animation.Timeline timeline;
 
     private static AdminDashboardController instance;
 
@@ -104,9 +105,18 @@ public class AdminDashboardController {
         loadAuctionData();
         
         loadSystemLogs();
-        javafx.animation.Timeline timeline = new javafx.animation.Timeline(new javafx.animation.KeyFrame(
+        if (timeline != null) {
+            timeline.stop();
+        }
+        timeline = new javafx.animation.Timeline(new javafx.animation.KeyFrame(
             javafx.util.Duration.seconds(3),
-            ev -> loadSystemLogs()
+            ev -> {
+                if (txtSystemLogs.getScene() != null) {
+                    loadSystemLogs();
+                } else {
+                    timeline.stop(); // Dừng hoàn toàn khi Admin thoát hoặc đóng màn hình
+                }
+            }
         ));
         timeline.setCycleCount(javafx.animation.Animation.INDEFINITE);
         timeline.play();

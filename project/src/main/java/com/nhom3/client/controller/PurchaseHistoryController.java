@@ -58,7 +58,8 @@ public class PurchaseHistoryController {
         tableHistory.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         cbFilter.setItems(FXCollections.observableArrayList(
-            "Tất cả", "Đang Dẫn Đầu", "Bị Vượt Giá", "CHIẾN THẮNG", "THUA CUỘC"
+            "Tất cả", "Đang Dẫn Đầu", "Bị Vượt Giá", "CHIẾN THẮNG", "THUA CUỘC",
+            "Đã Bị Huỷ"
         ));
         cbFilter.setValue("Tất cả");
 
@@ -83,7 +84,7 @@ public class PurchaseHistoryController {
                 case "RUNNING": return new SimpleStringProperty("Đang diễn ra");
                 case "FINISHED": return new SimpleStringProperty("Chờ thanh toán");
                 case "PAID": return new SimpleStringProperty("Đã hoàn tất");
-                case "CANCELLED": return new SimpleStringProperty("Bị hủy");
+                case "CANCELLED": return new SimpleStringProperty("Đã bị hủy");
                 default: return new SimpleStringProperty(status);
             }
         });
@@ -116,6 +117,7 @@ public class PurchaseHistoryController {
                         if (item.contains("Đang Dẫn Đầu")) btnAction.setStyle(baseStyle + "-fx-background-color: #27ae60;"); 
                         else if (item.contains("Bị Vượt Giá")) btnAction.setStyle(baseStyle + "-fx-background-color: #e67e22;"); 
                         else if (item.contains("CHIẾN THẮNG")) btnAction.setStyle(baseStyle + "-fx-background-color: #f1c40f; -fx-text-fill: #2c3e50;"); 
+                        else if (item.contains("Đã Bị Huỷ")) btnAction.setStyle(baseStyle + "-fx-background-color: #7f8c8d;");
                         else btnAction.setStyle(baseStyle + "-fx-background-color: #95a5a6;"); 
                         
                         setGraphic(btnAction);
@@ -167,6 +169,7 @@ public class PurchaseHistoryController {
         
         if (status.equals("RUNNING") || status.equals("OPEN")) return isMeTop1 ? "Đang Dẫn Đầu" : "Bị Vượt Giá";
         else if (status.equals("FINISHED") || status.equals("PAID")) return isMeTop1 ? "CHIẾN THẮNG" : "THUA CUỘC";
+        else if (status.equals("CANCELLED")) return "Đã Bị Huỷ";
         return "-";
     }
 

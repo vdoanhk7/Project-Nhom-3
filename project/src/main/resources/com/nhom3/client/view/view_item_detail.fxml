@@ -41,11 +41,11 @@
                   <Label text="GIÁ HIỆN TẠI" textFill="#95a5a6">
                      <font><Font name="System Bold" size="12.0" /></font>
                   </Label>
-                  <Label fx:id="lblCurrentPrice" text="5,000,000 VNĐ" textFill="#2ecc71">
+                  <Label fx:id="lblCurrentPrice" text="--- VNĐ" textFill="#2ecc71">
                      <font><Font name="System Bold" size="28.0" /></font>
                   </Label>
-                  <Label fx:id="lblStartPrice" text="Khởi điểm: 1,000,000 VNĐ" textFill="#7f8c8d" />
-                  <Label fx:id="lblBidStep" text="Bước giá: 50,000 VNĐ" textFill="#7f8c8d" />
+                  <Label fx:id="lblStartPrice" text="Khởi điểm: --- VNĐ" textFill="#7f8c8d" />
+                  <Label fx:id="lblBidStep" text="Bước giá: --- VNĐ" textFill="#7f8c8d" />
                </children>
             </VBox>
 
@@ -55,7 +55,7 @@
                   <Label fx:id="lblTimeTitle" text="THỜI GIAN CÒN LẠI" textFill="#95a5a6">
                      <font><Font name="System Bold" size="12.0" /></font>
                   </Label>
-                  <Label fx:id="lblCountdown" text="01:45:20" textFill="#e67e22">
+                  <Label fx:id="lblCountdown" text="--:--:--" textFill="#e67e22">
                      <font><Font name="System Bold" size="28.0" /></font>
                   </Label>
                   <Label fx:id="lblTimeRange" text="Đóng lúc: 22:00" textFill="#7f8c8d" />
@@ -101,9 +101,9 @@
                      </columnResizePolicy>
                   </TableView>
 
-                  <LineChart fx:id="priceHistoryChart" animated="true" legendVisible="false" horizontalGridLinesVisible="true" verticalGridLinesVisible="false" style="-fx-background-color: white; -fx-cursor: hand; -fx-padding: 10;" visible="false">
+                  <LineChart fx:id="priceHistoryChart" animated="true" horizontalGridLinesVisible="true" legendVisible="false" style="-fx-background-color: white; -fx-cursor: hand; -fx-padding: 10;" verticalGridLinesVisible="false" visible="false">
                      <xAxis><CategoryAxis label="Lượt đặt giá (Người đặt - Thời gian)" side="BOTTOM" tickLabelRotation="-45.0" /></xAxis>
-                     <yAxis><NumberAxis label="Giá (VNĐ)" side="LEFT" forceZeroInRange="false" /></yAxis>
+                     <yAxis><NumberAxis forceZeroInRange="false" label="Giá (VNĐ)" side="LEFT" /></yAxis>
                   </LineChart>
                </children>
             </StackPane>

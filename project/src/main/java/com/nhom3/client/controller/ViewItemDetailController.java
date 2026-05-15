@@ -211,20 +211,26 @@ public class ViewItemDetailController {
     private void startCountdown(LocalDateTime targetTime) {
         if (countdownTimeline != null) countdownTimeline.stop();
 
-        countdownTimeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
-            long secondsDiff = ChronoUnit.SECONDS.between(LocalDateTime.now(), targetTime);
-            if (secondsDiff <= 0) {
-                countdownTimeline.stop();
-                refreshState(); // Khi đếm ngược kết thúc, tự động cập nhật trạng thái mới
-            } else {
-                long hours = secondsDiff / 3600;
-                long minutes = (secondsDiff % 3600) / 60;
-                long seconds = secondsDiff % 60;
-                lblCountdown.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
-            }
-        }));
+        if (!updateCountdownLabel(targetTime)) return;
+        countdownTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), event -> updateCountdownLabel(targetTime)));
         countdownTimeline.setCycleCount(Animation.INDEFINITE);
         countdownTimeline.play();
+    }
+
+    private boolean updateCountdownLabel(LocalDateTime targetTime) {
+        long secondsDiff = ChronoUnit.SECONDS.between(LocalDateTime.now(), targetTime);
+        if (secondsDiff <= 0) {
+            if (countdownTimeline != null) countdownTimeline.stop();
+            refreshState(); // Khi đếm ngược kết thúc, tự động cập nhật trạng thái mới
+            return false;
+        }
+
+        long hours = secondsDiff / 3600;
+        long minutes = (secondsDiff % 3600) / 60;
+        long seconds = secondsDiff % 60;
+        lblCountdown.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
+        return true;
     }
 
     @FXML

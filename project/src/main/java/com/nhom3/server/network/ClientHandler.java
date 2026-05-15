@@ -21,12 +21,17 @@ public class ClientHandler implements Runnable {
     private final AuthService authService;
     private final AuctionService auctionService;
     private final PacketDispatcher dispatcher;
+    public BufferedReader in;
+    public BufferedWriter out;
+    private final Gson gson = new Gson();
 
-    public ClientHandler(Socket socket) {
+    public ClientHandler(Socket socket) throws IOException {
         this.clientSocket = socket;
         this.authService = new AuthService();
         this.auctionService = new AuctionService();
         this.dispatcher = new PacketDispatcher(this.authService, this.auctionService, this);
+        this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
+        this.out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
     }
 
     public void close() throws IOException {
@@ -34,9 +39,6 @@ public class ClientHandler implements Runnable {
     }
 
     public synchronized void send(Packet packet) throws IOException {
-        BufferedWriter out = new BufferedWriter(
-                new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
-        Gson gson = new Gson();
         out.write(gson.toJson(packet));
         out.newLine();
         out.flush();
@@ -45,11 +47,7 @@ public class ClientHandler implements Runnable {
     public void run() {
         Logger logger = LoggerFactory.getLogger(ClientHandler.class);
         try {
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
             String line;
-            Gson gson = new Gson();
-
             while ((line = in.readLine()) != null) {
                 Packet request = gson.fromJson(line, Packet.class);
                 

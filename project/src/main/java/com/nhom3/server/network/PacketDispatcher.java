@@ -31,19 +31,22 @@ import com.nhom3.shared.network.payload.*;
 
 public class PacketDispatcher {
     private static final Logger logger = LoggerFactory.getLogger(PacketDispatcher.class);
+    private static PacketDispatcher instance;
     private final Map<PacketType, PacketHandler> handlers = new HashMap<>();
-    private final AuthService authService;
-    private final AuctionService auctionService;
-    private final AuctionHandler auctionHandler;
-    private final ClientHandler currentClient;
+    private final AuthService authService = new AuthService();
+    private final AuctionService auctionService = new AuctionService();
+    private final AuctionHandler auctionHandler = AuctionHandler.getInstance();
     private final Announcer announcer = Announcer.getInstance();
 
-    public PacketDispatcher(AuthService authService, AuctionService auctionService, ClientHandler currentClient) {
-        auctionHandler = AuctionHandler.getInstance();
-        this.authService = authService;
-        this.auctionService = auctionService;
-        this.currentClient = currentClient;
+    private PacketDispatcher() {
         registerHandlers();
+    }
+
+    public synchronized static PacketDispatcher getInstance() {
+        if (instance == null) {
+            instance = new PacketDispatcher();
+        }
+        return instance;
     }
 
     private void registerHandlers() {
@@ -73,11 +76,11 @@ public class PacketDispatcher {
         handlers.put(PacketType.GET_SYSTEM_LOGS, this::handleGetSystemLogs);
     }
 
-    public Packet dispatch(Packet request, Gson gson) {
+    public Packet dispatch(Packet request, Gson gson, ClientHandler client) {
         PacketHandler handler = handlers.get(request.getType());
         if (handler != null) {
             try {
-                return handler.handle(request, gson);
+                return handler.handle(request, gson, client);
             } catch (Exception e) {
                 logger.error("Lỗi khi xử lý gói tin: " + request.getType(), e);
                 return new Packet(request.getType(), new ResultPayload(false, "Lỗi máy chủ", -1, "", "", "", "", ""));
@@ -87,7 +90,7 @@ public class PacketDispatcher {
         return null;
     }
 
-    private Packet handleLogin(Packet request, Gson gson) {
+    private Packet handleLogin(Packet request, Gson gson, ClientHandler client) {
         LoginPayload login = gson.fromJson(request.getPayload(), LoginPayload.class);
         logger.info("Yêu cầu đăng nhập từ: " + login.getUsername());
         User user = authService.login(login.getUsername(), login.getPassword());
@@ -106,7 +109,7 @@ public class PacketDispatcher {
         return new Packet(PacketType.LOGIN, resultPayload);
     }
 
-    private Packet handleRegister(Packet request, Gson gson) {
+    private Packet handleRegister(Packet request, Gson gson, ClientHandler client) {
         RegisterPayload regData = gson.fromJson(request.getPayload(), RegisterPayload.class);
         logger.info("Yêu cầu ĐĂNG KÝ từ user: " + regData.getUsername());
         UserInfo info = new UserInfo(regData.getUsername(), regData.getPassword(), regData.getFullName());
@@ -127,14 +130,14 @@ public class PacketDispatcher {
         return new Packet(PacketType.REGISTER, regResult);
     }
 
-    private Packet handlePlaceBid(Packet request, Gson gson) {
+    private Packet handlePlaceBid(Packet request, Gson gson, ClientHandler client) {
         BidPayload bidData = gson.fromJson(request.getPayload(), BidPayload.class);
         logger.info("Nhận yêu cầu Đặt giá: " + bidData.getAmount() + " từ User ID: " + bidData.getUserId());
         ResultPayload bidResultPayload = auctionHandler.handleBid(bidData);
         return new Packet(PacketType.PLACE_BID, bidResultPayload);
     }
 
-    private Packet handleLoadBidHistory(Packet request, Gson gson) {
+    private Packet handleLoadBidHistory(Packet request, Gson gson, ClientHandler client) {
         AuctionIdPayload reqData = gson.fromJson(request.getPayload(), AuctionIdPayload.class);
         AuctionDAO dao = new AuctionDAOImpl();
         List<BidTransaction> dbHistory = dao.getBidHistory(reqData.getAuctionId());
@@ -149,7 +152,7 @@ public class PacketDispatcher {
                 new BidHistoryResponsePayload(reqData.getAuctionId(), simpleList));
     }
 
-    private Packet handleLoadSellerItems(Packet request, Gson gson) {
+    private Packet handleLoadSellerItems(Packet request, Gson gson, ClientHandler client) {
         SellerIdPayload sellerReq = gson.fromJson(request.getPayload(), SellerIdPayload.class);
         ItemDAO itemDAO = new ItemDAOImpl();
         AuctionDAO auctionDAOForSeller = new AuctionDAOImpl();
@@ -166,7 +169,7 @@ public class PacketDispatcher {
         return new Packet(PacketType.LOAD_SELLER_ITEMS, new SellerItemsResponsePayload(dtoList));
     }
 
-    private Packet handleLoadActiveAuctions(Packet request, Gson gson) {
+    private Packet handleLoadActiveAuctions(Packet request, Gson gson, ClientHandler client) {
         AuctionDAO dao = new AuctionDAOImpl();
         List<Auction> auctions = dao.getActiveAuctions();
         List<AuctionListResponsePayload.AuctionDTO> dtoList = new ArrayList<>();
@@ -176,7 +179,7 @@ public class PacketDispatcher {
         return new Packet(PacketType.LOAD_ACTIVE_AUCTIONS, new AuctionListResponsePayload(dtoList));
     }
 
-    private Packet handleLoadAuctionByItem(Packet request, Gson gson) {
+    private Packet handleLoadAuctionByItem(Packet request, Gson gson, ClientHandler client) {
         ItemActionPayload payload = gson.fromJson(request.getPayload(), ItemActionPayload.class);
         Auction auction = new AuctionDAOImpl().getAuctionByItemId(payload.getItemId());
         List<AuctionListResponsePayload.AuctionDTO> dtoList = new ArrayList<>();
@@ -186,7 +189,7 @@ public class PacketDispatcher {
         return new Packet(PacketType.LOAD_AUCTION_BY_ITEM, new AuctionListResponsePayload(dtoList));
     }
 
-    private Packet handleSaveItem(Packet request, Gson gson) {
+    private Packet handleSaveItem(Packet request, Gson gson, ClientHandler client) {
         ItemPayload payload = gson.fromJson(request.getPayload(), ItemPayload.class);
         try {
             Item item = buildItem(payload);
@@ -201,7 +204,7 @@ public class PacketDispatcher {
         }
     }
 
-    private Packet handleUpdateItem(Packet request, Gson gson) {
+    private Packet handleUpdateItem(Packet request, Gson gson, ClientHandler client) {
         ItemPayload payload = gson.fromJson(request.getPayload(), ItemPayload.class);
         try {
             Item item = buildItem(payload);
@@ -215,7 +218,7 @@ public class PacketDispatcher {
         }
     }
 
-    private Packet handleDeleteItem(Packet request, Gson gson) {
+    private Packet handleDeleteItem(Packet request, Gson gson, ClientHandler client) {
         ItemActionPayload payload = gson.fromJson(request.getPayload(), ItemActionPayload.class);
         try {
             boolean success = new ItemService().removeItem(payload.getSellerId(), payload.getItemId());
@@ -228,7 +231,7 @@ public class PacketDispatcher {
         }
     }
 
-    private Packet handleConfirmPayment(Packet request, Gson gson) {
+    private Packet handleConfirmPayment(Packet request, Gson gson, ClientHandler client) {
         ItemActionPayload payload = gson.fromJson(request.getPayload(), ItemActionPayload.class);
         AuctionDAO dao = new AuctionDAOImpl();
         Auction auction = dao.getAuctionByItemId(payload.getItemId());
@@ -238,7 +241,7 @@ public class PacketDispatcher {
                 -1, "", "", "", "", ""));
     }
 
-    private Packet handleCancelAuction(Packet request, Gson gson) {
+    private Packet handleCancelAuction(Packet request, Gson gson, ClientHandler client) {
         AuctionIdPayload payload = gson.fromJson(request.getPayload(), AuctionIdPayload.class);
         try {
             boolean success = auctionService.cancelAuction(payload.getAuctionId());
@@ -251,7 +254,7 @@ public class PacketDispatcher {
         }
     }
 
-    private Packet handleUpdateProfile(Packet request, Gson gson) {
+    private Packet handleUpdateProfile(Packet request, Gson gson, ClientHandler client) {
         UserProfilePayload payload = gson.fromJson(request.getPayload(), UserProfilePayload.class);
         User user = buildUser(payload);
         boolean success;
@@ -269,7 +272,7 @@ public class PacketDispatcher {
                 payload.getRole(), payload.getEmail(), payload.getPhone(), payload.getProfileImageBase64()));
     }
 
-    private Packet handleChangePassword(Packet request, Gson gson) {
+    private Packet handleChangePassword(Packet request, Gson gson, ClientHandler client) {
         ChangePasswordPayload payload = gson.fromJson(request.getPayload(), ChangePasswordPayload.class);
         boolean success = new UserDAOImpl().changePassword(
                 payload.getUserId(), payload.getOldPassword(), payload.getNewPassword());
@@ -279,7 +282,7 @@ public class PacketDispatcher {
                 -1, "", "", "", "", ""));
     }
 
-    private Packet handleLoadUsers(Packet request, Gson gson) {
+    private Packet handleLoadUsers(Packet request, Gson gson, ClientHandler client) {
         UserDAO userDAO = new UserDAOImpl();
         List<UserListResponsePayload.UserDTO> dtoList = new ArrayList<>();
         for (User user : userDAO.getAllUsers()) {
@@ -288,7 +291,7 @@ public class PacketDispatcher {
         return new Packet(PacketType.LOAD_USERS, new UserListResponsePayload(dtoList));
     }
 
-    private Packet handlePublishAuction(Packet request, Gson gson) {
+    private Packet handlePublishAuction(Packet request, Gson gson, ClientHandler client) {
         PublishAuctionPayload pubData = gson.fromJson(request.getPayload(), PublishAuctionPayload.class);
         boolean isPubSuccess = false;
         String pubMsg = "Lỗi không xác định";
@@ -309,7 +312,7 @@ public class PacketDispatcher {
         return new Packet(PacketType.PUBLISH_AUCTION, new ResultPayload(isPubSuccess, pubMsg, -1, "", "", "", "", ""));
     }
 
-    private Packet handleLoadPurchaseHistory(Packet request, Gson gson) {
+    private Packet handleLoadPurchaseHistory(Packet request, Gson gson, ClientHandler client) {
         BidderIdPayload bidderReq = gson.fromJson(request.getPayload(), BidderIdPayload.class);
         AuctionDAO auctionDAOForHist = new AuctionDAOImpl();
         List<Auction> dbHistoryList = auctionDAOForHist.getMyBidHistory(bidderReq.getBidderId());
@@ -329,7 +332,7 @@ public class PacketDispatcher {
         return new Packet(PacketType.LOAD_PURCHASE_HISTORY, new PurchaseHistoryResponsePayload(purDtoList));
     }
 
-    private Packet handlePlaceAutoBid(Packet request, Gson gson) {
+    private Packet handlePlaceAutoBid(Packet request, Gson gson, ClientHandler client) {
         AutoBidPayload autoData = gson.fromJson(request.getPayload(), AutoBidPayload.class);
         AuctionDAO adao = new AuctionDAOImpl();
 
@@ -358,7 +361,7 @@ public class PacketDispatcher {
         return new Packet(PacketType.PLACE_AUTO_BID, new ResultPayload(autoSuccess, message, -1, "", "", "", "", ""));
     }
 
-    private Packet handleCheckAutoBid(Packet request, Gson gson) {
+    private Packet handleCheckAutoBid(Packet request, Gson gson, ClientHandler client) {
         AutoBidPayload checkReq = gson.fromJson(request.getPayload(), AutoBidPayload.class);
         AuctionDAOImpl dao = new AuctionDAOImpl();
         AutoBidPayload existingConfig = dao.getUserAutoBid(checkReq.getAuctionId(), checkReq.getUserId());
@@ -369,7 +372,7 @@ public class PacketDispatcher {
         return new Packet(PacketType.CHECK_AUTO_BID, existingConfig);
     }
 
-    private Packet handleCancelAutoBid(Packet request, Gson gson) {
+    private Packet handleCancelAutoBid(Packet request, Gson gson, ClientHandler client) {
         AutoBidPayload cancelData = gson.fromJson(request.getPayload(), AutoBidPayload.class);
         boolean cancelSuccess = new AuctionDAOImpl().cancelAutoBid(cancelData.getAuctionId(), cancelData.getUserId());
         return new Packet(PacketType.CANCEL_AUTO_BID,
@@ -378,19 +381,19 @@ public class PacketDispatcher {
                         "", "", "", ""));
     }
 
-    private Packet handleLoadDashboard(Packet request, Gson gson) {
+    private Packet handleLoadDashboard(Packet request, Gson gson, ClientHandler client) {
         AuctionDAO dashDao = new AuctionDAOImpl();
         DashboardResponsePayload dashRes = dashDao.getDashboardStats();
         return new Packet(PacketType.LOAD_DASHBOARD, dashRes);
     }
 
-    private Packet handleAuctionSubscribe(Packet request, Gson gson) {
+    private Packet handleAuctionSubscribe(Packet request, Gson gson, ClientHandler client) {
         AuctionSubscribePayload subscribePayload = gson.fromJson(request.getPayload(), AuctionSubscribePayload.class);
         Packet k = new Packet(PacketType.AUCTION_SUBSCRIBE, new ResultPayload(true, "", -1, "", "", "", "", ""));
         if (subscribePayload.isSub()) {
-            announcer.addObserver(subscribePayload.getAuctionId(), currentClient);
+            announcer.addObserver(subscribePayload.getAuctionId(), client);
         } else {
-            announcer.removeObserver(subscribePayload.getAuctionId(), currentClient);
+            announcer.removeObserver(subscribePayload.getAuctionId(), client);
         }
         return k;
     }
@@ -440,7 +443,7 @@ public class PacketDispatcher {
                 user.getUserContact() != null ? user.getUserContact().getPhoneNumber() : "");
     }
 
-    private Packet handleDeleteUser(Packet request, Gson gson) {
+    private Packet handleDeleteUser(Packet request, Gson gson, ClientHandler client) {
         UserIdPayload payload = gson.fromJson(request.getPayload(), UserIdPayload.class);
         UserDAO userDAO = new UserDAOImpl();
         boolean success = userDAO.deleteUser(payload.getUserId());
@@ -450,7 +453,7 @@ public class PacketDispatcher {
                 -1, "", "", "", "", ""));
     }
 
-    private Packet handleGetSystemLogs(Packet request, Gson gson) {
+    private Packet handleGetSystemLogs(Packet request, Gson gson, ClientHandler client) {
         StringBuilder logs = new StringBuilder();
         try {
             java.io.File file = new java.io.File("logs/server.log");

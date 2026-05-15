@@ -12,16 +12,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.nhom3.server.service.AuctionService;
-import com.nhom3.server.service.AuthService;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.server.network.liveUpdate.Announcer;
 
 
 public class ClientHandler implements Runnable {
     private final Socket clientSocket;
-    private final AuthService authService;
-    private final AuctionService auctionService;
     private final PacketDispatcher dispatcher;
     public BufferedReader in;
     public BufferedWriter out;
@@ -29,8 +25,6 @@ public class ClientHandler implements Runnable {
 
     public ClientHandler(Socket socket) throws IOException {
         this.clientSocket = socket;
-        this.authService = new AuthService();
-        this.auctionService = new AuctionService();
         this.clientSocket.setSoTimeout(600000); // Timeout 1 phút, sau đó tự ngắt kết nối 
         this.dispatcher = PacketDispatcher.getInstance();
         this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));

@@ -83,6 +83,7 @@ public class ProfileController {
                     getClass().getResource("/com/nhom3/client/view/change_password.fxml"));
             Parent root = loader.load();
             Stage popupStage = new Stage();
+            popupStage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             popupStage.setTitle("Thay đổi mật khẩu");
             popupStage.initModality(Modality.APPLICATION_MODAL);
             popupStage.setScene(new Scene(root));

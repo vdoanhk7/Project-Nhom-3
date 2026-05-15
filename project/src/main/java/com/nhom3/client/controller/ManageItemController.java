@@ -273,6 +273,7 @@ public class ManageItemController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/add_item.fxml"));
             Parent root = loader.load();
             Stage popupStage = new Stage();
+            popupStage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             popupStage.setTitle("Thêm Sản Phẩm Mới");
             popupStage.initModality(Modality.APPLICATION_MODAL);
             popupStage.setScene(new Scene(root));
@@ -294,6 +295,7 @@ public class ManageItemController {
             controller.setItem(item);
 
             Stage stage = new Stage();
+            stage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             stage.setScene(new Scene(root));
             stage.setTitle("Đăng Bán Sản Phẩm");
             stage.initModality(Modality.APPLICATION_MODAL);
@@ -312,6 +314,7 @@ public class ManageItemController {
             controller.setEditingItem(item);
 
             Stage popupStage = new Stage();
+            popupStage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             popupStage.setTitle("Sửa Sản Phẩm: " + item.getName());
             popupStage.initModality(Modality.APPLICATION_MODAL);
             popupStage.setScene(new Scene(root));
@@ -383,6 +386,7 @@ public class ManageItemController {
             controller.setItemData(item, auction, status);
 
             Stage stage = new Stage();
+            stage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             stage.setScene(new Scene(root));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Chi Tiết Đấu Giá: " + item.getName());

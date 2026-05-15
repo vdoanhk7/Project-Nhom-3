@@ -290,6 +290,9 @@ public class UserDAOImpl implements UserDAO {
 
     private boolean hasColumn(ResultSet rs, String columnName) throws SQLException {
         ResultSetMetaData metaData = rs.getMetaData();
+        if (metaData == null) {
+            return false;
+        }
         for (int i = 1; i <= metaData.getColumnCount(); i++) {
             if (columnName.equalsIgnoreCase(metaData.getColumnName(i))) {
                 return true;

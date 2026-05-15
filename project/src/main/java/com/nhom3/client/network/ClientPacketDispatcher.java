@@ -69,6 +69,7 @@ public class ClientPacketDispatcher {
                 User loggedInUser = null;
                 if (loginResult.getResult()) {
                     UserInfo info = new UserInfo(loginResult.getUsername(), "", loginResult.getFullName());
+                    info.setProfileImageBase64(loginResult.getProfileImageBase64());
                     UserContact contact = new UserContact(loginResult.getEmail(), loginResult.getPhone());
                     if ("BIDDER".equals(loginResult.getRole())) {
                         loggedInUser = new Bidder(loginResult.getUserId(), info, contact);

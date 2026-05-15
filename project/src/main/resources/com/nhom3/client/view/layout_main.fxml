@@ -44,7 +44,7 @@
             <!-- Khu vực User Profile -->
             <HBox alignment="CENTER" spacing="12.0" style="-fx-background-color: #f4f6f9; -fx-padding: 6 15 6 8; -fx-background-radius: 30;">
                <children>
-                  <Circle fill="#95a5a6" radius="16.0" />
+                  <Circle fx:id="circleUserAvatar" fill="#95a5a6" radius="16.0" />
                   <Label fx:id="lblUserName" text="User Name" textFill="#34495e">
                      <font><Font name="System Bold" size="14.0" /></font>
                   </Label>
@@ -114,7 +114,10 @@
                         <Insets bottom="10.0" left="30.0" top="20.0" />
                      </VBox.margin>
                   </Label>
-                  <Button fx:id="btnProfile" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showProfile" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="   👤     Hồ sơ cá nhân">
+                  <Button fx:id="btnProfile" graphicTextGap="14.0" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showProfile" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="Hồ sơ cá nhân">
+                     <graphic>
+                        <Circle fx:id="circleMenuProfileAvatar" fill="#95a5a6" radius="22.0" />
+                     </graphic>
                      <padding><Insets bottom="20.0" left="30.0" top="16.0" /></padding>
                   </Button>
                </children>

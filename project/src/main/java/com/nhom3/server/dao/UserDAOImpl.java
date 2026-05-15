@@ -1,9 +1,12 @@
 package com.nhom3.server.dao;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +21,8 @@ import com.nhom3.shared.model.user.UserContact;
 import com.nhom3.shared.model.user.UserInfo;
 
 public class UserDAOImpl implements UserDAO {
+    private static final String PROFILE_IMAGE_COLUMN = "profile_image";
+
     private User mapUser(ResultSet rs) throws SQLException {
         int id = rs.getInt("id");
         String role = rs.getString("role");
@@ -25,6 +30,7 @@ public class UserDAOImpl implements UserDAO {
                 rs.getString("username"),
                 rs.getString("password"),
                 rs.getString("full_name"));
+        info.setProfileImageBase64(readOptionalString(rs, PROFILE_IMAGE_COLUMN));
         UserContact contact = new UserContact(
                 rs.getString("email"),
                 rs.getString("phone"));
@@ -82,14 +88,26 @@ public class UserDAOImpl implements UserDAO {
 
     @Override
     public boolean updateUser(User user) {
-        String sql = "UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?";
-        try (Connection conn = DbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, user.getUserInfo().getName());
-            stmt.setString(2, user.getUserContact().getEmail());
-            stmt.setString(3, user.getUserContact().getPhoneNumber());
-            stmt.setInt(4, user.getId());
-            return stmt.executeUpdate() > 0;
+        boolean hasNewProfileImage = user.getUserInfo().getProfileImageBase64() != null;
+        String sql = hasNewProfileImage
+                ? "UPDATE users SET full_name = ?, email = ?, phone = ?, profile_image = ? WHERE id = ?"
+                : "UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?";
+        try (Connection conn = DbConnection.getConnection()) {
+            if (hasNewProfileImage) {
+                ensureProfileImageColumn(conn);
+            }
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, user.getUserInfo().getName());
+                stmt.setString(2, user.getUserContact().getEmail());
+                stmt.setString(3, user.getUserContact().getPhoneNumber());
+                if (hasNewProfileImage) {
+                    stmt.setString(4, user.getUserInfo().getProfileImageBase64());
+                    stmt.setInt(5, user.getId());
+                } else {
+                    stmt.setInt(4, user.getId());
+                }
+                return stmt.executeUpdate() > 0;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -260,6 +278,45 @@ public class UserDAOImpl implements UserDAO {
                     conn.close();
                 } catch (SQLException ex) { ex.printStackTrace(); }
             }
+        }
+    }
+
+    private String readOptionalString(ResultSet rs, String columnName) throws SQLException {
+        if (!hasColumn(rs, columnName)) {
+            return null;
+        }
+        return rs.getString(columnName);
+    }
+
+    private boolean hasColumn(ResultSet rs, String columnName) throws SQLException {
+        ResultSetMetaData metaData = rs.getMetaData();
+        for (int i = 1; i <= metaData.getColumnCount(); i++) {
+            if (columnName.equalsIgnoreCase(metaData.getColumnName(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void ensureProfileImageColumn(Connection conn) throws SQLException {
+        if (hasProfileImageColumn(conn)) {
+            return;
+        }
+
+        try (Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("ALTER TABLE users ADD COLUMN profile_image MEDIUMTEXT NULL");
+        } catch (SQLException e) {
+            if (e.getErrorCode() != 1060) {
+                throw e;
+            }
+        }
+    }
+
+    private boolean hasProfileImageColumn(Connection conn) throws SQLException {
+        DatabaseMetaData metaData = conn.getMetaData();
+        try (ResultSet columns = metaData.getColumns(
+                conn.getCatalog(), null, "users", PROFILE_IMAGE_COLUMN)) {
+            return columns.next();
         }
     }
 }

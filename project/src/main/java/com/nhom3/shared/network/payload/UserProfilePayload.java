@@ -7,15 +7,22 @@ public class UserProfilePayload {
     private final String role;
     private final String email;
     private final String phone;
+    private final String profileImageBase64;
 
     public UserProfilePayload(int userId, String username, String fullName,
             String role, String email, String phone) {
+        this(userId, username, fullName, role, email, phone, null);
+    }
+
+    public UserProfilePayload(int userId, String username, String fullName,
+            String role, String email, String phone, String profileImageBase64) {
         this.userId = userId;
         this.username = username;
         this.fullName = fullName;
         this.role = role;
         this.email = email;
         this.phone = phone;
+        this.profileImageBase64 = profileImageBase64;
     }
 
     public int getUserId() {
@@ -40,5 +47,9 @@ public class UserProfilePayload {
 
     public String getPhone() {
         return phone;
+    }
+
+    public String getProfileImageBase64() {
+        return profileImageBase64;
     }
 }

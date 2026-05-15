@@ -31,13 +31,19 @@ public class AdminDashboardController {
     @FXML private TableColumn<UserListResponsePayload.UserDTO, Integer> colUserId;
     @FXML private TableColumn<UserListResponsePayload.UserDTO, String> colUserName;
     @FXML private TableColumn<UserListResponsePayload.UserDTO, String> colUserRole;
-    @FXML private TableColumn<UserListResponsePayload.UserDTO, Void> colUserAction;
+    @FXML private TableColumn<UserListResponsePayload.UserDTO, UserListResponsePayload.UserDTO> colUserAction;
 
     @FXML private TableView<AuctionListResponsePayload.AuctionDTO> tableAuctions;
     @FXML private TableColumn<AuctionListResponsePayload.AuctionDTO, Integer> colAuctionId;
     @FXML private TableColumn<AuctionListResponsePayload.AuctionDTO, String> colItemName;
     @FXML private TableColumn<AuctionListResponsePayload.AuctionDTO, String> colStatus;
-    @FXML private TableColumn<AuctionListResponsePayload.AuctionDTO, Void> colAuctionAction;
+    @FXML private TableColumn<AuctionListResponsePayload.AuctionDTO, AuctionListResponsePayload.AuctionDTO> colAuctionAction;
+    @FXML private Button btnAllAuctions;
+    @FXML private Button btnOpenAuctions;
+    @FXML private Button btnRunningAuctions;
+    @FXML private Button btnSuccessfulSales;
+    @FXML private Button btnCancelledAuctions;
+    private List<AuctionListResponsePayload.AuctionDTO> allAuctionsList;
 
     // System Log fields
     @FXML private javafx.scene.control.TextArea txtSystemLogs;
@@ -53,6 +59,47 @@ public class AdminDashboardController {
         instance = this;
         setupUserTable();
         setupAuctionTable();
+        
+        btnAllAuctions.setOnAction(e -> {
+            if (allAuctionsList != null) tableAuctions.setItems(FXCollections.observableArrayList(allAuctionsList));
+        });
+        
+        btnOpenAuctions.setOnAction(e -> {
+            if (allAuctionsList != null) {
+                List<AuctionListResponsePayload.AuctionDTO> filtered = allAuctionsList.stream()
+                    .filter(a -> "OPEN".equals(a.status))
+                    .collect(java.util.stream.Collectors.toList());
+                tableAuctions.setItems(FXCollections.observableArrayList(filtered));
+            }
+        });
+        
+        btnRunningAuctions.setOnAction(e -> {
+            if (allAuctionsList != null) {
+                List<AuctionListResponsePayload.AuctionDTO> filtered = allAuctionsList.stream()
+                    .filter(a -> "RUNNING".equals(a.status))
+                    .collect(java.util.stream.Collectors.toList());
+                tableAuctions.setItems(FXCollections.observableArrayList(filtered));
+            }
+        });
+        
+        btnSuccessfulSales.setOnAction(e -> {
+            if (allAuctionsList != null) {
+                List<AuctionListResponsePayload.AuctionDTO> filtered = allAuctionsList.stream()
+                    .filter(a -> "FINISHED".equals(a.status) || "PAID".equals(a.status))
+                    .collect(java.util.stream.Collectors.toList());
+                tableAuctions.setItems(FXCollections.observableArrayList(filtered));
+            }
+        });
+
+        btnCancelledAuctions.setOnAction(e -> {
+            if (allAuctionsList != null) {
+                List<AuctionListResponsePayload.AuctionDTO> filtered = allAuctionsList.stream()
+                    .filter(a -> "CANCELLED".equals(a.status))
+                    .collect(java.util.stream.Collectors.toList());
+                tableAuctions.setItems(FXCollections.observableArrayList(filtered));
+            }
+        });
+
         loadUserData();
         loadAuctionData();
         
@@ -89,12 +136,18 @@ public class AdminDashboardController {
     }
 
     public void handleLoadAuctionDataResult(List<AuctionListResponsePayload.AuctionDTO> auctions) {
+        this.allAuctionsList = auctions;
         tableAuctions.setItems(FXCollections.observableArrayList(auctions));
-        int count = auctions == null ? 0 : auctions.size();
+        int count = 0;
         double totalValue = 0;
         if (auctions != null) {
             for (AuctionListResponsePayload.AuctionDTO auction : auctions) {
-                totalValue += auction.curHighest;
+                if ("RUNNING".equals(auction.status) || "OPEN".equals(auction.status)) {
+                    count++;
+                }
+                if ("PAID".equals(auction.status)) {
+                    totalValue += auction.curHighest;
+                }
             }
         }
         txtActiveAuctions.setText(String.format("%,d", count));
@@ -121,21 +174,25 @@ public class AdminDashboardController {
         colUserId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().id).asObject());
         colUserName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().username));
         colUserRole.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().role));
-        colUserAction.setCellFactory(column -> new TableCell<>() {
+        colUserAction.setCellValueFactory(param -> new javafx.beans.property.SimpleObjectProperty<>(param.getValue()));
+        colUserAction.setCellFactory(column -> new TableCell<UserListResponsePayload.UserDTO, UserListResponsePayload.UserDTO>() {
             private final Button btnInfo = new Button("Xem Thông Tin");
             private final Button btnDelete = new Button("Xóa Người Dùng");
             private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(5, btnInfo, btnDelete);
 
             {
                 btnInfo.setOnAction(event -> {
-                    UserListResponsePayload.UserDTO user = getTableView().getItems().get(getIndex());
-                    showAlert(Alert.AlertType.INFORMATION, "Thông Tin Người Dùng",
-                            "Tên: " + user.fullName + "\nEmail: " + user.email + "\nPhone: " + user.phone);
+                    UserListResponsePayload.UserDTO user = getItem();
+                    if (user != null) {
+                        showAlert(Alert.AlertType.INFORMATION, "Thông Tin Người Dùng",
+                                "Tên: " + user.fullName + "\nEmail: " + user.email + "\nPhone: " + user.phone);
+                    }
                 });
 
                 btnDelete.setStyle("-fx-background-color: #ff4d4d; -fx-text-fill: white;");
                 btnDelete.setOnAction(event -> {
-                    UserListResponsePayload.UserDTO user = getTableView().getItems().get(getIndex());
+                    UserListResponsePayload.UserDTO user = getItem();
+                    if (user == null) return;
                     
                     Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
                     confirm.setTitle("Xác Nhận Xóa");
@@ -156,16 +213,15 @@ public class AdminDashboardController {
             }
 
             @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
+            protected void updateItem(UserListResponsePayload.UserDTO user, boolean empty) {
+                super.updateItem(user, empty);
+                if (empty || user == null) {
                     setGraphic(null);
-                } else {
-                    UserListResponsePayload.UserDTO user = getTableView().getItems().get(getIndex());
-                    // Vô hiệu hóa nút xóa nếu là tài khoản ADMIN hiện tại (hoặc có thể chặn xóa ADMIN nói chung)
-                    btnDelete.setDisable("ADMIN".equals(user.role));
-                    setGraphic(pane);
+                    return;
                 }
+                // Vô hiệu hóa nút xóa nếu là tài khoản ADMIN hiện tại
+                btnDelete.setDisable("ADMIN".equals(user.role));
+                setGraphic(pane);
             }
         });
     }
@@ -174,12 +230,14 @@ public class AdminDashboardController {
         colAuctionId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().auctionId).asObject());
         colItemName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().itemName));
         colStatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().status));
-        colAuctionAction.setCellFactory(column -> new TableCell<>() {
+        colAuctionAction.setCellValueFactory(param -> new javafx.beans.property.SimpleObjectProperty<>(param.getValue()));
+        colAuctionAction.setCellFactory(column -> new TableCell<AuctionListResponsePayload.AuctionDTO, AuctionListResponsePayload.AuctionDTO>() {
             private final Button btnCancel = new Button("Hủy Phiên");
 
             {
                 btnCancel.setOnAction(event -> {
-                    AuctionListResponsePayload.AuctionDTO auction = getTableView().getItems().get(getIndex());
+                    AuctionListResponsePayload.AuctionDTO auction = getItem();
+                    if (auction == null) return;
                     try {
                         ServerConnection.getInstance().sendMessage(
                                 new Packet(PacketType.CANCEL_AUCTION, new AuctionIdPayload(auction.auctionId)));
@@ -191,13 +249,12 @@ public class AdminDashboardController {
             }
 
             @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
+            protected void updateItem(AuctionListResponsePayload.AuctionDTO auction, boolean empty) {
+                super.updateItem(auction, empty);
+                if (empty || auction == null) {
                     setGraphic(null);
                     return;
                 }
-                AuctionListResponsePayload.AuctionDTO auction = getTableView().getItems().get(getIndex());
                 btnCancel.setDisable("FINISHED".equals(auction.status)
                         || "PAID".equals(auction.status)
                         || "CANCELLED".equals(auction.status));
@@ -216,7 +273,7 @@ public class AdminDashboardController {
 
     private void loadAuctionData() {
         try {
-            ServerConnection.getInstance().sendMessage(new Packet(PacketType.LOAD_ACTIVE_AUCTIONS, null));
+            ServerConnection.getInstance().sendMessage(new Packet(PacketType.LOAD_ALL_AUCTIONS, null));
         } catch (Exception e) {
             e.printStackTrace();
         }

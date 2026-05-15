@@ -52,6 +52,7 @@ public class ManageItemController {
     @FXML private ComboBox<String> cbCategory;
     @FXML private TableView<Item> tableItems;
     @FXML private TableColumn<Item, Integer> colId;
+    @FXML private TableColumn<Item, Void> colImage;
     @FXML private TableColumn<Item, String> colName;
     @FXML private TableColumn<Item, String> colType;
     @FXML private TableColumn<Item, Double> colStartPrice;
@@ -103,6 +104,7 @@ public class ManageItemController {
             ItemType type = ItemType.valueOf(dto.type);
             Item item = type.createItem(dto.id, dto.name, dto.startPrice);
             item.setCurHighest(dto.curHighest);
+            item.setImageBase64(dto.imageBase64);
             realItems.add(item);
             if (dto.status != null && !dto.status.isEmpty()) {
                 itemStatusMap.put(dto.id, dto.status);
@@ -151,6 +153,35 @@ public class ManageItemController {
                 setText(empty || id == null ? null : String.format("SP-%04d", id));
             }
         });
+        
+        colImage.setCellFactory(tc -> new TableCell<>() {
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getIndex() >= getTableView().getItems().size()) {
+                    setGraphic(null);
+                    return;
+                }
+                Item currentItem = getTableView().getItems().get(getIndex());
+                if (currentItem.getImageBase64() != null && !currentItem.getImageBase64().isEmpty()) {
+                    try {
+                        byte[] imageBytes = java.util.Base64.getDecoder().decode(currentItem.getImageBase64());
+                        javafx.scene.image.Image img = new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imageBytes));
+                        javafx.scene.image.ImageView imageView = new javafx.scene.image.ImageView(img);
+                        imageView.setFitWidth(60);
+                        imageView.setFitHeight(60);
+                        imageView.setPreserveRatio(true);
+                        setGraphic(imageView);
+                        setAlignment(javafx.geometry.Pos.CENTER);
+                    } catch (Exception e) {
+                        setGraphic(null);
+                    }
+                } else {
+                    setGraphic(null);
+                }
+            }
+        });
+
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colType.setCellValueFactory(new PropertyValueFactory<>("type"));
         colStartPrice.setCellValueFactory(new PropertyValueFactory<>("startPrice"));
@@ -396,6 +427,7 @@ public class ManageItemController {
         ItemType type = ItemType.valueOf(dto.itemType);
         Item item = type.createItem(dto.itemId, dto.itemName, dto.startPrice);
         item.setCurHighest(dto.curHighest);
+        item.setImageBase64(dto.imageBase64);
         Auction auction = new Auction(
                 dto.auctionId,
                 item,

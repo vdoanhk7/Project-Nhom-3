@@ -14,8 +14,15 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import java.io.File;
+import java.nio.file.Files;
+import java.util.Base64;
 
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
         value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
@@ -25,6 +32,10 @@ public class AddItemController {
     @FXML private TextField txtName;
     @FXML private ComboBox<String> cbType;
     @FXML private TextField txtStartPrice;
+    @FXML private ImageView imgPreview;
+    @FXML private Label lblImageName;
+
+    private String selectedImageBase64 = null;
 
     private Item editingItem;
     private static AddItemController instance;
@@ -46,6 +57,34 @@ public class AddItemController {
         txtStartPrice.setText(MoneyInputFormatter.formatAmount(item.getStartPrice()));
         cbType.setValue(item.getType().name());
         cbType.setDisable(true);
+        if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
+            this.selectedImageBase64 = item.getImageBase64();
+            byte[] imageBytes = Base64.getDecoder().decode(this.selectedImageBase64);
+            imgPreview.setImage(new Image(new java.io.ByteArrayInputStream(imageBytes)));
+            lblImageName.setText("Đã có ảnh");
+        }
+    }
+
+    @FXML
+    void handleChooseImage(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Chọn Ảnh Sản Phẩm");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif")
+        );
+        Stage stage = (Stage) txtName.getScene().getWindow();
+        File file = fileChooser.showOpenDialog(stage);
+        if (file != null) {
+            try {
+                byte[] fileContent = Files.readAllBytes(file.toPath());
+                selectedImageBase64 = Base64.getEncoder().encodeToString(fileContent);
+                imgPreview.setImage(new Image(file.toURI().toString()));
+                lblImageName.setText(file.getName());
+            } catch (Exception e) {
+                e.printStackTrace();
+                showAlert(Alert.AlertType.ERROR, "Lỗi đọc file", "Không thể đọc file ảnh đã chọn!");
+            }
+        }
     }
 
     @FXML
@@ -80,7 +119,8 @@ public class AddItemController {
                     seller.getId(),
                     name,
                     type,
-                    startPriceVal
+                    startPriceVal,
+                    selectedImageBase64
             );
             PacketType packetType = editingItem == null ? PacketType.SAVE_ITEM : PacketType.UPDATE_ITEM;
             Packet packet = new Packet(packetType, payload);

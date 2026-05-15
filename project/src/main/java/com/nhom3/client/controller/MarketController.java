@@ -27,8 +27,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
+import java.io.ByteArrayInputStream;
+import java.util.Base64;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -90,6 +94,7 @@ public class MarketController {
         ItemType type = ItemType.valueOf(dto.itemType);
         Item item = type.createItem(dto.itemId, dto.itemName, dto.startPrice);
         item.setCurHighest(dto.curHighest);
+        item.setImageBase64(dto.imageBase64);
         
         Auction auction = new Auction(
                 dto.auctionId,
@@ -151,8 +156,29 @@ public class MarketController {
         card.setPadding(new Insets(15));
         card.setPrefWidth(220);
 
-        Rectangle imagePlaceholder = new Rectangle(190, 140);
-        imagePlaceholder.setStyle("-fx-fill: #ecf0f1; -fx-arc-width: 10; -fx-arc-height: 10;");
+        javafx.scene.Node imageNode;
+        if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
+            try {
+                byte[] imageBytes = Base64.getDecoder().decode(item.getImageBase64());
+                Image img = new Image(new ByteArrayInputStream(imageBytes));
+                ImageView imageView = new ImageView(img);
+                imageView.setFitWidth(190);
+                imageView.setFitHeight(140);
+                imageView.setPreserveRatio(false); // Stretch to fit the box
+                
+                // Add a border/clip radius if desired, here just use ImageView
+                imageNode = imageView;
+            } catch (Exception e) {
+                e.printStackTrace();
+                Rectangle imagePlaceholder = new Rectangle(190, 140);
+                imagePlaceholder.setStyle("-fx-fill: #ecf0f1; -fx-arc-width: 10; -fx-arc-height: 10;");
+                imageNode = imagePlaceholder;
+            }
+        } else {
+            Rectangle imagePlaceholder = new Rectangle(190, 140);
+            imagePlaceholder.setStyle("-fx-fill: #ecf0f1; -fx-arc-width: 10; -fx-arc-height: 10;");
+            imageNode = imagePlaceholder;
+        }
 
         Label lblName = new Label(item.getName());
         lblName.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
@@ -167,7 +193,7 @@ public class MarketController {
                 + "-fx-font-weight: bold; -fx-cursor: hand;");
         btnBid.setOnAction(e -> openItemDetail(item, auction, this::loadMarket));
 
-        card.getChildren().addAll(imagePlaceholder, lblName, lblType, lblPrice, btnBid);
+        card.getChildren().addAll(imageNode, lblName, lblType, lblPrice, btnBid);
         return card;
     }
 

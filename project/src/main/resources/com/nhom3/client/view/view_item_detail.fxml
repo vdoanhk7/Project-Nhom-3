@@ -21,6 +21,7 @@
    <children>
       <HBox alignment="CENTER_LEFT" spacing="15.0">
          <children>
+            <javafx.scene.image.ImageView fx:id="imgItem" fitHeight="80.0" fitWidth="80.0" preserveRatio="false" style="-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);" />
             <VBox HBox.hgrow="ALWAYS">
                <children>
                   <Label fx:id="lblItemName" text="Tên Sản Phẩm" textFill="#2c3e50">

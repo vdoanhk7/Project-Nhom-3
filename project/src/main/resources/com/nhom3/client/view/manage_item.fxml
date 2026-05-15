@@ -54,6 +54,7 @@
       <TableView fx:id="tableItems" style="-fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 0);" VBox.vgrow="ALWAYS">
         <columns>
           <TableColumn fx:id="colId" prefWidth="60.0" style="-fx-alignment: CENTER;" text="Mã SP" />
+          <TableColumn fx:id="colImage" prefWidth="100.0" style="-fx-alignment: CENTER;" text="Hình Ảnh" />
           <TableColumn fx:id="colName" prefWidth="201.0" text="Tên Sản Phẩm" />
           <TableColumn fx:id="colType" prefWidth="113.30935668945312" style="-fx-alignment: CENTER;" text="Phân Loại" />
           <TableColumn fx:id="colStartPrice" prefWidth="140.0" style="-fx-alignment: CENTER_RIGHT;" text="Giá Khởi Điểm" />

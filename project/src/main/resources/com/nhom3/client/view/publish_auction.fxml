@@ -27,36 +27,40 @@
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="120.0" />
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="200.0" />
         </columnConstraints>
-        <rowConstraints>
+         <rowConstraints>
+          <RowConstraints minHeight="10.0" prefHeight="80.0" vgrow="SOMETIMES" />
           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
           <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
           <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
           <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
-        </rowConstraints>
+         </rowConstraints>
          <children>
-            <Label text="Sản phẩm:" textFill="#7f8c8d" />
-            <Label fx:id="lblItemName" text="Tên sản phẩm mẫu" textFill="#2c3e50" GridPane.columnIndex="1">
+            <Label text="Hình ảnh:" textFill="#7f8c8d" />
+            <javafx.scene.image.ImageView fx:id="imgPreview" fitHeight="80.0" fitWidth="80.0" preserveRatio="true" GridPane.columnIndex="1" />
+            
+            <Label text="Sản phẩm:" textFill="#7f8c8d" GridPane.rowIndex="1" />
+            <Label fx:id="lblItemName" text="Tên sản phẩm mẫu" textFill="#2c3e50" GridPane.columnIndex="1" GridPane.rowIndex="1">
                <font><Font name="System Bold" size="14.0" /></font>
             </Label>
 
-            <Label text="Thời gian bắt đầu:" textFill="#7f8c8d" GridPane.rowIndex="1" />
-            <HBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <Label text="Thời gian bắt đầu:" textFill="#7f8c8d" GridPane.rowIndex="2" />
+            <HBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
                <children>
                   <DatePicker fx:id="dpStartDate" prefWidth="130.0" promptText="Ngày" />
                   <TextField fx:id="txtStartTime" prefWidth="80.0" promptText="HH:mm" text="08:00" />
                </children>
             </HBox>
 
-            <Label text="Thời gian kết thúc:" textFill="#7f8c8d" GridPane.rowIndex="2" />
-            <HBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+            <Label text="Thời gian kết thúc:" textFill="#7f8c8d" GridPane.rowIndex="3" />
+            <HBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
                <children>
                   <DatePicker fx:id="dpEndDate" prefWidth="130.0" promptText="Ngày" />
                   <TextField fx:id="txtEndTime" prefWidth="80.0" promptText="HH:mm" text="22:00" />
                </children>
             </HBox>
 
-            <Label text="Bước giá:" textFill="#7f8c8d" GridPane.rowIndex="3" />
-            <TextField fx:id="txtBidStep" prefWidth="210.0" promptText="VD: 50,000" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <Label text="Bước giá:" textFill="#7f8c8d" GridPane.rowIndex="4" />
+            <TextField fx:id="txtBidStep" prefWidth="210.0" promptText="VD: 50,000" GridPane.columnIndex="1" GridPane.rowIndex="4" />
          </children>
       </GridPane>
 

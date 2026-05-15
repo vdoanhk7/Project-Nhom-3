@@ -111,7 +111,7 @@ public class AuctionHandler {
                             intendedAmount = maxAmount;
                         Bidder bidder = new Bidder(autoBids.get(0).getUserId(), null, null);
                         BidTransaction newBid = new BidTransaction(0, bidder, intendedAmount, LocalDateTime.now(),
-                                "Đặt giá qua AutoBid");
+                                "Đặt giá qua 🤖 Auto-Bid");
                         boolean isBidSuccess = auctionService.placeBid(currentAuction, newBid);
 
                         if (isBidSuccess) {
@@ -127,7 +127,7 @@ public class AuctionHandler {
                         intendedAmount = maxAmount;
                     Bidder bidder = new Bidder(autoBids.get(winner).getUserId(), null, null);
                     BidTransaction newBid = new BidTransaction(0, bidder, intendedAmount, LocalDateTime.now(),
-                            "Đặt giá qua mạng");
+                            "Đặt giá qua 🤖 Auto-Bid");
                     boolean isBidSuccess = auctionService.placeBid(currentAuction, newBid);
                     if (isBidSuccess) {
                         announcer.notify(auctionId, intendedAmount);

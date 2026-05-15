@@ -39,6 +39,9 @@ public class AdminDashboardController {
     @FXML private TableColumn<AuctionListResponsePayload.AuctionDTO, String> colStatus;
     @FXML private TableColumn<AuctionListResponsePayload.AuctionDTO, Void> colAuctionAction;
 
+    // System Log fields
+    @FXML private javafx.scene.control.TextArea txtSystemLogs;
+
     private static AdminDashboardController instance;
 
     public static AdminDashboardController getInstance() {
@@ -52,7 +55,33 @@ public class AdminDashboardController {
         setupAuctionTable();
         loadUserData();
         loadAuctionData();
+        
+        loadSystemLogs();
+        javafx.animation.Timeline timeline = new javafx.animation.Timeline(new javafx.animation.KeyFrame(
+            javafx.util.Duration.seconds(3),
+            ev -> loadSystemLogs()
+        ));
+        timeline.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        timeline.play();
     }
+
+    // Removed activity log methods
+
+    private void loadSystemLogs() {
+        try {
+            ServerConnection.getInstance().sendMessage(new Packet(PacketType.GET_SYSTEM_LOGS, null));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    public void handleSystemLogsResult(String logs) {
+        txtSystemLogs.setText(logs);
+    }
+
+    // Duplicates removed
 
     public void handleLoadUserDataResult(List<UserListResponsePayload.UserDTO> users) {
         tableUsers.setItems(FXCollections.observableArrayList(users));
@@ -74,7 +103,7 @@ public class AdminDashboardController {
 
     public void handleCancelAuctionResult(boolean success, String message) {
         showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
-                success ? "Thanh cong" : "That bai", message);
+                success ? "Thành Công" : "Thất Bại", message);
         if (success) {
             loadAuctionData();
         }
@@ -82,7 +111,7 @@ public class AdminDashboardController {
 
     public void handleDeleteUserResult(boolean success, String message) {
         showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
-                success ? "Thành công" : "Thất bại", message);
+                success ? "Thành Công" : "Thất Bại", message);
         if (success) {
             loadUserData();
         }
@@ -93,15 +122,15 @@ public class AdminDashboardController {
         colUserName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().username));
         colUserRole.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().role));
         colUserAction.setCellFactory(column -> new TableCell<>() {
-            private final Button btnInfo = new Button("Xem");
-            private final Button btnDelete = new Button("Xóa");
+            private final Button btnInfo = new Button("Xem Thông Tin");
+            private final Button btnDelete = new Button("Xóa Người Dùng");
             private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(5, btnInfo, btnDelete);
 
             {
                 btnInfo.setOnAction(event -> {
                     UserListResponsePayload.UserDTO user = getTableView().getItems().get(getIndex());
-                    showAlert(Alert.AlertType.INFORMATION, "Thong tin nguoi dung",
-                            user.fullName + "\nEmail: " + user.email + "\nPhone: " + user.phone);
+                    showAlert(Alert.AlertType.INFORMATION, "Thông Tin Người Dùng",
+                            "Tên: " + user.fullName + "\nEmail: " + user.email + "\nPhone: " + user.phone);
                 });
 
                 btnDelete.setStyle("-fx-background-color: #ff4d4d; -fx-text-fill: white;");
@@ -109,7 +138,7 @@ public class AdminDashboardController {
                     UserListResponsePayload.UserDTO user = getTableView().getItems().get(getIndex());
                     
                     Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-                    confirm.setTitle("Xác nhận xóa");
+                    confirm.setTitle("Xác Nhận Xóa");
                     confirm.setHeaderText(null);
                     confirm.setContentText("Bạn có chắc chắn muốn xóa tài khoản '" + user.username + "' không?");
                     
@@ -146,7 +175,7 @@ public class AdminDashboardController {
         colItemName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().itemName));
         colStatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().status));
         colAuctionAction.setCellFactory(column -> new TableCell<>() {
-            private final Button btnCancel = new Button("Huy phien");
+            private final Button btnCancel = new Button("Hủy Phiên");
 
             {
                 btnCancel.setOnAction(event -> {
@@ -156,7 +185,7 @@ public class AdminDashboardController {
                                 new Packet(PacketType.CANCEL_AUCTION, new AuctionIdPayload(auction.auctionId)));
                     } catch (Exception e) {
                         e.printStackTrace();
-                        showAlert(Alert.AlertType.ERROR, "Loi mang", "Khong the gui yeu cau huy phien!");
+                        showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi yêu cầu hủy phiên!");
                     }
                 });
             }

@@ -45,6 +45,7 @@ public class ClientPacketDispatcher {
         handlers.put(PacketType.SCREEN_NOTIFY, this::handleScreenNotify);
         handlers.put(PacketType.AUCTION_SUBSCRIBE, this::handleAuctionSubscribe);
         handlers.put(PacketType.DELETE_USER, this::handleDeleteUser);
+        handlers.put(PacketType.SYSTEM_LOGS_RESPONSE, this::handleSystemLogsResponse);
     }
 
     public void dispatch(Packet response, Gson gson) {
@@ -68,6 +69,7 @@ public class ClientPacketDispatcher {
                 User loggedInUser = null;
                 if (loginResult.getResult()) {
                     UserInfo info = new UserInfo(loginResult.getUsername(), "", loginResult.getFullName());
+                    info.setProfileImageBase64(loginResult.getProfileImageBase64());
                     UserContact contact = new UserContact(loginResult.getEmail(), loginResult.getPhone());
                     if ("BIDDER".equals(loginResult.getRole())) {
                         loggedInUser = new Bidder(loginResult.getUserId(), info, contact);
@@ -292,6 +294,15 @@ public class ClientPacketDispatcher {
             if (AdminDashboardController.getInstance() != null) {
                 AdminDashboardController.getInstance().handleDeleteUserResult(
                         result.getResult(), result.getMessage());
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void handleSystemLogsResponse(Packet response, Gson gson) {
+        SystemLogResponsePayload payload = gson.fromJson(response.getPayload(), SystemLogResponsePayload.class);
+        try {
+            if (AdminDashboardController.getInstance() != null) {
+                AdminDashboardController.getInstance().handleSystemLogsResult(payload.getLogs());
             }
         } catch (Exception e) { e.printStackTrace(); }
     }

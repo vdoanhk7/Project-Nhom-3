@@ -11,6 +11,11 @@ import javafx.scene.Node;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 import javafx.scene.control.Button; 
@@ -19,16 +24,29 @@ import com.nhom3.shared.model.user.User;
 import com.nhom3.shared.model.user.Admin;
 import com.nhom3.shared.model.user.Seller;
 
+import java.io.ByteArrayInputStream;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
+
 public class MainController {
 
     @FXML private StackPane contentArea;
     @FXML private Label lblUserName;
+    @FXML private Circle circleUserAvatar;
+    @FXML private Circle circleMenuProfileAvatar;
+    
+    @FXML private Button btnDashboard;
+    @FXML private Button btnMarket;
     @FXML private Button btnPurchaseHistory;
     @FXML private Button btnManageItem;
     @FXML private Button btnAdminPanel;
+    @FXML private Button btnProfile;
 
     private static MainController instance;
-    private long currentNavigationId = 0; // Biến để theo dõi ID của lần điều hướng hiện tại
+    private long currentNavigationId = 0; 
+    
+    private List<Button> allMenuButtons; 
 
     public static MainController getInstance() {
         return instance;
@@ -39,16 +57,16 @@ public class MainController {
         instance = this;
         System.out.println("Giao diện chính đã tải thành công!");
         
-        // 2. ẨN TẤT CẢ CÁC NÚT ĐỘNG
+        allMenuButtons = Arrays.asList(btnDashboard, btnMarket, btnPurchaseHistory, btnManageItem, btnAdminPanel, btnProfile);
+        
         btnPurchaseHistory.setVisible(false); btnPurchaseHistory.setManaged(false);
         btnManageItem.setVisible(false); btnManageItem.setManaged(false);
         btnAdminPanel.setVisible(false); btnAdminPanel.setManaged(false);
 
-        // 3. LẤY THÔNG TIN USER VÀ PHÂN QUYỀN HIỂN THỊ
         User currentUser = UserSession.getInstance().getLoggedInUser();
         
         if (currentUser != null) {
-            lblUserName.setText(buildGreeting(currentUser));
+            refreshUserProfileHeader();
 
             if (currentUser instanceof Admin) {
                 btnAdminPanel.setVisible(true); btnAdminPanel.setManaged(true);
@@ -59,28 +77,76 @@ public class MainController {
             }
         }
         System.out.println("Đang tự động tải trang Tổng quan mặc định...");
-        loadPage("/com/nhom3/client/view/dashboard.fxml");
+        navigateToDashboard(); 
     }
 
-    // HÀM TIỆN ÍCH DÙNG CHUNG: Vòng xoay loading & Chống nghẽn luồng
+    public void refreshUserProfileHeader() {
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        if (currentUser == null) return;
+
+        lblUserName.setText(buildGreeting(currentUser));
+        btnProfile.setText(buildProfileMenuText(currentUser));
+        renderHeaderAvatar(currentUser);
+    }
+
+    private void renderHeaderAvatar(User user) {
+        if (user.getUserInfo() == null) {
+            return;
+        }
+
+        String profileImage = user.getUserInfo().getProfileImageBase64();
+        if (profileImage == null || profileImage.isBlank()) {
+            setProfileAvatarFill(Color.web("#95a5a6"));
+            return;
+        }
+
+        try {
+            byte[] imageBytes = Base64.getDecoder().decode(profileImage.trim());
+            Image image = new Image(new ByteArrayInputStream(imageBytes));
+            if (image.isError()) {
+                setProfileAvatarFill(Color.web("#95a5a6"));
+                return;
+            }
+            setProfileAvatarFill(new ImagePattern(image));
+        } catch (IllegalArgumentException e) {
+            setProfileAvatarFill(Color.web("#95a5a6"));
+        }
+    }
+
+    private void setProfileAvatarFill(Paint fill) {
+        if (circleUserAvatar != null) {
+            circleUserAvatar.setFill(fill);
+        }
+        if (circleMenuProfileAvatar != null) {
+            circleMenuProfileAvatar.setFill(fill);
+        }
+    }
+
+    private void setActiveButton(Button activeButton) {
+        String normalStyle = "-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px; -fx-border-width: 0;";
+        for (Button btn : allMenuButtons) {
+            if (btn != null) btn.setStyle(normalStyle);
+        }
+        String activeStyle = "-fx-background-color: rgba(255, 255, 255, 0.08); -fx-text-fill: #ffffff; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px; -fx-font-weight: bold; -fx-border-color: #3498db; -fx-border-width: 0 0 0 4;";
+        if (activeButton != null) {
+            activeButton.setStyle(activeStyle);
+        }
+    }
+
     public void loadPage(String fxmlPath) {
-        // 1. Tạo ID mới mỗi lần bấm nút
         currentNavigationId = System.currentTimeMillis();
         final long thisLoadId = currentNavigationId;
         
-        // 2. Hiện vòng xoay
         ProgressIndicator spinner = new ProgressIndicator();
         spinner.setMaxSize(50, 50);
         contentArea.getChildren().clear();
         contentArea.getChildren().add(spinner);
         
-        // 3. Tải ngầm FXML an toàn trên luồng giao diện
         Thread loadThread = new Thread(() -> {
             javafx.application.Platform.runLater(() -> {
                 try {
                     FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
                     Parent view = loader.load();               
-                    // Cập nhật UI nếu ID vẫn khớp (Nghĩa là user chưa bấm nút khác)
                     if (thisLoadId == currentNavigationId) {
                         contentArea.getChildren().clear();
                         contentArea.getChildren().add(view);
@@ -101,62 +167,53 @@ public class MainController {
         loadThread.start();
     }
     
-    // CÁC SỰ KIỆN CHUYỂN TRANG (ĐÃ ĐƯỢC RÚT GỌN SIÊU SẠCH)
-    @FXML
-    void showDashboard(ActionEvent event) {
-        navigateToDashboard();
-    }
-
-    @FXML
-    void showMarket(ActionEvent event) {
-        navigateToMarket();
-    }
-
-    @FXML
-    void showPurchaseHistory(ActionEvent event) {
-        navigateToPurchaseHistory();
-    }
-
-    @FXML
-    void showManageItem(ActionEvent event) {
-        navigateToManageItem();
-    }
-
-    @FXML
-    void showAdminPanel(ActionEvent event) {
-        loadPage("/com/nhom3/client/view/admin_dashboard.fxml");
-    }
-
-    @FXML
-    void showProfile(ActionEvent event) {
-        loadPage("/com/nhom3/client/view/profile.fxml");
-    }
+    @FXML void showDashboard(ActionEvent event) { navigateToDashboard(); }
+    @FXML void showMarket(ActionEvent event) { navigateToMarket(); }
+    @FXML void showPurchaseHistory(ActionEvent event) { navigateToPurchaseHistory(); }
+    @FXML void showManageItem(ActionEvent event) { navigateToManageItem(); }
+    @FXML void showAdminPanel(ActionEvent event) { navigateToAdminPanel(); }
+    @FXML void showProfile(ActionEvent event) { navigateToProfile(); }
 
     public void navigateToDashboard() {
+        setActiveButton(btnDashboard); 
         loadPage("/com/nhom3/client/view/dashboard.fxml");
     }
 
     public void navigateToMarket() {
+        setActiveButton(btnMarket); 
         loadPage("/com/nhom3/client/view/market.fxml");
     }
 
     public void navigateToPurchaseHistory() {
+        setActiveButton(btnPurchaseHistory); 
         loadPage("/com/nhom3/client/view/purchase_history.fxml");
     }
 
     public void navigateToManageItem() {
+        setActiveButton(btnManageItem); 
         loadPage("/com/nhom3/client/view/manage_item.fxml");
     }
 
     public void navigateToAdminPanel() {
+        setActiveButton(btnAdminPanel); 
         loadPage("/com/nhom3/client/view/admin_dashboard.fxml");
     }
+    
+    public void navigateToProfile() {
+        setActiveButton(btnProfile); 
+        loadPage("/com/nhom3/client/view/profile.fxml");
+    }
 
+    // HÀM CHÀO HỎI NHƯ BẠN YÊU CẦU
     private String buildGreeting(User user) {
         return "Xin chào " + user.getRole().name() + ", " + user.getUserInfo().getName();
     }
 
-    // ĐĂNG XUẤT
+    private String buildProfileMenuText(User user) {
+        String name = user.getUserInfo() != null ? user.getUserInfo().getName() : "";
+        return name != null && !name.isBlank() ? name : "Hồ sơ cá nhân";
+    }
+
     @FXML
     void handleLogout(ActionEvent event) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -165,9 +222,6 @@ public class MainController {
         alert.setContentText("Bạn thực sự muốn đăng xuất?");
 
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-            // Xóa session người dùng hiện tại (nếu bạn có hàm này trong UserSession)
-            // UserSession.getInstance().clearSession(); 
-
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/login.fxml"));
                 Parent root = loader.load();

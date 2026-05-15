@@ -72,7 +72,7 @@ public class ManageItemController {
     @FXML
     public void initialize() {
         instance = this;
-        cbCategory.setItems(FXCollections.observableArrayList("Tat ca", "ART", "ELECTRONICS", "VEHICLE"));
+        cbCategory.setItems(FXCollections.observableArrayList("Tất cả", "ART", "ELECTRONICS", "VEHICLE"));
         setupTableColumns();
         setupActionColumn();
         setupSearchAndFilter();
@@ -87,7 +87,7 @@ public class ManageItemController {
                 ServerConnection.getInstance().sendMessage(new Packet(PacketType.LOAD_SELLER_ITEMS, payload));
             } catch (Exception e) {
                 e.printStackTrace();
-                showAlert(Alert.AlertType.ERROR, "Loi mang", "Khong the tai danh sach san pham!");
+                showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể tải danh sách sản phẩm!");
             }
         }
     }
@@ -114,7 +114,7 @@ public class ManageItemController {
 
     public void handleDeleteItemResult(boolean success, String message) {
         showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
-                success ? "Thanh cong" : "That bai", message);
+                success ? "Thành công" : "Thất bại", message);
         if (success && pendingDeleteItem != null) {
             itemList.remove(pendingDeleteItem);
         }
@@ -123,7 +123,7 @@ public class ManageItemController {
 
     public void handleConfirmPaymentResult(boolean success, String message) {
         showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
-                success ? "Thanh cong" : "That bai", message);
+                success ? "Thành công" : "Thất bại", message);
         if (success) {
             loadSellerItems();
         }
@@ -182,7 +182,7 @@ public class ManageItemController {
 
     private boolean checkFilter(Item item, String searchText, String category) {
         boolean matchesCategory = category == null
-                || "Tat ca".equals(category)
+                || "Tất cả".equals(category)
                 || item.getType().name().equalsIgnoreCase(category);
         boolean matchesSearch = true;
         if (searchText != null && !searchText.isEmpty()) {
@@ -196,22 +196,19 @@ public class ManageItemController {
 
     private void setupActionColumn() {
         colAction.setCellFactory(param -> new TableCell<>() {
-            private final Button btnPublish = new Button("Dang ban");
-            private final Button btnEdit = new Button("Sua");
-            private final Button btnDelete = new Button("Xoa");
-            private final Button btnView = new Button("Xem chi tiet");
-            private final Button btnConfirmPaid = new Button("Xac nhan");
-            private final Label lblPaidStatus = new Label("Da thanh toan");
+            private final Button btnPublish = createStyledButton(" Đăng Bán ", "#10b981", "#059669");
+            private final Button btnEdit = createStyledButton(" Sửa ", "#f59e0b", "#d97706");
+            private final Button btnDelete = createStyledButton(" Xoá ", "#ef4444", "#dc2626");
+            private final Button btnView = createStyledButton(" Xem Chi Tiết ", "#3b82f6", "#2563eb");
+            private final Button btnConfirmPaid = createStyledButton(" Xác Nhận ", "#10b981", "#059669");
+            private final Label lblPaidStatus = new Label("💰 Đã Thanh Toán");
+            
             private final HBox pane = new HBox(8, btnPublish, btnEdit, btnDelete,
                     btnView, btnConfirmPaid, lblPaidStatus);
 
             {
-                btnPublish.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-cursor: hand;");
-                btnEdit.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-cursor: hand;");
-                btnDelete.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand;");
-                btnView.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-cursor: hand;");
-                btnConfirmPaid.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-cursor: hand;");
-                lblPaidStatus.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
+                // Làm đẹp cho Label trạng thái
+                lblPaidStatus.setStyle("-fx-background-color: #d1fae5; -fx-text-fill: #065f46; -fx-padding: 5 12; -fx-background-radius: 12; -fx-font-weight: bold; -fx-font-size: 12px;");
                 pane.setStyle("-fx-alignment: center;");
 
                 btnPublish.setOnAction(e -> handlePublish(getCurrentRowItem()));
@@ -219,6 +216,18 @@ public class ManageItemController {
                 btnDelete.setOnAction(e -> handleDelete(getCurrentRowItem()));
                 btnView.setOnAction(e -> handleViewDetail(getCurrentRowItem()));
                 btnConfirmPaid.setOnAction(e -> handleConfirmPaid(getCurrentRowItem()));
+            }
+
+            // Hàm tiện ích tạo nút bấm chuyên nghiệp (có Hover)
+            private Button createStyledButton(String text, String color, String hoverColor) {
+                Button btn = new Button(text);
+                String baseStyle = "-fx-background-color: " + color + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6; -fx-padding: 5 10;";
+                String hoverStyle = "-fx-background-color: " + hoverColor + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6; -fx-padding: 5 10;";
+                
+                btn.setStyle(baseStyle);
+                btn.setOnMouseEntered(e -> btn.setStyle(hoverStyle));
+                btn.setOnMouseExited(e -> btn.setStyle(baseStyle));
+                return btn;
             }
 
             @Override
@@ -266,6 +275,7 @@ public class ManageItemController {
             }
         });
     }
+    // =================================================================================
 
     @FXML
     void handleAddNewItem(ActionEvent event) {
@@ -273,7 +283,7 @@ public class ManageItemController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/add_item.fxml"));
             Parent root = loader.load();
             Stage popupStage = new Stage();
-            popupStage.setTitle("Them san pham moi");
+            popupStage.setTitle("Thêm Sản Phẩm Mới");
             popupStage.initModality(Modality.APPLICATION_MODAL);
             popupStage.setScene(new Scene(root));
             popupStage.setResizable(false);
@@ -281,7 +291,7 @@ public class ManageItemController {
             loadSellerItems();
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Loi he thong", "Khong the mo cua so them san pham!");
+            showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể mở cửa sổ thêm sản phẩm!");
         }
     }
 
@@ -295,7 +305,7 @@ public class ManageItemController {
 
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
-            stage.setTitle("Dang ban san pham");
+            stage.setTitle("Đăng Bán Sản Phẩm");
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
             loadSellerItems();
@@ -312,7 +322,7 @@ public class ManageItemController {
             controller.setEditingItem(item);
 
             Stage popupStage = new Stage();
-            popupStage.setTitle("Sua san pham: " + item.getName());
+            popupStage.setTitle("Sửa Sản Phẩm: " + item.getName());
             popupStage.initModality(Modality.APPLICATION_MODAL);
             popupStage.setScene(new Scene(root));
             popupStage.setResizable(false);
@@ -326,12 +336,12 @@ public class ManageItemController {
     private void handleDelete(Item item) {
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (!(currentUser instanceof Seller)) {
-            showAlert(Alert.AlertType.ERROR, "Tu choi", "Ban khong co quyen thuc hien thao tac nay!");
+            showAlert(Alert.AlertType.ERROR, "Từ chối", "Bạn không có quyền thực hiện thao tác này!");
             return;
         }
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-                "Ban co chac chan muon xoa san pham: " + item.getName() + "?",
+                "Bạn có chắc chắn muốn xóa sản phẩm: " + item.getName() + "?",
                 ButtonType.OK, ButtonType.CANCEL);
         alert.setHeaderText(null);
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
@@ -341,7 +351,7 @@ public class ManageItemController {
                 ServerConnection.getInstance().sendMessage(new Packet(PacketType.DELETE_ITEM, payload));
             } catch (Exception e) {
                 e.printStackTrace();
-                showAlert(Alert.AlertType.ERROR, "Loi mang", "Khong the gui yeu cau xoa san pham!");
+                showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi yêu cầu xóa sản phẩm!");
             }
         }
     }
@@ -353,14 +363,14 @@ public class ManageItemController {
             ServerConnection.getInstance().sendMessage(new Packet(PacketType.LOAD_AUCTION_BY_ITEM, payload));
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Loi mang", "Khong the tai chi tiet phien dau gia!");
+            showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể tải chi tiết phiên đấu giá!");
         }
     }
 
     private void handleConfirmPaid(Item item) {
         User currentUser = UserSession.getInstance().getLoggedInUser();
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-                "Xac nhan da nhan du tien cho san pham: " + item.getName() + "?",
+                "Xác nhận đã nhận đủ tiền cho sản phẩm: " + item.getName() + "?",
                 ButtonType.YES, ButtonType.NO);
         alert.setHeaderText(null);
         if (currentUser != null && alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
@@ -369,7 +379,7 @@ public class ManageItemController {
                 ServerConnection.getInstance().sendMessage(new Packet(PacketType.CONFIRM_PAYMENT, payload));
             } catch (Exception e) {
                 e.printStackTrace();
-                showAlert(Alert.AlertType.ERROR, "Loi mang", "Khong the gui yeu cau xac nhan!");
+                showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi yêu cầu xác nhận!");
             }
         }
     }
@@ -385,7 +395,7 @@ public class ManageItemController {
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
             stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Chi tiet dau gia: " + item.getName());
+            stage.setTitle("Chi Tiết Đấu Giá: " + item.getName());
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();

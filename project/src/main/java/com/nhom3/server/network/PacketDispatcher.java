@@ -70,6 +70,7 @@ public class PacketDispatcher {
         handlers.put(PacketType.LOAD_DASHBOARD, this::handleLoadDashboard);
         handlers.put(PacketType.AUCTION_SUBSCRIBE, this::handleAuctionSubscribe);
         handlers.put(PacketType.DELETE_USER, this::handleDeleteUser);
+        handlers.put(PacketType.GET_SYSTEM_LOGS, this::handleGetSystemLogs);
     }
 
     public Packet dispatch(Packet request, Gson gson) {
@@ -95,9 +96,10 @@ public class PacketDispatcher {
         if (user != null) {
             String uEmail = user.getUserContact() != null ? user.getUserContact().getEmail() : "";
             String uPhone = user.getUserContact() != null ? user.getUserContact().getPhoneNumber() : "";
+            String profileImage = user.getUserInfo() != null ? user.getUserInfo().getProfileImageBase64() : null;
             resultPayload = new ResultPayload(true, "Đăng nhập thành công", user.getId(),
                     user.getUserInfo().getUserName(), user.getUserInfo().getName(), user.getRole().name(), uEmail,
-                    uPhone);
+                    uPhone, profileImage);
         } else {
             resultPayload = new ResultPayload(false, "Sai tài khoản hoặc mật khẩu", -1, "", "", "", "", "");
         }
@@ -252,11 +254,19 @@ public class PacketDispatcher {
     private Packet handleUpdateProfile(Packet request, Gson gson) {
         UserProfilePayload payload = gson.fromJson(request.getPayload(), UserProfilePayload.class);
         User user = buildUser(payload);
-        boolean success = authService.updateUser(user);
+        boolean success;
+        String message;
+        try {
+            success = authService.updateUser(user);
+            message = success ? "Cập nhật thông tin cá nhân thành công!" : "Không thể cập nhật thông tin!";
+        } catch (IllegalArgumentException e) {
+            success = false;
+            message = e.getMessage();
+        }
         return new Packet(PacketType.UPDATE_PROFILE, new ResultPayload(success,
-                success ? "Cập nhật thông tin cá nhân thành công!" : "Không thể cập nhật thông tin!",
+                message,
                 payload.getUserId(), payload.getUsername(), payload.getFullName(),
-                payload.getRole(), payload.getEmail(), payload.getPhone()));
+                payload.getRole(), payload.getEmail(), payload.getPhone(), payload.getProfileImageBase64()));
     }
 
     private Packet handleChangePassword(Packet request, Gson gson) {
@@ -322,6 +332,24 @@ public class PacketDispatcher {
     private Packet handlePlaceAutoBid(Packet request, Gson gson) {
         AutoBidPayload autoData = gson.fromJson(request.getPayload(), AutoBidPayload.class);
         AuctionDAO adao = new AuctionDAOImpl();
+
+        Auction auction = adao.getAuctionById(autoData.getAuctionId());
+        if (auction == null) {
+            return new Packet(PacketType.PLACE_AUTO_BID,
+                    new ResultPayload(false, "Không tìm thấy phiên đấu giá này!", -1, "", "", "", "", ""));
+        }
+        if (autoData.getIncrement() < auction.getBidStep()) {
+            return new Packet(PacketType.PLACE_AUTO_BID,
+                    new ResultPayload(false,
+                            "Bước giá Auto-Bid phải lớn hơn hoặc bằng "
+                                    + String.format("%,.0f VNĐ", auction.getBidStep()) + "!",
+                            -1, "", "", "", "", ""));
+        }
+        if (autoData.getMaxAmount() <= auction.getItem().getCurHighest()) {
+            return new Packet(PacketType.PLACE_AUTO_BID,
+                    new ResultPayload(false, "Giá tối đa phải lớn hơn giá hiện tại!", -1, "", "", "", "", ""));
+        }
+
         boolean autoSuccess = adao.saveAutoBidConfig(autoData);
         if (autoSuccess) {
             auctionHandler.handleAutoBid(autoData.getAuctionId());
@@ -376,6 +404,7 @@ public class PacketDispatcher {
 
     private User buildUser(UserProfilePayload payload) {
         UserInfo info = new UserInfo(payload.getUsername(), "", payload.getFullName());
+        info.setProfileImageBase64(payload.getProfileImageBase64());
         UserContact contact = new UserContact(payload.getEmail(), payload.getPhone());
         if ("SELLER".equals(payload.getRole())) {
             return new Seller(payload.getUserId(), info, contact);
@@ -415,8 +444,29 @@ public class PacketDispatcher {
         UserIdPayload payload = gson.fromJson(request.getPayload(), UserIdPayload.class);
         UserDAO userDAO = new UserDAOImpl();
         boolean success = userDAO.deleteUser(payload.getUserId());
+        
         return new Packet(PacketType.DELETE_USER, new ResultPayload(success,
                 success ? "Đã xóa tài khoản thành công!" : "Lỗi: Không thể xóa tài khoản!",
                 -1, "", "", "", "", ""));
+    }
+
+    private Packet handleGetSystemLogs(Packet request, Gson gson) {
+        StringBuilder logs = new StringBuilder();
+        try {
+            java.io.File file = new java.io.File("logs/server.log");
+            if (file.exists()) {
+                try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(file))) {
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        logs.append(line).append("\n");
+                    }
+                }
+            } else {
+                logs.append("Không tìm thấy file log hệ thống (logs/server.log).\n");
+            }
+        } catch (Exception e) {
+            logs.append("Lỗi đọc file log: ").append(e.getMessage());
+        }
+        return new Packet(PacketType.SYSTEM_LOGS_RESPONSE, new SystemLogResponsePayload(logs.toString()));
     }
 }

@@ -25,7 +25,9 @@ public enum PacketType {
     SCREEN_NOTIFY("screen notify"),
     AUCTION_SUBSCRIBE("auction subscribe"),
     LOAD_DASHBOARD("load dashboard"),
-    DELETE_USER("delete user");
+    DELETE_USER("delete user"),
+    GET_SYSTEM_LOGS("get system logs"),
+    SYSTEM_LOGS_RESPONSE("system logs response");
 
 
     private String message;

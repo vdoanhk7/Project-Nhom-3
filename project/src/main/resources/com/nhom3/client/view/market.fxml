@@ -12,26 +12,34 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="700.0" prefWidth="1000.0" style="-fx-background-color: #f4f7f6;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.MarketController">
+<BorderPane prefHeight="700.0" prefWidth="1000.0" style="-fx-background-color: #f4f7f6;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.MarketController">
    
    <top>
-      <VBox spacing="15.0" style="-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 2);">
+      <VBox spacing="15.0" style="-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 15, 0, 0, 5);">
          <padding>
-            <Insets bottom="20.0" left="30.0" right="30.0" top="20.0" />
+            <Insets bottom="20.0" left="40.0" right="40.0" top="25.0" />
          </padding>
          <children>
             <HBox alignment="CENTER_LEFT" spacing="20.0">
                <children>
-                  <Label text="Sàn Đấu Giá Trực Tuyến" textFill="#2c3e50">
-                     <font>
-                        <Font name="System Bold" size="26.0" />
-                     </font>
-                  </Label>
-                  <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS" spacing="10.0">
+                  <VBox>
+                     <Label text="Đấu Giá Trực Tuyến" textFill="#2c3e50">
+                        <font>
+                           <Font name="System Bold" size="28.0" />
+                        </font>
+                     </Label>
+                     <Label text="Khám phá và đặt giá cho các sản phẩm" textFill="#7f8c8d">
+                        <font>
+                           <Font size="14.0" />
+                        </font>
+                     </Label>
+                  </VBox>
+                  
+                  <HBox alignment="CENTER_RIGHT" spacing="15.0" HBox.hgrow="ALWAYS">
                      <children>
-                        <TextField fx:id="txtSearch" prefHeight="40.0" prefWidth="350.0" promptText="Tìm kiếm sản phẩm đang đấu giá..." style="-fx-background-radius: 20; -fx-padding: 0 15;" />
-                        <ComboBox fx:id="cbCategory" prefHeight="40.0" prefWidth="150.0" promptText="Tất Cả" style="-fx-background-radius: 20;" />
-                        <Button fx:id="btnReload" mnemonicParsing="false" prefHeight="40.0" prefWidth="100.0" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-background-radius: 20; -fx-cursor: hand;" text="Làm Mới" />
+                        <TextField fx:id="txtSearch" prefHeight="42.0" prefWidth="350.0" promptText="🔍 Tìm kiếm sản phẩm..." style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #bdc3c7; -fx-background-color: #ffffff; -fx-padding: 0 15; -fx-font-size: 14px;" />
+                        <ComboBox fx:id="cbCategory" prefHeight="42.0" prefWidth="160.0" promptText="Tất Cả" style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #bdc3c7; -fx-background-color: #ffffff; -fx-font-size: 14px;" />
+                        <Button fx:id="btnReload" mnemonicParsing="false" prefHeight="42.0" prefWidth="110.0" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-weight: bold; -fx-font-size: 14px;" text="🔄 Làm Mới" />
                      </children>
                   </HBox>
                </children>
@@ -41,13 +49,13 @@
    </top>
 
    <center>
-      <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-padding: 20;">
+      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: #f4f7f6; -fx-border-color: transparent;" vbarPolicy="AS_NEEDED">
          <content>
-            <FlowPane fx:id="flowMarket" hgap="25.0" vgap="25.0" alignment="TOP_LEFT">
+            <FlowPane fx:id="flowMarket" alignment="TOP_LEFT" hgap="30.0" vgap="30.0">
                <padding>
-                  <Insets bottom="20.0" left="10.0" right="10.0" top="10.0" />
+                  <Insets bottom="30.0" left="40.0" right="40.0" top="30.0" />
                </padding>
-               </FlowPane>
+            </FlowPane>
          </content>
       </ScrollPane>
    </center>

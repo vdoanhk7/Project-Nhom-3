@@ -12,23 +12,56 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="800.0" prefWidth="978.0" spacing="20.0" style="-fx-background-color: #f4f6f9;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.ManageItemController">
+<VBox prefHeight="800.0" prefWidth="1050.0" spacing="25.0" style="-fx-background-color: #F8FAFC;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.ManageItemController">
    <padding>
-      <Insets bottom="20.0" left="25.0" right="25.0" top="25.0" />
+      <Insets bottom="30.0" left="35.0" right="35.0" top="30.0" />
    </padding>
    <children>
       
       <!-- PHẦN 1: HEADER -->
       <HBox alignment="CENTER_LEFT">
          <children>
-            <Label text="📦 Quản Lý Sản Phẩm" textFill="#2c3e50">
-               <font>
-                  <Font name="System Bold" size="24.0" />
-               </font>
-            </Label>
+            <VBox>
+               <children>
+                  <Label text="Quản Lý Sản Phẩm" textFill="#0f172a">
+                     <font>
+                        <Font name="System Bold" size="28.0" />
+                     </font>
+                  </Label>
+                  <Label text="Thêm mới, chỉnh sửa và theo dõi các phiên đấu giá của bạn" textFill="#64748b">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                     <VBox.margin>
+                        <Insets top="5.0" />
+                     </VBox.margin>
+                  </Label>
+               </children>
+            </VBox>
             <Region HBox.hgrow="ALWAYS" />
             <!-- Nút Thêm Mới -->
-            <Button mnemonicParsing="false" onAction="#handleAddNewItem" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5;" text="+ Thêm Sản Phẩm Mới">
+            <Button mnemonicParsing="false" onAction="#handleAddNewItem" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(59, 130, 246, 0.4), 10, 0, 0, 4);" text="+ Thêm Sản Phẩm Mới">
+               <padding>
+                  <Insets bottom="12.0" left="20.0" right="20.0" top="12.0" />
+               </padding>
+               <font>
+                  <Font size="15.0" />
+               </font>
+            </Button>
+         </children>
+      </HBox>
+
+      <!-- PHẦN 2: BỘ LỌC TÌM KIẾM CẢI TIẾN -->
+      <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.03), 10, 0, 0, 2); -fx-border-color: #e2e8f0; -fx-border-radius: 12;">
+         <children>
+            <TextField fx:id="txtSearch" prefHeight="42.0" prefWidth="350.0" promptText="🔍 Nhập Tên Sản Phẩm / Mã SP cần tìm..." style="-fx-padding: 0 15; -fx-background-radius: 8; -fx-border-color: #cbd5e1; -fx-border-radius: 8; -fx-background-color: #f8fafc; -fx-font-size: 14px;" />
+            
+            <ComboBox fx:id="cbCategory" prefHeight="42.0" prefWidth="180.0" promptText="Tất cả phân loại" style="-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 8; -fx-background-radius: 8; -fx-font-size: 14px;" />
+            
+            <Region HBox.hgrow="ALWAYS" />
+            
+            <!-- Nút làm mới danh sách (Tuỳ chọn thêm) -->
+            <Button mnemonicParsing="false" onAction="#loadSellerItems" style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-cursor: hand; -fx-background-radius: 8; -fx-border-color: #cbd5e1; -fx-border-radius: 8;" text="🔄 Làm mới">
                <padding>
                   <Insets bottom="10.0" left="15.0" right="15.0" top="10.0" />
                </padding>
@@ -39,32 +72,28 @@
          </children>
       </HBox>
 
-      <!-- PHẦN 2: BỘ LỌC TÌM KIẾM -->
-      <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 0);">
+      <!-- PHẦN 3: BẢNG DỮ LIỆU SẢN PHẨM MỚI (ĐÃ MERGE) -->
+      <VBox style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.04), 15, 0, 0, 4); -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-padding: 5;" VBox.vgrow="ALWAYS">
          <children>
-            <TextField fx:id="txtSearch" prefWidth="300.0" promptText="🔍 Nhập Tên Sản Phẩm / Mã SP cần tìm..." style="-fx-padding: 8; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
-            
-            <ComboBox fx:id="cbCategory" prefWidth="180.0" promptText="Phân loại (Type)" style="-fx-background-color: #ffffff; -fx-border-color: #bdc3c7; -fx-border-radius: 5;" />
-            
-            <Region HBox.hgrow="ALWAYS" />
+            <TableView fx:id="tableItems" style="-fx-background-color: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
+              <columns>
+                <TableColumn fx:id="colId" prefWidth="70.0" style="-fx-alignment: CENTER; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="Mã SP" />
+                
+                <!-- CỘT HÌNH ẢNH (Giữ lại từ code của TienDung) -->
+                <TableColumn fx:id="colImage" prefWidth="90.0" style="-fx-alignment: CENTER;" text="Hình Ảnh" />
+                
+                <TableColumn fx:id="colName" prefWidth="220.0" style="-fx-alignment: CENTER_LEFT; -fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1e293b; -fx-padding: 0 0 0 15px;" text="Tên Sản Phẩm" />
+                <TableColumn fx:id="colType" prefWidth="120.0" style="-fx-alignment: CENTER;" text="Phân Loại" />
+                <TableColumn fx:id="colStartPrice" prefWidth="140.0" style="-fx-alignment: CENTER_RIGHT; -fx-text-fill: #000406ff;" text="Giá Khởi Điểm" />
+                <TableColumn fx:id="colCurHighest" prefWidth="140.0" style="-fx-alignment: CENTER_RIGHT; -fx-font-weight: bold; -fx-text-fill: #10d267ff; -fx-font-size: 14px;" text="Giá Hiện Tại" />
+                <TableColumn fx:id="colAction" prefWidth="250.0" style="-fx-alignment: CENTER;" text="Thao Tác" />
+              </columns>
+               <columnResizePolicy>
+                  <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+               </columnResizePolicy>
+            </TableView>
          </children>
-      </HBox>
-
-      <!-- PHẦN 3: BẢNG DỮ LIỆU SẢN PHẨM -->
-      <TableView fx:id="tableItems" style="-fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 0);" VBox.vgrow="ALWAYS">
-        <columns>
-          <TableColumn fx:id="colId" prefWidth="60.0" style="-fx-alignment: CENTER;" text="Mã SP" />
-          <TableColumn fx:id="colImage" prefWidth="100.0" style="-fx-alignment: CENTER;" text="Hình Ảnh" />
-          <TableColumn fx:id="colName" prefWidth="201.0" text="Tên Sản Phẩm" />
-          <TableColumn fx:id="colType" prefWidth="113.30935668945312" style="-fx-alignment: CENTER;" text="Phân Loại" />
-          <TableColumn fx:id="colStartPrice" prefWidth="140.0" style="-fx-alignment: CENTER_RIGHT;" text="Giá Khởi Điểm" />
-          <TableColumn fx:id="colCurHighest" prefWidth="140.0" style="-fx-alignment: CENTER_RIGHT;" text="Giá Hiện Tại" />
-          <TableColumn fx:id="colAction" prefWidth="250.88677978515625" style="-fx-alignment: CENTER;" text="Thao Tác" />
-        </columns>
-         <columnResizePolicy>
-            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-         </columnResizePolicy>
-      </TableView>
+      </VBox>
 
    </children>
 </VBox>

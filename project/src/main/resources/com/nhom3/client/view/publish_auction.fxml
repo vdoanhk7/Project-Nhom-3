@@ -1,73 +1,146 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefWidth="450.0" spacing="20.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.PublishAuctionController">
-   <padding>
-      <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
-   </padding>
+<VBox prefWidth="550.0" style="-fx-background-color: #F8FAFC;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.PublishAuctionController">
    <children>
-      <Label text="🚀 Thiết Lập Phiên Đấu Giá" textFill="#2c3e50">
-         <font><Font name="System Bold" size="20.0" /></font>
-      </Label>
-
-      <HBox alignment="CENTER_LEFT" spacing="18.0">
+      <!-- HEADER -->
+      <VBox style="-fx-background-color: white; -fx-border-color: transparent transparent #e2e8f0 transparent; -fx-border-width: 0 0 1 0;">
+         <padding>
+            <Insets bottom="20.0" left="30.0" right="30.0" top="25.0" />
+         </padding>
          <children>
-            <Label text="Hình thức đăng bán:" textFill="#7f8c8d" />
-            <RadioButton fx:id="rbPublishNow" mnemonicParsing="false" text="Đăng bán trực tiếp" />
-            <RadioButton fx:id="rbSchedule" mnemonicParsing="false" text="Đăng bán hẹn giờ" />
-         </children>
-      </HBox>
-
-      <GridPane hgap="10.0" vgap="15.0">
-        <columnConstraints>
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="120.0" />
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="200.0" />
-        </columnConstraints>
-         <rowConstraints>
-          <RowConstraints minHeight="10.0" prefHeight="80.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
-         </rowConstraints>
-         <children>
-            <Label text="Hình ảnh:" textFill="#7f8c8d" />
-            <javafx.scene.image.ImageView fx:id="imgPreview" fitHeight="80.0" fitWidth="80.0" preserveRatio="true" GridPane.columnIndex="1" />
-            
-            <Label text="Sản phẩm:" textFill="#7f8c8d" GridPane.rowIndex="1" />
-            <Label fx:id="lblItemName" text="Tên sản phẩm mẫu" textFill="#2c3e50" GridPane.columnIndex="1" GridPane.rowIndex="1">
-               <font><Font name="System Bold" size="14.0" /></font>
+            <Label text="Thiết Lập Phiên Đấu Giá" textFill="#0f172a">
+               <font>
+                  <Font name="System Bold" size="22.0" />
+               </font>
             </Label>
-
-            <Label text="Thời gian bắt đầu:" textFill="#7f8c8d" GridPane.rowIndex="2" />
-            <HBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
-               <children>
-                  <DatePicker fx:id="dpStartDate" prefWidth="130.0" promptText="Ngày" />
-                  <TextField fx:id="txtStartTime" prefWidth="80.0" promptText="HH:mm" text="08:00" />
-               </children>
-            </HBox>
-
-            <Label text="Thời gian kết thúc:" textFill="#7f8c8d" GridPane.rowIndex="3" />
-            <HBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
-               <children>
-                  <DatePicker fx:id="dpEndDate" prefWidth="130.0" promptText="Ngày" />
-                  <TextField fx:id="txtEndTime" prefWidth="80.0" promptText="HH:mm" text="22:00" />
-               </children>
-            </HBox>
-
-            <Label text="Bước giá:" textFill="#7f8c8d" GridPane.rowIndex="4" />
-            <TextField fx:id="txtBidStep" prefWidth="210.0" promptText="VD: 50,000" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+            <Label text="Cấu hình thời gian và bước giá để đưa sản phẩm lên sàn" textFill="#64748b">
+               <font>
+                  <Font size="13.0" />
+               </font>
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+            </Label>
          </children>
-      </GridPane>
+      </VBox>
 
-      <HBox alignment="CENTER_RIGHT" spacing="15.0">
+      <!-- BODY (FORM) -->
+      <VBox spacing="20.0">
+         <padding>
+            <Insets bottom="30.0" left="30.0" right="30.0" top="25.0" />
+         </padding>
          <children>
-            <Button onAction="#handleCancel" style="-fx-background-color: #ecf0f1; -fx-cursor: hand;" text="Hủy bỏ" />
-            <Button onAction="#handleConfirm" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="XÁC NHẬN ĐĂNG BÁN" />
+            
+            <!-- Hình thức đăng bán (Card 1) -->
+            <HBox alignment="CENTER_LEFT" spacing="20.0" style="-fx-background-color: white; -fx-padding: 18 20; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.02), 10, 0, 0, 2);">
+               <children>
+                  <Label text="Hình thức đăng bán:" textFill="#475569">
+                     <font>
+                        <Font name="System Bold" size="14.0" />
+                     </font>
+                  </Label>
+                  <RadioButton fx:id="rbPublishNow" mnemonicParsing="false" text="Đăng trực tiếp" textFill="#1e293b">
+                     <font>
+                        <Font size="13.0" />
+                     </font></RadioButton>
+                  <RadioButton fx:id="rbSchedule" mnemonicParsing="false" text="Hẹn giờ lên sàn" textFill="#1e293b">
+                     <font>
+                        <Font size="13.0" />
+                     </font></RadioButton>
+               </children>
+            </HBox>
+
+            <!-- Cấu hình chi tiết (Card 2) - Đã chèn thêm ImageView từ nhánh TienDung -->
+            <GridPane hgap="15.0" style="-fx-background-color: white; -fx-padding: 25; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.02), 10, 0, 0, 2);" vgap="22.0">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="130.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="250.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="80.0" vgrow="SOMETIMES" /> <!-- Hàng cho Ảnh -->
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" /> <!-- Hàng cho Tên -->
+                <RowConstraints minHeight="10.0" prefHeight="38.0" vgrow="SOMETIMES" /> <!-- Hàng cho Bắt đầu -->
+                <RowConstraints minHeight="10.0" prefHeight="38.0" vgrow="SOMETIMES" /> <!-- Hàng cho Kết thúc -->
+                <RowConstraints minHeight="10.0" prefHeight="38.0" vgrow="SOMETIMES" /> <!-- Hàng cho Bước giá -->
+              </rowConstraints>
+               <children>
+                  
+                  <!-- Dòng 0: Hình ảnh (Được lấy từ code của nhánh TienDung) -->
+                  <Label text="Hình ảnh:" textFill="#64748b" GridPane.rowIndex="0">
+                     <font><Font name="System Bold" size="13.0" /></font>
+                  </Label>
+                  <javafx.scene.image.ImageView fx:id="imgPreview" fitHeight="80.0" fitWidth="80.0" preserveRatio="true" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                  <!-- Dòng 1: Tên sản phẩm -->
+                  <Label text="Sản phẩm:" textFill="#64748b" GridPane.rowIndex="1">
+                     <font><Font name="System Bold" size="13.0" /></font>
+                  </Label>
+                  <Label fx:id="lblItemName" text="Tên sản phẩm mẫu" textFill="#3b82f6" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+
+                  <!-- Dòng 2: Thời gian bắt đầu -->
+                  <Label text="Bắt đầu lúc:" textFill="#475569" GridPane.rowIndex="2">
+                     <font><Font name="System Bold" size="13.0" /></font>
+                  </Label>
+                  <HBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                     <children>
+                        <DatePicker fx:id="dpStartDate" prefHeight="38.0" prefWidth="150.0" promptText="Ngày" style="-fx-background-color: #ffffff; -fx-border-color: #cbd5e1; -fx-border-radius: 6;" />
+                        <TextField fx:id="txtStartTime" prefHeight="38.0" prefWidth="90.0" promptText="HH:mm" style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #cbd5e1; -fx-background-color: #ffffff;" text="08:00" />
+                     </children>
+                  </HBox>
+
+                  <!-- Dòng 3: Thời gian kết thúc -->
+                  <Label text="Kết thúc lúc:" textFill="#475569" GridPane.rowIndex="3">
+                     <font><Font name="System Bold" size="13.0" /></font>
+                  </Label>
+                  <HBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                     <children>
+                        <DatePicker fx:id="dpEndDate" prefHeight="38.0" prefWidth="150.0" promptText="Ngày" style="-fx-background-color: #ffffff; -fx-border-color: #cbd5e1; -fx-border-radius: 6;" />
+                        <TextField fx:id="txtEndTime" prefHeight="38.0" prefWidth="90.0" promptText="HH:mm" style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #cbd5e1; -fx-background-color: #ffffff;" text="22:00" />
+                     </children>
+                  </HBox>
+
+                  <!-- Dòng 4: Bước giá -->
+                  <Label text="Bước giá mặc định:" textFill="#475569" GridPane.rowIndex="4">
+                     <font><Font name="System Bold" size="13.0" /></font>
+                  </Label>
+                  <HBox alignment="CENTER_LEFT" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                     <children>
+                        <TextField fx:id="txtBidStep" prefHeight="38.0" prefWidth="150.0" promptText="VD: 50,000" style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #cbd5e1; -fx-background-color: #ffffff;" />
+                        <Label text="VNĐ" textFill="#64748b">
+                           <font><Font name="System Bold" size="13.0" /></font>
+                        </Label>
+                     </children>
+                  </HBox>
+               </children>
+            </GridPane>
+         </children>
+      </VBox>
+
+      <!-- FOOTER (BUTTONS) -->
+      <HBox alignment="CENTER_RIGHT" spacing="15.0" style="-fx-background-color: #f1f5f9; -fx-border-color: #e2e8f0 transparent transparent transparent;">
+         <padding>
+            <Insets bottom="20.0" left="30.0" right="30.0" top="20.0" />
+         </padding>
+         <children>
+            <Button fx:id="btnCancel" mnemonicParsing="false" onAction="#handleCancel" text="Hủy bỏ" />
+            <Button fx:id="btnConfirm" mnemonicParsing="false" onAction="#handleConfirm" text="XÁC NHẬN ĐĂNG BÁN" />
          </children>
       </HBox>
    </children>

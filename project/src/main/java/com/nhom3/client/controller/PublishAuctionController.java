@@ -22,6 +22,10 @@ public class PublishAuctionController {
     @FXML private TextField txtBidStep;
     @FXML private javafx.scene.image.ImageView imgPreview;
 
+    // Khai báo thêm 2 nút để cấu hình hiệu ứng Hover ở initialize
+    @FXML private Button btnCancel;
+    @FXML private Button btnConfirm;
+
     private Item currentItem;
     private static PublishAuctionController instance;
     private final ToggleGroup publishModeGroup = new ToggleGroup();
@@ -35,10 +39,31 @@ public class PublishAuctionController {
         rbSchedule.setSelected(true);
         publishModeGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> updatePublishModeUI());
         MoneyInputFormatter.install(txtBidStep);
+        
+        setupButtonStyles(); // Gọi hàm làm đẹp nút bấm
         updatePublishModeUI();
     }
 
     public static PublishAuctionController getInstance() { return instance; }
+
+    // HÀM MỚI: Trang trí hiệu ứng Hover chuyên nghiệp cho 2 nút bấm
+    private void setupButtonStyles() {
+        if (btnConfirm != null) {
+            String confirmDefault = "-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6; -fx-padding: 10 24; -fx-effect: dropshadow(three-pass-box, rgba(59, 130, 246, 0.4), 10, 0, 0, 4);";
+            String confirmHover = "-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6; -fx-padding: 10 24; -fx-effect: dropshadow(three-pass-box, rgba(59, 130, 246, 0.6), 12, 0, 0, 6);";
+            btnConfirm.setStyle(confirmDefault);
+            btnConfirm.setOnMouseEntered(e -> btnConfirm.setStyle(confirmHover));
+            btnConfirm.setOnMouseExited(e -> btnConfirm.setStyle(confirmDefault));
+        }
+
+        if (btnCancel != null) {
+            String cancelDefault = "-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-padding: 9 20;";
+            String cancelHover = "-fx-background-color: #e2e8f0; -fx-text-fill: #0f172a; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6; -fx-border-color: #94a3b8; -fx-border-radius: 6; -fx-padding: 9 20;";
+            btnCancel.setStyle(cancelDefault);
+            btnCancel.setOnMouseEntered(e -> btnCancel.setStyle(cancelHover));
+            btnCancel.setOnMouseExited(e -> btnCancel.setStyle(cancelDefault));
+        }
+    }
 
     public void setItem(Item item) {
         this.currentItem = item;
@@ -58,6 +83,12 @@ public class PublishAuctionController {
             }
         }
         
+        // Kiểm tra xem class Auction có hằng số DEFAULT_BID_STEP không, nếu có lỗi đoạn này bạn thay bằng 50000 nhé
+        try {
+            txtBidStep.setText(MoneyInputFormatter.formatAmount(com.nhom3.shared.model.auction.Auction.DEFAULT_BID_STEP));
+        } catch (Exception e) {
+            txtBidStep.setText("50,000");
+        }
         updatePublishModeUI();
     }
 
@@ -103,19 +134,21 @@ public class PublishAuctionController {
     }
 
     public void handlePublishResult(boolean isSuccess, String message) {
-        if (isSuccess) {
-            showAlert("Thành công", isPublishNowMode()
-                ? "Sản phẩm đã được đăng bán ngay thành công!"
-                : "Sản phẩm đã được lên lịch đấu giá thành công!");
-            ((Stage) lblItemName.getScene().getWindow()).close();
-            
-            // Cập nhật lại bảng của Seller ngay lập tức
-            if (com.nhom3.client.controller.ManageItemController.getInstance() != null) {
-                com.nhom3.client.controller.ManageItemController.getInstance().loadSellerItems();
+        javafx.application.Platform.runLater(() -> {
+            if (isSuccess) {
+                showAlert("Thành công", isPublishNowMode()
+                    ? "Sản phẩm đã được đăng bán ngay thành công!"
+                    : "Sản phẩm đã được lên lịch đấu giá thành công!");
+                ((Stage) lblItemName.getScene().getWindow()).close();
+                
+                // Cập nhật lại bảng của Seller ngay lập tức
+                if (com.nhom3.client.controller.ManageItemController.getInstance() != null) {
+                    com.nhom3.client.controller.ManageItemController.getInstance().loadSellerItems();
+                }
+            } else {
+                showAlert("Lỗi", message);
             }
-        } else {
-            showAlert("Lỗi", message);
-        }
+        });
     }
 
     @FXML void handleCancel() { ((Stage) lblItemName.getScene().getWindow()).close(); }

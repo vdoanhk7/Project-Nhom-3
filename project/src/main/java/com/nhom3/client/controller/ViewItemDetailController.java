@@ -23,9 +23,13 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -38,18 +42,23 @@ public class ViewItemDetailController {
     @FXML private Label lblItemName, lblItemType, lblStatusBadge;
     @FXML private Label lblCurrentPrice, lblStartPrice, lblBidStep;
     @FXML private Label lblTimeTitle, lblCountdown, lblTimeRange;
-    @FXML private HBox boxSellerActions; // Vùng chứa nút của Seller (Hiện tại chưa dùng đến)
-    @FXML private HBox boxBidderActions; // Vùng chứa ô nhập tiền và nút Đặt giá
-    @FXML private TextField txtBidAmount; // Ô nhập số tiền đặt giá
-    @FXML private TextField txtBidNote; // Ô nhập ghi chú
-    @FXML private Button btnPlaceBid;     // Nút "Đặt giá"
+    
+    @FXML private HBox boxSellerActions; 
+    
+    // ĐÃ FIX: Chuyển thành VBox để khớp với FXML thiết kế mới
+    @FXML private VBox boxBidderActions; 
+    // ĐÃ FIX: Thêm ID dòng ngang để nhét nút Auto-bid vào cạnh nút Đặt giá
+    @FXML private HBox boxBidInputRow; 
+    
+    @FXML private TextField txtBidAmount; 
+    @FXML private TextField txtBidNote; 
+    @FXML private Button btnPlaceBid;     
 
     @FXML private LineChart<String, Number> priceHistoryChart;
     @FXML private Button btnShowChart;
     @FXML private ImageView imgItem;
     private XYChart.Series<String, Number> priceSeries; // Biến giữ dữ liệu đường giá
 
-    // Giữ lại khai báo bảng để FXML không bị lỗi, nhưng chưa dùng đến
     @FXML private TableView<BidTransaction> tableBids;
     @FXML private TableColumn<BidTransaction, String> colBidder;
     @FXML private TableColumn<BidTransaction, String> colBidAmount;
@@ -60,15 +69,14 @@ public class ViewItemDetailController {
     private Auction currentAuction;
     private int currentBidCount = -1;
     private static ViewItemDetailController instance;
-    private double pendingBidAmount = 0; // Lưu tạm số tiền đang định đặt
-    private javafx.scene.layout.VBox autoBidInfoBox; // Hộp giao diện hiển thị thông tin Auto-bid
-    //Tự động cập nhật thời gian
+    private double pendingBidAmount = 0; 
+    private javafx.scene.layout.VBox autoBidInfoBox; 
+    
     private void refreshState() {
         if (currentAuction == null) return;
         
         LocalDateTime now = LocalDateTime.now();
         
-        // Tự động kiểm tra thời gian thực
         if (now.isBefore(currentAuction.getStartTime())) {
             setupOpenState(currentAuction);
         } else if (now.isBefore(currentAuction.getEndTime())) {
@@ -77,6 +85,7 @@ public class ViewItemDetailController {
             setupFinishedState(currentAuction);
         }
     }
+    
     public static ViewItemDetailController getInstance() {
         return instance;
     }
@@ -84,7 +93,7 @@ public class ViewItemDetailController {
     @FXML
     public void initialize() {
         instance = this; 
-        // 1. Cột Người đặt
+        
         colBidder.setCellValueFactory(cellData -> {
             try {
                 String name = cellData.getValue().getBidder().getUserInfo().getName();
@@ -94,12 +103,10 @@ public class ViewItemDetailController {
             }
         });
 
-        // 2. Cột Mức giá: Format tiền tệ 
         colBidAmount.setCellValueFactory(cellData -> 
             new SimpleStringProperty(String.format("%,.0f VNĐ", cellData.getValue().getAmount()))
         );
 
-        // 3. Cột Thời gian: Format giờ ngày
         colBidTime.setCellValueFactory(cellData -> {
             try {
                 LocalDateTime time = cellData.getValue().getBidTime();
@@ -109,7 +116,7 @@ public class ViewItemDetailController {
                 return new SimpleStringProperty("Lỗi thời gian");
             }
         });
-        // 4. Cột ghi chú
+        
         colBidNote.setCellValueFactory(cellData -> {
             try {
                 String note = cellData.getValue().getNote();
@@ -118,16 +125,21 @@ public class ViewItemDetailController {
                 return new SimpleStringProperty("");
             }
         });
-        // Khởi tạo series dữ liệu cho biểu đồ
+        
         priceSeries = new XYChart.Series<>();
         priceSeries.setName("Diễn biến giá (VNĐ)");
         priceHistoryChart.getData().add(priceSeries);
 
-        // Mặc định ẩn biểu đồ để giao diện gọn gàng
         priceHistoryChart.setVisible(false);
         priceHistoryChart.setManaged(false);
 
         MoneyInputFormatter.install(txtBidAmount);
+
+        // HIỆU ỨNG THẨM MỸ: Hover nút Đặt Giá
+        if(btnPlaceBid != null) {
+            btnPlaceBid.setOnMouseEntered(e -> btnPlaceBid.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px; -fx-background-radius: 5; -fx-cursor: hand;"));
+            btnPlaceBid.setOnMouseExited(e -> btnPlaceBid.setStyle("-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px; -fx-background-radius: 5; -fx-cursor: hand;"));
+        }
     }
 
     public void setItemData(Item item, Auction auction, String status) {
@@ -149,24 +161,28 @@ public class ViewItemDetailController {
         if (auction == null) {
             lblBidStep.setText("Bước giá: --");
             lblStatusBadge.setText("CHƯA ĐĂNG BÁN");
-            lblStatusBadge.setStyle("-fx-background-color: #95a5a6;");
+            lblStatusBadge.setStyle("-fx-background-color: #95a5a6; -fx-padding: 5 15; -fx-background-radius: 20; -fx-text-fill: white;");
             lblCountdown.setText("--:--:--");
             lblTimeTitle.setText("THỜI GIAN:");
             lblTimeRange.setText("");
             return;
         }
+        
         lblBidStep.setText("Bước giá: " + formatMoney(auction.getBidStep()));
         updateBidInputHint();
+        
         if ("PAID".equals(status)) {
             setupPaidState(auction);
         } else if ("CANCELLED".equals(status)) {
             setupCancelledState(auction);
         } else {
-            refreshState();}
+            refreshState();
+        }
         
         setupDynamicUI();
         loadBidHistory();
         subscribeToAuction(true);
+        
         javafx.application.Platform.runLater(() -> {
             if (lblItemName.getScene() != null && lblItemName.getScene().getWindow() != null) {
                 javafx.stage.Stage stage = (javafx.stage.Stage) lblItemName.getScene().getWindow();
@@ -180,7 +196,7 @@ public class ViewItemDetailController {
 
     private void setupOpenState(Auction auction) {
         lblStatusBadge.setText(" SẮP DIỄN RA ");
-        lblStatusBadge.setStyle("-fx-background-color: #f1c40f; -fx-text-fill: black;");
+        lblStatusBadge.setStyle("-fx-background-color: #f1c40f; -fx-text-fill: black; -fx-padding: 5 15; -fx-background-radius: 20;");
         lblTimeTitle.setText("BẮT ĐẦU SAU:");
         lblTimeRange.setText("Lên sàn lúc: " + formatTime(auction.getStartTime()));
         startCountdown(auction.getStartTime());
@@ -188,7 +204,7 @@ public class ViewItemDetailController {
 
     private void setupRunningState(Auction auction) {
         lblStatusBadge.setText(" ĐANG ĐẤU GIÁ ");
-        lblStatusBadge.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white;");
+        lblStatusBadge.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-padding: 5 15; -fx-background-radius: 20;");
         lblTimeTitle.setText("THỜI GIAN CÒN LẠI:");
         lblTimeRange.setText("Kết thúc lúc: " + formatTime(auction.getEndTime()));
         startCountdown(auction.getEndTime());
@@ -196,7 +212,7 @@ public class ViewItemDetailController {
 
     private void setupFinishedState(Auction auction) {
         lblStatusBadge.setText(" ĐÃ KẾT THÚC ");
-        lblStatusBadge.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
+        lblStatusBadge.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 5 15; -fx-background-radius: 20;");
         lblTimeTitle.setText("PHIÊN ĐÃ ĐÓNG");
         lblCountdown.setText("00:00:00");
         lblTimeRange.setText("Đã đóng lúc: " + formatTime(auction.getEndTime()));
@@ -205,7 +221,7 @@ public class ViewItemDetailController {
 
     private void setupPaidState(Auction auction) {
         lblStatusBadge.setText("ĐÃ THANH TOÁN");
-        lblStatusBadge.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;"); // Màu xanh lá
+        lblStatusBadge.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 5 15; -fx-background-radius: 20;");
         lblTimeTitle.setText("GIAO DỊCH HOÀN TẤT");
         lblCountdown.setText("DONE");
         lblTimeRange.setText("Kết thúc lúc: " + formatTime(auction.getEndTime()));
@@ -214,7 +230,7 @@ public class ViewItemDetailController {
 
     private void setupCancelledState(Auction auction) {
         lblStatusBadge.setText("ĐÃ HỦY BỎ");
-        lblStatusBadge.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;"); // Màu xám xám
+        lblStatusBadge.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white; -fx-padding: 5 15; -fx-background-radius: 20;");
         lblTimeTitle.setText("PHIÊN ĐÃ ĐÓNG");
         lblCountdown.setText("--:--:--");
         lblTimeRange.setText("Lý do: Theo quy định hệ thống");
@@ -235,7 +251,7 @@ public class ViewItemDetailController {
         long secondsDiff = ChronoUnit.SECONDS.between(LocalDateTime.now(), targetTime);
         if (secondsDiff <= 0) {
             if (countdownTimeline != null) countdownTimeline.stop();
-            refreshState(); // Khi đếm ngược kết thúc, tự động cập nhật trạng thái mới
+            refreshState(); 
             return false;
         }
 
@@ -257,7 +273,6 @@ public class ViewItemDetailController {
         return time.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm - dd/MM"));
     }
 
-    // QUYẾT ĐỊNH HIỂN THỊ TUỲ VÀO VAI TRÒ
     private void setupDynamicUI() {
         if (boxBidderActions == null) return;
         boxBidderActions.setVisible(false); boxBidderActions.setManaged(false);
@@ -266,60 +281,70 @@ public class ViewItemDetailController {
         if (currentUser == null || currentAuction == null) return;
 
         if (currentUser instanceof Bidder && currentAuction.getStatus() == com.nhom3.shared.model.auction.StatusOfAuction.RUNNING) {
-            // Hiển thị tạm box đặt tay, sau đó gọi mạng kiểm tra Auto-Bid
             boxBidderActions.setVisible(true);
             boxBidderActions.setManaged(true);
             
-            if (boxBidderActions.getChildren().stream().noneMatch(n -> "btnAutoBid".equals(n.getId()))) {
-                Button btnAutoBid = new Button("🤖 Cài Đặt Auto-Bid");
+            // Nhét nút Auto-bid vào Dòng ngang boxBidInputRow
+            if (boxBidInputRow != null && boxBidInputRow.getChildren().stream().noneMatch(n -> "btnAutoBid".equals(n.getId()))) {
+                Button btnAutoBid = new Button("🤖 Auto-Bid");
                 btnAutoBid.setId("btnAutoBid");
-                btnAutoBid.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
+                
+                String styleNormal = "-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px; -fx-cursor: hand; -fx-background-radius: 5;";
+                String styleHover = "-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px; -fx-cursor: hand; -fx-background-radius: 5;";
+                
+                btnAutoBid.setStyle(styleNormal);
+                btnAutoBid.setPrefHeight(45.0); 
+                btnAutoBid.setPrefWidth(120.0);
+                
+                btnAutoBid.setOnMouseEntered(e -> btnAutoBid.setStyle(styleHover));
+                btnAutoBid.setOnMouseExited(e -> btnAutoBid.setStyle(styleNormal));
+                
                 btnAutoBid.setOnAction(e -> openAutoBidDialog());
-                boxBidderActions.getChildren().add(btnAutoBid);
+                boxBidInputRow.getChildren().add(btnAutoBid);
             }
             
-            // Hỏi Server xem có đang bật Auto-Bid không
             checkAutoBidStatus();
         }
     }
 
-    // Mở cửa sổ nhập thông số Auto-Bid
     private void openAutoBidDialog() {
         User currentUser = UserSession.getInstance().getLoggedInUser();
         
-        // Tạo cửa sổ Dialog
         Dialog<com.nhom3.shared.network.payload.AutoBidPayload> dialog = new Dialog<>();
         dialog.setTitle("Cài đặt Đấu giá tự động (Auto-Bid)");
         double sellerBidStep = currentAuction.getBidStep();
         dialog.setHeaderText("Bước giá tự động phải từ " + formatMoney(sellerBidStep)
                 + " trở lên và không vượt quá giới hạn giá cao nhất.");
 
-        // Nút OK và Cancel
         ButtonType btnSetup = new ButtonType("Lưu Cài Đặt", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(btnSetup, ButtonType.CANCEL);
 
-        // Khung nhập liệu
         javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
-        grid.setHgap(10); grid.setVgap(10);
-        grid.setPadding(new javafx.geometry.Insets(20, 150, 10, 10));
+        grid.setHgap(15); grid.setVgap(15);
+        grid.setPadding(new javafx.geometry.Insets(20, 50, 10, 10));
 
         TextField txtMaxAmount = new TextField();
         txtMaxAmount.setPromptText("VD: 20000000");
+        txtMaxAmount.setStyle("-fx-padding: 8; -fx-background-radius: 5;");
+        
         TextField txtIncrement = new TextField();
+        txtIncrement.setStyle("-fx-padding: 8; -fx-background-radius: 5;");
+        
         MoneyInputFormatter.install(txtMaxAmount);
         MoneyInputFormatter.install(txtIncrement);
         txtIncrement.setText(MoneyInputFormatter.formatAmount(sellerBidStep));
 
-        grid.add(new Label("Giới hạn giá cao nhất (VNĐ):"), 0, 0);
-        grid.add(txtMaxAmount, 1, 0);
-        grid.add(new Label("Bước giá mỗi lần tự tăng (VNĐ):"), 0, 1);
-        grid.add(txtIncrement, 1, 1);
-        grid.add(new Label("Bước giá seller yêu cầu:"), 0, 2);
-        grid.add(new Label(formatMoney(sellerBidStep)), 1, 2);
+        Label l1 = new Label("Giới hạn giá cao nhất (VNĐ):"); l1.setStyle("-fx-font-weight: bold;");
+        Label l2 = new Label("Bước giá mỗi lần tự tăng (VNĐ):"); l2.setStyle("-fx-font-weight: bold;");
+        Label l3 = new Label("Bước giá seller yêu cầu:"); l3.setStyle("-fx-text-fill: #7f8c8d;");
+        Label l4 = new Label(formatMoney(sellerBidStep)); l4.setStyle("-fx-text-fill: #2ecc71; -fx-font-weight: bold;");
+
+        grid.add(l1, 0, 0); grid.add(txtMaxAmount, 1, 0);
+        grid.add(l2, 0, 1); grid.add(txtIncrement, 1, 1);
+        grid.add(l3, 0, 2); grid.add(l4, 1, 2);
 
         dialog.getDialogPane().setContent(grid);
 
-        // Lấy dữ liệu khi bấm OK
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == btnSetup) {
                 try {
@@ -350,6 +375,8 @@ public class ViewItemDetailController {
                 Packet packet = new Packet(PacketType.PLACE_AUTO_BID, payload);
                 ServerConnection.getInstance().sendMessage(packet);
                 System.out.println("[Client] Đã gửi yêu cầu Auto-Bid: Max=" + payload.getMaxAmount());
+                
+                // Đợi Server xử lý rồi tự động gọi giao diện cập nhật (Không gọi showAlert thủ công để tránh popup đúp)
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -383,17 +410,9 @@ public class ViewItemDetailController {
                 return;
             }
 
-            // --- BẮT ĐẦU PHẦN GỌI MẠNG (THAY THẾ CODE GỌI DB CŨ) ---
-            this.pendingBidAmount = bidAmount; // Lưu tạm để nếu thành công thì update UI
+            this.pendingBidAmount = bidAmount; 
             
-            // 1. Tạo Gói hàng BidPayload
-            BidPayload payload = new BidPayload(
-                currentUser.getId(), 
-                bidAmount, 
-                currentAuction.getId()
-            );
-            
-            // 2. Bọc vào Packet và gửi đi
+            BidPayload payload = new BidPayload(currentUser.getId(), bidAmount, currentAuction.getId());
             Packet packet = new Packet(PacketType.PLACE_BID, payload);
             ServerConnection.getInstance().sendMessage(packet);
             
@@ -407,7 +426,6 @@ public class ViewItemDetailController {
         }
     }
 
-    // Sử lí ẩn hiện biểu đồ giá
     @FXML
     private void handleToggleChart() {
         boolean isShowing = priceHistoryChart.isVisible();
@@ -415,12 +433,13 @@ public class ViewItemDetailController {
             priceHistoryChart.setVisible(false);
             priceHistoryChart.setManaged(false);
             btnShowChart.setText("📊 Xem Biểu Đồ Giá");
+            btnShowChart.setStyle("-fx-background-color: #E0F2FE; -fx-text-fill: #0284C7; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 6 15;");
         } else {
             priceHistoryChart.setVisible(true);
             priceHistoryChart.setManaged(true);
             btnShowChart.setText("❌ Đóng Biểu Đồ");
+            btnShowChart.setStyle("-fx-background-color: #FEE2E2; -fx-text-fill: #DC2626; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 6 15;");
 
-            // Mỗi lần mở ra, nạp lại lịch sử mới nhất từ server
             refreshChartFromBidList(tableBids.getItems());
             loadBidHistory();
         }
@@ -428,14 +447,12 @@ public class ViewItemDetailController {
 
     private void loadPriceHistoryToChart() {
         if (currentAuction == null) return;
-
         refreshChartFromBidList(tableBids.getItems());
     }
 
     public void handleBidResult(boolean isSuccess, String message) {
         if (isSuccess) {
             showAlert(Alert.AlertType.INFORMATION, "Thành công", "Bạn đã đặt giá " + String.format("%,.0f VNĐ", pendingBidAmount) + " thành công!");
-            // Cập nhật giao diện lập tức
             currentAuction.getItem().setCurHighest(pendingBidAmount);
             lblCurrentPrice.setText(String.format("%,.0f VNĐ", pendingBidAmount));
             updateBidInputHint();
@@ -445,27 +462,21 @@ public class ViewItemDetailController {
         } else {
             showAlert(Alert.AlertType.ERROR, "Thất bại", message);
         }
-        
     }
 
     private void loadBidHistory() {
         if (currentAuction == null) return;
         
         com.nhom3.shared.network.payload.AuctionIdPayload payload = new com.nhom3.shared.network.payload.AuctionIdPayload(currentAuction.getId());
-        
-        // CHẮC CHẮN PACKET TYPE Ở ĐÂY LÀ LOAD_BID_HISTORY
         com.nhom3.shared.network.packet.Packet packet = new com.nhom3.shared.network.packet.Packet(com.nhom3.shared.network.packet.PacketType.LOAD_BID_HISTORY, payload);
         
         try {
             com.nhom3.client.network.ServerConnection.getInstance().sendMessage(packet);
-            // THÊM DÒNG NÀY ĐỂ XEM CLIENT CÓ THỰC SỰ GỬI LỜI YÊU CẦU ĐI KHÔNG
-            System.out.println("[Client] Đã gửi gói tin xin Lịch sử của Auction: " + currentAuction.getId()); 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // Hàm hỗ trợ hiện thông báo (Popup) cho đẹp 
     private void showAlert(Alert.AlertType type, String title, String content) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
@@ -484,10 +495,6 @@ public class ViewItemDetailController {
             return; 
         }
 
-        // In ra Terminal để kiểm tra xem Server gửi về mấy dòng
-        System.out.println("[UI] Nhận được " + simpleList.size() + " dòng lịch sử từ Server");
-
-        // 1. Tái tạo danh sách
         List<BidTransaction> realList = new java.util.ArrayList<>();
         for (com.nhom3.shared.network.payload.BidHistoryResponsePayload.SimpleBid sb : simpleList) {
             com.nhom3.shared.model.user.UserInfo info = new com.nhom3.shared.model.user.UserInfo("", "", sb.bidderName != null ? sb.bidderName : "Ẩn danh");
@@ -505,16 +512,11 @@ public class ViewItemDetailController {
             realList.add(bid);
         }
 
-        // 2. ÉP BẢNG PHẢI VẼ LẠI TRÊN LUỒNG GIAO DIỆN
         javafx.application.Platform.runLater(() -> {
-            // Khởi tạo ObservableList mới tinh
             javafx.collections.ObservableList<BidTransaction> oList = javafx.collections.FXCollections.observableArrayList(realList);
-            
-            // Gắn vào bảng và ép làm mới
             tableBids.setItems(oList);
             tableBids.refresh(); 
 
-            // 3. Cập nhật Giá cao nhất trên đỉnh màn hình
             if (!realList.isEmpty()) {
                 double realHighest = realList.get(0).getAmount();
                 if (realHighest > currentAuction.getItem().getCurHighest()) {
@@ -533,7 +535,6 @@ public class ViewItemDetailController {
         priceSeries.getData().clear();
         if (history == null) return;
 
-        // Giới hạn chỉ hiển thị 15 cột để to rõ và không bị rối
         int maxPoints = 15;
         int startIndex = Math.min(history.size() - 1, maxPoints - 1);
 
@@ -546,7 +547,7 @@ public class ViewItemDetailController {
                 bidderName = bid.getBidder().getUserInfo().getName();
                 String[] parts = bidderName.split(" ");
                 if (parts.length > 0) {
-                    bidderName = parts[parts.length - 1]; // Chỉ lấy Tên cuối cùng cho gọn
+                    bidderName = parts[parts.length - 1]; 
                 }
             }
             
@@ -589,7 +590,6 @@ public class ViewItemDetailController {
         }
     }
 
-    // Gửi yêu cầu kiểm tra trạng thái
     public void checkAutoBidStatus() {
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (currentUser == null || currentAuction == null) return;
@@ -599,7 +599,6 @@ public class ViewItemDetailController {
         try { ServerConnection.getInstance().sendMessage(packet); } catch (Exception e) { e.printStackTrace(); }
     }
 
-    // Server trả về kết quả
     public void handleCheckAutoBidResult(com.nhom3.shared.network.payload.AutoBidPayload config) {
         if (config == null) {
             // CHƯA BẬT AUTO-BID -> Hiện nút đặt tay, ẩn bảng Info
@@ -610,25 +609,42 @@ public class ViewItemDetailController {
             boxBidderActions.setVisible(false); boxBidderActions.setManaged(false);
 
             if (autoBidInfoBox == null) {
-                autoBidInfoBox = new javafx.scene.layout.VBox(8);
-                autoBidInfoBox.setStyle("-fx-background-color: #f3e5f5; -fx-padding: 15; -fx-background-radius: 5; -fx-border-color: #9b59b6; -fx-border-width: 2;");
+                autoBidInfoBox = new javafx.scene.layout.VBox(10);
+                
+                // HIỆU ỨNG THẨM MỸ: Bảng nền Tím
+                autoBidInfoBox.setStyle("-fx-background-color: #f5eef8; -fx-padding: 20; -fx-background-radius: 8; -fx-border-color: #9b59b6; -fx-border-width: 2; -fx-border-radius: 8;");
+                DropShadow shadow = new DropShadow();
+                shadow.setColor(Color.web("#00000020"));
+                shadow.setRadius(5); shadow.setOffsetY(3);
+                autoBidInfoBox.setEffect(shadow);
                 
                 Label lblTitle = new Label("🤖 ĐANG BẬT ĐẤU GIÁ TỰ ĐỘNG");
-                lblTitle.setStyle("-fx-font-weight: bold; -fx-text-fill: #8e44ad; -fx-font-size: 14px;");
+                lblTitle.setStyle("-fx-font-weight: bold; -fx-text-fill: #8e44ad; -fx-font-size: 15px;");
                 
                 Label lblMax = new Label(); lblMax.setId("lblMax");
-                Label lblInc = new Label(); lblInc.setId("lblInc");
+                lblMax.setStyle("-fx-text-fill: #2c3e50; -fx-font-size: 14px; -fx-font-weight: bold;");
                 
-                // Khung chứa 2 nút nằm ngang
-                javafx.scene.layout.HBox btnBox = new javafx.scene.layout.HBox(10);
+                Label lblInc = new Label(); lblInc.setId("lblInc");
+                lblInc.setStyle("-fx-text-fill: #2c3e50; -fx-font-size: 14px; -fx-font-weight: bold;");
+                
+                javafx.scene.layout.HBox btnBox = new javafx.scene.layout.HBox(15);
+                btnBox.setPadding(new javafx.geometry.Insets(10, 0, 0, 0));
                 
                 Button btnEdit = new Button("Thay đổi thiết lập");
-                btnEdit.setStyle("-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-cursor: hand;");
+                String editStyle = "-fx-background-color: white; -fx-text-fill: #2c3e50; -fx-border-color: #bdc3c7; -fx-border-radius: 5; -fx-cursor: hand; -fx-background-radius: 5; -fx-padding: 8 20; -fx-font-weight: bold;";
+                String editHover = "-fx-background-color: #ecf0f1; -fx-text-fill: #2c3e50; -fx-border-color: #bdc3c7; -fx-border-radius: 5; -fx-cursor: hand; -fx-background-radius: 5; -fx-padding: 8 20; -fx-font-weight: bold;";
+                btnEdit.setStyle(editStyle);
+                btnEdit.setOnMouseEntered(e -> btnEdit.setStyle(editHover));
+                btnEdit.setOnMouseExited(e -> btnEdit.setStyle(editStyle));
                 btnEdit.setOnAction(e -> openAutoBidDialog()); 
                 
                 Button btnCancelAuto = new Button("Dừng Auto-Bid");
-                btnCancelAuto.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
-                btnCancelAuto.setOnAction(e -> handleCancelAutoBid()); // GỌI HÀM HỦY
+                String cancelStyle = "-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5; -fx-padding: 8 20;";
+                String cancelHover = "-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5; -fx-padding: 8 20;";
+                btnCancelAuto.setStyle(cancelStyle);
+                btnCancelAuto.setOnMouseEntered(e -> btnCancelAuto.setStyle(cancelHover));
+                btnCancelAuto.setOnMouseExited(e -> btnCancelAuto.setStyle(cancelStyle));
+                btnCancelAuto.setOnAction(e -> handleCancelAutoBid()); 
                 
                 btnBox.getChildren().addAll(btnEdit, btnCancelAuto);
                 autoBidInfoBox.getChildren().addAll(lblTitle, lblMax, lblInc, btnBox);
@@ -639,17 +655,15 @@ public class ViewItemDetailController {
                 }
             }
             
-            // Cập nhật thông số
             Label lblMax = (Label) autoBidInfoBox.lookup("#lblMax");
             Label lblInc = (Label) autoBidInfoBox.lookup("#lblInc");
-            lblMax.setText("Giới hạn ví: " + String.format("%,.0f VNĐ", config.getMaxAmount()));
-            lblInc.setText("Bước giá tự động: " + String.format("%,.0f VNĐ", config.getIncrement()));
+            lblMax.setText("💵 Giới hạn ví: " + String.format("%,.0f VNĐ", config.getMaxAmount()));
+            lblInc.setText("📈 Bước giá tự động: " + String.format("%,.0f VNĐ", config.getIncrement()));
             
             autoBidInfoBox.setVisible(true); autoBidInfoBox.setManaged(true);
         }
     }
 
-    // Xử lý khi bấm nút "Dừng Auto-Bid"
     private void handleCancelAutoBid() {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Bạn có chắc chắn muốn dừng hệ thống đấu giá tự động?\nSau khi dừng, bạn sẽ phải tự đặt giá bằng tay.", ButtonType.YES, ButtonType.NO);
         confirm.setTitle("Xác nhận dừng");
@@ -659,7 +673,6 @@ public class ViewItemDetailController {
             User currentUser = UserSession.getInstance().getLoggedInUser();
             if (currentUser == null || currentAuction == null) return;
             
-            // Tái sử dụng AutoBidPayload nhưng truyền maxAmount=0, increment=0 để gửi đi
             com.nhom3.shared.network.payload.AutoBidPayload payload = new com.nhom3.shared.network.payload.AutoBidPayload(currentUser.getId(), currentAuction.getId(), 0, 0);
             Packet packet = new Packet(PacketType.CANCEL_AUTO_BID, payload);
             

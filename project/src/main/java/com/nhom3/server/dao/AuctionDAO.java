@@ -17,6 +17,7 @@ public interface AuctionDAO {
     Auction getAuctionByItemId(int itemId);
     boolean confirmPayment(int auctionId);
     List<Auction> getActiveAuctions();
+    List<Auction> getAllAuctions();
     List<BidTransaction> getBidHistory(int auctionId);
     List<Auction> getMyBidHistory(int bidderId);
     boolean extendAuctionTime(int auctionId, int additionalMinutes);

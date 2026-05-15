@@ -10,6 +10,7 @@ public enum PacketType {
     CANCEL_AUTO_BID("cancel auto bid"),
     LOAD_SELLER_ITEMS("load seller items"),
     LOAD_ACTIVE_AUCTIONS("load active auctions"),
+    LOAD_ALL_AUCTIONS("load all auctions"),
     LOAD_AUCTION_BY_ITEM("load auction by item"),
     SAVE_ITEM("save item"),
     UPDATE_ITEM("update item"),

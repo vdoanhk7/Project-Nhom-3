@@ -56,6 +56,7 @@ public class PacketDispatcher {
         handlers.put(PacketType.LOAD_BID_HISTORY, this::handleLoadBidHistory);
         handlers.put(PacketType.LOAD_SELLER_ITEMS, this::handleLoadSellerItems);
         handlers.put(PacketType.LOAD_ACTIVE_AUCTIONS, this::handleLoadActiveAuctions);
+        handlers.put(PacketType.LOAD_ALL_AUCTIONS, this::handleLoadAllAuctions);
         handlers.put(PacketType.LOAD_AUCTION_BY_ITEM, this::handleLoadAuctionByItem);
         handlers.put(PacketType.SAVE_ITEM, this::handleSaveItem);
         handlers.put(PacketType.UPDATE_ITEM, this::handleUpdateItem);
@@ -164,7 +165,7 @@ public class PacketDispatcher {
         for (Item itm : itemsFromDb) {
             String stt = statusMap.getOrDefault(itm.getId(), "");
             dtoList.add(new SellerItemsResponsePayload.SellerItemDTO(itm.getId(), itm.getName(), itm.getType().name(),
-                    itm.getStartPrice(), itm.getCurHighest(), stt));
+                    itm.getStartPrice(), itm.getCurHighest(), stt, itm.getImageBase64()));
         }
         return new Packet(PacketType.LOAD_SELLER_ITEMS, new SellerItemsResponsePayload(dtoList));
     }
@@ -177,6 +178,16 @@ public class PacketDispatcher {
             dtoList.add(toAuctionDto(auction));
         }
         return new Packet(PacketType.LOAD_ACTIVE_AUCTIONS, new AuctionListResponsePayload(dtoList));
+    }
+
+    private Packet handleLoadAllAuctions(Packet request, Gson gson, ClientHandler client) {
+        AuctionDAO dao = new AuctionDAOImpl();
+        List<Auction> auctions = dao.getAllAuctions();
+        List<AuctionListResponsePayload.AuctionDTO> dtoList = new ArrayList<>();
+        for (Auction auction : auctions) {
+            dtoList.add(toAuctionDto(auction));
+        }
+        return new Packet(PacketType.LOAD_ALL_AUCTIONS, new AuctionListResponsePayload(dtoList));
     }
 
     private Packet handleLoadAuctionByItem(Packet request, Gson gson, ClientHandler client) {
@@ -327,7 +338,7 @@ public class PacketDispatcher {
                     topBidderId,
                     a.getItem().getType().name(), a.getItem().getStartPrice(), a.getItem().getCurHighest(),
                     a.getBidStep(),
-                    a.getStartTime().toString(), a.getEndTime().toString()));
+                    a.getStartTime().toString(), a.getEndTime().toString(), a.getItem().getImageBase64()));
         }
         return new Packet(PacketType.LOAD_PURCHASE_HISTORY, new PurchaseHistoryResponsePayload(purDtoList));
     }
@@ -402,6 +413,7 @@ public class PacketDispatcher {
         ItemType type = ItemType.valueOf(payload.getType());
         Item item = type.createItem(payload.getItemId(), payload.getName(), payload.getStartPrice());
         item.setCurHighest(payload.getStartPrice());
+        item.setImageBase64(payload.getImageBase64());
         return item;
     }
 
@@ -430,7 +442,8 @@ public class PacketDispatcher {
                 auction.getStartTime() != null ? auction.getStartTime().toString() : "",
                 auction.getEndTime() != null ? auction.getEndTime().toString() : "",
                 auction.getStatus() != null ? auction.getStatus().name() : "",
-                auction.getHighestBidderId());
+                auction.getHighestBidderId(),
+                item != null ? item.getImageBase64() : null);
     }
 
     private UserListResponsePayload.UserDTO toUserDto(User user) {

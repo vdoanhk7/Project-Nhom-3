@@ -6,7 +6,7 @@ import com.nhom3.shared.network.packet.PacketType;
 import com.nhom3.shared.network.payload.LoginPayload;
 
 public class ClientTest {
-    
+
     public static void main(String[] args) {
         ServerHandler serverHandler = new ServerHandler();
         boolean isConnected = false;

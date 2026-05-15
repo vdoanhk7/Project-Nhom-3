@@ -27,6 +27,7 @@ public class ClientPacketDispatcher {
         handlers.put(PacketType.LOAD_BID_HISTORY, this::handleLoadBidHistory);
         handlers.put(PacketType.LOAD_SELLER_ITEMS, this::handleLoadSellerItems);
         handlers.put(PacketType.LOAD_ACTIVE_AUCTIONS, this::handleLoadActiveAuctions);
+        handlers.put(PacketType.LOAD_ALL_AUCTIONS, this::handleLoadAllAuctions);
         handlers.put(PacketType.LOAD_AUCTION_BY_ITEM, this::handleLoadAuctionByItem);
         handlers.put(PacketType.SAVE_ITEM, this::handleItemMutation);
         handlers.put(PacketType.UPDATE_ITEM, this::handleItemMutation);
@@ -131,6 +132,13 @@ public class ClientPacketDispatcher {
             if (MarketController.getInstance() != null) {
                 MarketController.getInstance().handleLoadActiveAuctionsResult(payload.getAuctions());
             }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void handleLoadAllAuctions(Packet response, Gson gson) {
+        AuctionListResponsePayload payload =
+                gson.fromJson(response.getPayload(), AuctionListResponsePayload.class);
+        try {
             if (AdminDashboardController.getInstance() != null) {
                 AdminDashboardController.getInstance().handleLoadAuctionDataResult(payload.getAuctions());
             }

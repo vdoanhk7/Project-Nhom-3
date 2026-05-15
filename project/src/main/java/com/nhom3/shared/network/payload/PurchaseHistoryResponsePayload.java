@@ -18,17 +18,18 @@ public class PurchaseHistoryResponsePayload {
         public double bidStep;
         public String startTimeStr;
         public String endTimeStr;
+        public String imageBase64;
 
         public HistoryDTO(int auctionId, int itemId, String itemName, double myBidAmount, String myBidTimeStr, String status, int topBidderId,
                           String itemType, double startPrice, double curHighest, String startTimeStr, String endTimeStr) {
             this(auctionId, itemId, itemName, myBidAmount, myBidTimeStr, status, topBidderId,
                     itemType, startPrice, curHighest,
                     com.nhom3.shared.model.auction.Auction.DEFAULT_BID_STEP,
-                    startTimeStr, endTimeStr);
+                    startTimeStr, endTimeStr, null);
         }
 
         public HistoryDTO(int auctionId, int itemId, String itemName, double myBidAmount, String myBidTimeStr, String status, int topBidderId,
-                          String itemType, double startPrice, double curHighest, double bidStep, String startTimeStr, String endTimeStr) {
+                          String itemType, double startPrice, double curHighest, double bidStep, String startTimeStr, String endTimeStr, String imageBase64) {
             this.auctionId = auctionId;
             this.itemId = itemId;
             this.itemName = itemName;
@@ -42,6 +43,7 @@ public class PurchaseHistoryResponsePayload {
             this.bidStep = bidStep;
             this.startTimeStr = startTimeStr;
             this.endTimeStr = endTimeStr;
+            this.imageBase64 = imageBase64;
         }
     }
 

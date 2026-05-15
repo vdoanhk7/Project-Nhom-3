@@ -196,22 +196,19 @@ public class ManageItemController {
 
     private void setupActionColumn() {
         colAction.setCellFactory(param -> new TableCell<>() {
-            private final Button btnPublish = new Button("Đăng Bán");
-            private final Button btnEdit = new Button("Sửa");
-            private final Button btnDelete = new Button("Xoá");
-            private final Button btnView = new Button("Xem Chi Tiết");
-            private final Button btnConfirmPaid = new Button("Xác Nhận");
-            private final Label lblPaidStatus = new Label("Đã Thanh Toán");
+            private final Button btnPublish = createStyledButton(" Đăng Bán ", "#10b981", "#059669");
+            private final Button btnEdit = createStyledButton(" Sửa ", "#f59e0b", "#d97706");
+            private final Button btnDelete = createStyledButton(" Xoá ", "#ef4444", "#dc2626");
+            private final Button btnView = createStyledButton(" Xem Chi Tiết ", "#3b82f6", "#2563eb");
+            private final Button btnConfirmPaid = createStyledButton(" Xác Nhận ", "#10b981", "#059669");
+            private final Label lblPaidStatus = new Label("💰 Đã Thanh Toán");
+            
             private final HBox pane = new HBox(8, btnPublish, btnEdit, btnDelete,
                     btnView, btnConfirmPaid, lblPaidStatus);
 
             {
-                btnPublish.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-cursor: hand;");
-                btnEdit.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-cursor: hand;");
-                btnDelete.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand;");
-                btnView.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-cursor: hand;");
-                btnConfirmPaid.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-cursor: hand;");
-                lblPaidStatus.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
+                // Làm đẹp cho Label trạng thái
+                lblPaidStatus.setStyle("-fx-background-color: #d1fae5; -fx-text-fill: #065f46; -fx-padding: 5 12; -fx-background-radius: 12; -fx-font-weight: bold; -fx-font-size: 12px;");
                 pane.setStyle("-fx-alignment: center;");
 
                 btnPublish.setOnAction(e -> handlePublish(getCurrentRowItem()));
@@ -219,6 +216,18 @@ public class ManageItemController {
                 btnDelete.setOnAction(e -> handleDelete(getCurrentRowItem()));
                 btnView.setOnAction(e -> handleViewDetail(getCurrentRowItem()));
                 btnConfirmPaid.setOnAction(e -> handleConfirmPaid(getCurrentRowItem()));
+            }
+
+            // Hàm tiện ích tạo nút bấm chuyên nghiệp (có Hover)
+            private Button createStyledButton(String text, String color, String hoverColor) {
+                Button btn = new Button(text);
+                String baseStyle = "-fx-background-color: " + color + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6; -fx-padding: 5 10;";
+                String hoverStyle = "-fx-background-color: " + hoverColor + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6; -fx-padding: 5 10;";
+                
+                btn.setStyle(baseStyle);
+                btn.setOnMouseEntered(e -> btn.setStyle(hoverStyle));
+                btn.setOnMouseExited(e -> btn.setStyle(baseStyle));
+                return btn;
             }
 
             @Override
@@ -266,6 +275,7 @@ public class ManageItemController {
             }
         });
     }
+    // =================================================================================
 
     @FXML
     void handleAddNewItem(ActionEvent event) {

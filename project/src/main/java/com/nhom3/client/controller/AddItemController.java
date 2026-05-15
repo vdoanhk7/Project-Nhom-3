@@ -21,7 +21,6 @@ import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import java.io.File;
-import java.nio.file.Files;
 import java.util.Base64;
 
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
@@ -76,8 +75,10 @@ public class AddItemController {
         File file = fileChooser.showOpenDialog(stage);
         if (file != null) {
             try {
-                byte[] fileContent = Files.readAllBytes(file.toPath());
-                selectedImageBase64 = Base64.getEncoder().encodeToString(fileContent);
+                selectedImageBase64 = com.nhom3.client.utils.ImageUtils.compressAndEncodeImage(file);
+                if (selectedImageBase64 == null) {
+                    throw new Exception("Không thể xử lý ảnh.");
+                }
                 imgPreview.setImage(new Image(file.toURI().toString()));
                 lblImageName.setText(file.getName());
             } catch (Exception e) {

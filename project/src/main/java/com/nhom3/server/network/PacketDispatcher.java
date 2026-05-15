@@ -96,9 +96,10 @@ public class PacketDispatcher {
         if (user != null) {
             String uEmail = user.getUserContact() != null ? user.getUserContact().getEmail() : "";
             String uPhone = user.getUserContact() != null ? user.getUserContact().getPhoneNumber() : "";
+            String profileImage = user.getUserInfo() != null ? user.getUserInfo().getProfileImageBase64() : null;
             resultPayload = new ResultPayload(true, "Đăng nhập thành công", user.getId(),
                     user.getUserInfo().getUserName(), user.getUserInfo().getName(), user.getRole().name(), uEmail,
-                    uPhone);
+                    uPhone, profileImage);
         } else {
             resultPayload = new ResultPayload(false, "Sai tài khoản hoặc mật khẩu", -1, "", "", "", "", "");
         }
@@ -265,7 +266,7 @@ public class PacketDispatcher {
         return new Packet(PacketType.UPDATE_PROFILE, new ResultPayload(success,
                 message,
                 payload.getUserId(), payload.getUsername(), payload.getFullName(),
-                payload.getRole(), payload.getEmail(), payload.getPhone()));
+                payload.getRole(), payload.getEmail(), payload.getPhone(), payload.getProfileImageBase64()));
     }
 
     private Packet handleChangePassword(Packet request, Gson gson) {
@@ -385,6 +386,7 @@ public class PacketDispatcher {
 
     private User buildUser(UserProfilePayload payload) {
         UserInfo info = new UserInfo(payload.getUsername(), "", payload.getFullName());
+        info.setProfileImageBase64(payload.getProfileImageBase64());
         UserContact contact = new UserContact(payload.getEmail(), payload.getPhone());
         if ("SELLER".equals(payload.getRole())) {
             return new Seller(payload.getUserId(), info, contact);

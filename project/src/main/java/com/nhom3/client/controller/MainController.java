@@ -11,6 +11,11 @@ import javafx.scene.Node;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 import javafx.scene.control.Button; 
@@ -19,13 +24,17 @@ import com.nhom3.shared.model.user.User;
 import com.nhom3.shared.model.user.Admin;
 import com.nhom3.shared.model.user.Seller;
 
+import java.io.ByteArrayInputStream;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 
 public class MainController {
 
     @FXML private StackPane contentArea;
     @FXML private Label lblUserName;
+    @FXML private Circle circleUserAvatar;
+    @FXML private Circle circleMenuProfileAvatar;
     
     @FXML private Button btnDashboard;
     @FXML private Button btnMarket;
@@ -57,8 +66,7 @@ public class MainController {
         User currentUser = UserSession.getInstance().getLoggedInUser();
         
         if (currentUser != null) {
-            // SỬ DỤNG LẠI HÀM CŨ ĐỂ HIỆN: "Xin chào VAI TRÒ, Tên"
-            lblUserName.setText(buildGreeting(currentUser));
+            refreshUserProfileHeader();
 
             if (currentUser instanceof Admin) {
                 btnAdminPanel.setVisible(true); btnAdminPanel.setManaged(true);
@@ -70,6 +78,48 @@ public class MainController {
         }
         System.out.println("Đang tự động tải trang Tổng quan mặc định...");
         navigateToDashboard(); 
+    }
+
+    public void refreshUserProfileHeader() {
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        if (currentUser == null) return;
+
+        lblUserName.setText(buildGreeting(currentUser));
+        btnProfile.setText(buildProfileMenuText(currentUser));
+        renderHeaderAvatar(currentUser);
+    }
+
+    private void renderHeaderAvatar(User user) {
+        if (user.getUserInfo() == null) {
+            return;
+        }
+
+        String profileImage = user.getUserInfo().getProfileImageBase64();
+        if (profileImage == null || profileImage.isBlank()) {
+            setProfileAvatarFill(Color.web("#95a5a6"));
+            return;
+        }
+
+        try {
+            byte[] imageBytes = Base64.getDecoder().decode(profileImage.trim());
+            Image image = new Image(new ByteArrayInputStream(imageBytes));
+            if (image.isError()) {
+                setProfileAvatarFill(Color.web("#95a5a6"));
+                return;
+            }
+            setProfileAvatarFill(new ImagePattern(image));
+        } catch (IllegalArgumentException e) {
+            setProfileAvatarFill(Color.web("#95a5a6"));
+        }
+    }
+
+    private void setProfileAvatarFill(Paint fill) {
+        if (circleUserAvatar != null) {
+            circleUserAvatar.setFill(fill);
+        }
+        if (circleMenuProfileAvatar != null) {
+            circleMenuProfileAvatar.setFill(fill);
+        }
     }
 
     private void setActiveButton(Button activeButton) {
@@ -157,6 +207,11 @@ public class MainController {
     // HÀM CHÀO HỎI NHƯ BẠN YÊU CẦU
     private String buildGreeting(User user) {
         return "Xin chào " + user.getRole().name() + ", " + user.getUserInfo().getName();
+    }
+
+    private String buildProfileMenuText(User user) {
+        String name = user.getUserInfo() != null ? user.getUserInfo().getName() : "";
+        return name != null && !name.isBlank() ? name : "Hồ sơ cá nhân";
     }
 
     @FXML

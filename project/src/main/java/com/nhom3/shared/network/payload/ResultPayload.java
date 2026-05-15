@@ -12,9 +12,15 @@ public class ResultPayload {
     // THÊM 2 BIẾN NÀY
     private String email;
     private String phone;
+    private String profileImageBase64;
 
     // Cập nhật Constructor có chứa email và phone
     public ResultPayload(boolean result, String message, int userId, String username, String fullName, String role, String email, String phone) {
+        this(result, message, userId, username, fullName, role, email, phone, null);
+    }
+
+    public ResultPayload(boolean result, String message, int userId, String username, String fullName,
+            String role, String email, String phone, String profileImageBase64) {
         this.result = result;
         this.message = message;
         this.userId = userId;
@@ -23,6 +29,7 @@ public class ResultPayload {
         this.role = role;
         this.email = email;
         this.phone = phone;
+        this.profileImageBase64 = profileImageBase64;
     }
 
     // Getters
@@ -34,4 +41,5 @@ public class ResultPayload {
     public String getRole() { return role; }
     public String getEmail() { return email; } // Lấy email
     public String getPhone() { return phone; } // Lấy sđt
+    public String getProfileImageBase64() { return profileImageBase64; }
 }

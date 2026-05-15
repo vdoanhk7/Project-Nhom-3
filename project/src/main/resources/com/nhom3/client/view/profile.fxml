@@ -38,7 +38,7 @@
                         <Label fx:id="lblUsername" text="\@admin" textFill="#2c3e50">
                            <font><Font name="System Bold" size="18.0" /></font>
                         </Label>
-                        <Label text="Thành viên VIP" textFill="#7f8c8d" />
+                        <Label/>
                      </children>
                   </VBox>
 	                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleChooseProfileImage" style="-fx-background-color: #ecf0f1; -fx-text-fill: #34495e; -fx-cursor: hand;" text="Đổi Ảnh Đại Diện">

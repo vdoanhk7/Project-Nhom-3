@@ -176,7 +176,7 @@ public class AuctionDAOImpl implements AuctionDAO {
     public Auction getAuctionByItemId(int itemId) {
         // Lấy phiên đấu giá mới nhất của sản phẩm này
         String sql = "SELECT a.*, i.id AS item_id, i.name AS item_name, i.item_type, "
-                + "i.start_price, i.cur_highest "
+                + "i.start_price, i.cur_highest, i.image "
                 + "FROM auctions a "
                 + "JOIN items i ON a.item_id = i.id "
                 + "WHERE a.item_id = ? ORDER BY a.id DESC LIMIT 1";
@@ -194,6 +194,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                         rs.getString("item_name"),
                         rs.getDouble("start_price"));
                 item.setCurHighest(rs.getDouble("cur_highest"));
+                item.setImageBase64(rs.getString("image"));
                 java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                 java.time.LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
                 // Khởi tạo Auction (Truyền null cho thuộc tính Item để tránh query vòng lặp, vì
@@ -255,7 +256,7 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public List<Auction> getActiveAuctions() {
         List<Auction> list = new ArrayList<>();
-        String sql = "SELECT a.*, i.name, i.item_type, i.start_price, i.cur_highest " +
+        String sql = "SELECT a.*, i.name, i.item_type, i.start_price, i.cur_highest, i.image " +
                 "FROM auctions a " +
                 "JOIN items i ON a.item_id = i.id " +
                 "WHERE a.end_time > ? AND a.status != 'CANCELLED' " +
@@ -273,6 +274,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                             com.nhom3.shared.model.item.ItemType.valueOf(rs.getString("item_type"))) {
                     };
                     item.setCurHighest(rs.getDouble("cur_highest"));
+                    item.setImageBase64(rs.getString("image"));
                     int id = rs.getInt("id");
                     java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                     java.time.LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
@@ -290,6 +292,53 @@ public class AuctionDAOImpl implements AuctionDAO {
             }
         } catch (Exception e) {
             System.err.println("Lỗi khi tải danh sách Chợ Đấu Giá: ");
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    @Override
+    public List<Auction> getAllAuctions() {
+        List<Auction> list = new ArrayList<>();
+        String sql = "SELECT a.*, i.name, i.item_type, i.start_price, i.cur_highest, i.image " +
+                "FROM auctions a " +
+                "JOIN items i ON a.item_id = i.id " +
+                "ORDER BY a.id DESC";
+
+        try (Connection conn = DbConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Item item = new Item(
+                            rs.getInt("item_id"),
+                            rs.getString("name"),
+                            rs.getDouble("start_price"),
+                            com.nhom3.shared.model.item.ItemType.valueOf(rs.getString("item_type"))) {
+                    };
+                    item.setCurHighest(rs.getDouble("cur_highest"));
+                    item.setImageBase64(rs.getString("image"));
+                    int id = rs.getInt("id");
+                    java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
+                    java.time.LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
+                    Auction auction = new Auction(id, item, start, end);
+                    auction.setBidStep(readBidStep(rs));
+
+                    java.time.LocalDateTime now = java.time.LocalDateTime.now();
+                    String dbStatus = rs.getString("status");
+                    if ("PAID".equals(dbStatus) || "CANCELLED".equals(dbStatus) || "FINISHED".equals(dbStatus)) {
+                        auction.setStatus(StatusOfAuction.valueOf(dbStatus));
+                    } else if (now.isBefore(start)) {
+                        auction.setStatus(StatusOfAuction.OPEN);
+                    } else if (now.isAfter(end) || now.isEqual(end)) {
+                        auction.setStatus(StatusOfAuction.FINISHED);
+                    } else {
+                        auction.setStatus(StatusOfAuction.RUNNING);
+                    }
+                    list.add(auction);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi khi tải toàn bộ danh sách Đấu Giá: ");
             e.printStackTrace();
         }
         return list;
@@ -338,7 +387,7 @@ public class AuctionDAOImpl implements AuctionDAO {
         // Ta tạo một bảng ảo "my_bids" chỉ chứa mức giá CAO NHẤT (MAX) của user này cho
         // từng auction_id
         String sql = "SELECT a.id AS auction_id, a.highest_bidder_id, a.start_time, a.end_time, a.status, " +
-                "a.bid_step, i.id AS item_id, i.name AS item_name, i.item_type, i.start_price, i.cur_highest, " +
+                "a.bid_step, i.id AS item_id, i.name AS item_name, i.item_type, i.start_price, i.cur_highest, i.image, " +
                 "my_bids.max_amount AS amount, my_bids.last_bid_time AS bid_time " +
                 "FROM ( " +
                 "    SELECT auction_id, MAX(amount) AS max_amount, MAX(bid_time) AS last_bid_time " +
@@ -363,6 +412,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                         com.nhom3.shared.model.item.ItemType.valueOf(rs.getString("item_type"))) {
                 };
                 item.setCurHighest(rs.getDouble("cur_highest"));
+                item.setImageBase64(rs.getString("image"));
 
                 LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                 LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
@@ -560,7 +610,7 @@ public class AuctionDAOImpl implements AuctionDAO {
 
     @Override
     public Auction getAuctionById(int auctionId) {
-        String sql = "SELECT a.*, i.id AS item_id, i.name AS item_name, i.item_type, i.start_price, i.cur_highest " +
+        String sql = "SELECT a.*, i.id AS item_id, i.name AS item_name, i.item_type, i.start_price, i.cur_highest, i.image " +
                 "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = ?";
         try (Connection conn = DbConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -570,6 +620,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 com.nhom3.shared.model.item.ItemType type = com.nhom3.shared.model.item.ItemType.valueOf(rs.getString("item_type"));
                 Item item = type.createItem(rs.getInt("item_id"), rs.getString("item_name"), rs.getDouble("start_price"));
                 item.setCurHighest(rs.getDouble("cur_highest"));
+                item.setImageBase64(rs.getString("image"));
 
                 LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                 LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();

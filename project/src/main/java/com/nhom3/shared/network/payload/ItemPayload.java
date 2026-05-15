@@ -6,13 +6,15 @@ public class ItemPayload {
     private final String name;
     private final String type;
     private final double startPrice;
+    private final String imageBase64;
 
-    public ItemPayload(int itemId, int sellerId, String name, String type, double startPrice) {
+    public ItemPayload(int itemId, int sellerId, String name, String type, double startPrice, String imageBase64) {
         this.itemId = itemId;
         this.sellerId = sellerId;
         this.name = name;
         this.type = type;
         this.startPrice = startPrice;
+        this.imageBase64 = imageBase64;
     }
 
     public int getItemId() {
@@ -33,5 +35,9 @@ public class ItemPayload {
 
     public double getStartPrice() {
         return startPrice;
+    }
+
+    public String getImageBase64() {
+        return imageBase64;
     }
 }

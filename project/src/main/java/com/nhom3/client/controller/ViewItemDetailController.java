@@ -21,6 +21,8 @@ import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -54,7 +56,8 @@ public class ViewItemDetailController {
 
     @FXML private LineChart<String, Number> priceHistoryChart;
     @FXML private Button btnShowChart;
-    private XYChart.Series<String, Number> priceSeries; 
+    @FXML private ImageView imgItem;
+    private XYChart.Series<String, Number> priceSeries; // Biến giữ dữ liệu đường giá
 
     @FXML private TableView<BidTransaction> tableBids;
     @FXML private TableColumn<BidTransaction, String> colBidder;
@@ -145,6 +148,15 @@ public class ViewItemDetailController {
         lblStartPrice.setText(String.format("Khởi điểm: %,.0f VNĐ", item.getStartPrice()));
         lblCurrentPrice.setText(String.format("%,.0f VNĐ", item.getCurHighest()));
         this.currentAuction = auction;
+        
+        if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
+            try {
+                byte[] imageBytes = java.util.Base64.getDecoder().decode(item.getImageBase64());
+                imgItem.setImage(new Image(new java.io.ByteArrayInputStream(imageBytes)));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         
         if (auction == null) {
             lblBidStep.setText("Bước giá: --");

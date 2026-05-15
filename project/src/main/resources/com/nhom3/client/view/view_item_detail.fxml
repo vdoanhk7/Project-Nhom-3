@@ -24,6 +24,10 @@
       <!-- HEADER SECTION -->
       <HBox alignment="CENTER_LEFT" spacing="15.0">
          <children>
+            <!-- Hình ảnh sản phẩm (Từ nhánh TienDung) -->
+            <javafx.scene.image.ImageView fx:id="imgItem" fitHeight="80.0" fitWidth="80.0" preserveRatio="false" style="-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);" />
+            
+            <!-- VBox chứa thông tin (Giữ spacing="2.0" từ nhánh main) -->
             <VBox HBox.hgrow="ALWAYS" spacing="2.0">
                <children>
                   <Label fx:id="lblItemName" text="Tên Sản Phẩm" textFill="#1F2937">
@@ -122,7 +126,7 @@
                <children>
                   <TextField fx:id="txtBidAmount" prefHeight="45.0" promptText="💵 Nhập số tiền trả giá..." style="-fx-font-size: 15px; -fx-background-color: #F9FAFB; -fx-background-radius: 5; -fx-border-color: #D1D5DB; -fx-border-radius: 5;" HBox.hgrow="ALWAYS" />
                   <TextField fx:id="txtBidNote" prefHeight="45.0" promptText="📝 Ghi chú (tùy chọn)..." style="-fx-font-size: 15px; -fx-background-color: #F9FAFB; -fx-background-radius: 5; -fx-border-color: #D1D5DB; -fx-border-radius: 5;" HBox.hgrow="ALWAYS" />
-                  <Button fx:id="btnPlaceBid" onAction="#handlePlaceBid" prefHeight="45.0" prefWidth="120.0" style="-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px; -fx-background-radius: 5; -fx-cursor: hand;" text="🚀 ĐẶT GIÁ" />
+                  <Button fx:id="btnPlaceBid" onAction="#handlePlaceBid" prefHeight="45.0" prefWidth="120.0" style="-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px; -fx-background-radius: 5; -fx-cursor: hand;" text="ĐẶT GIÁ" />
                </children>
             </HBox>
          </children>

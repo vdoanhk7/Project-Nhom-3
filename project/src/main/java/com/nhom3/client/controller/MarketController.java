@@ -288,6 +288,7 @@ public class MarketController {
             detailController.setItemData(item, auction, auction.getStatus().name());
 
             Stage stage = new Stage();
+            stage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Chi tiết sản phẩm - " + item.getName());
             stage.setScene(new Scene(root));

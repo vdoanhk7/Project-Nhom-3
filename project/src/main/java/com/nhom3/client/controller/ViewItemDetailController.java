@@ -130,6 +130,10 @@ public class ViewItemDetailController {
         priceSeries.setName("Diễn biến giá (VNĐ)");
         priceHistoryChart.getData().add(priceSeries);
 
+        // Tắt hiệu ứng animation để biểu đồ vẽ ngay lập tức, không bị giật/chậm
+        priceHistoryChart.setAnimated(false);
+
+        // Mặc định ẩn biểu đồ để giao diện gọn gàng
         priceHistoryChart.setVisible(false);
         priceHistoryChart.setManaged(false);
 

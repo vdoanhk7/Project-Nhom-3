@@ -332,6 +332,24 @@ public class PacketDispatcher {
     private Packet handlePlaceAutoBid(Packet request, Gson gson) {
         AutoBidPayload autoData = gson.fromJson(request.getPayload(), AutoBidPayload.class);
         AuctionDAO adao = new AuctionDAOImpl();
+
+        Auction auction = adao.getAuctionById(autoData.getAuctionId());
+        if (auction == null) {
+            return new Packet(PacketType.PLACE_AUTO_BID,
+                    new ResultPayload(false, "Không tìm thấy phiên đấu giá này!", -1, "", "", "", "", ""));
+        }
+        if (autoData.getIncrement() < auction.getBidStep()) {
+            return new Packet(PacketType.PLACE_AUTO_BID,
+                    new ResultPayload(false,
+                            "Bước giá Auto-Bid phải lớn hơn hoặc bằng "
+                                    + String.format("%,.0f VNĐ", auction.getBidStep()) + "!",
+                            -1, "", "", "", "", ""));
+        }
+        if (autoData.getMaxAmount() <= auction.getItem().getCurHighest()) {
+            return new Packet(PacketType.PLACE_AUTO_BID,
+                    new ResultPayload(false, "Giá tối đa phải lớn hơn giá hiện tại!", -1, "", "", "", "", ""));
+        }
+
         boolean autoSuccess = adao.saveAutoBidConfig(autoData);
         if (autoSuccess) {
             auctionHandler.handleAutoBid(autoData.getAuctionId());

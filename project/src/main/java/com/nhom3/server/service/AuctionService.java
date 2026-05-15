@@ -153,8 +153,14 @@ public class AuctionService {
     // Logic cốt lõi ghi vào DB
     private boolean placeBidInternal(Auction auction, BidTransaction bid) throws IllegalStateException {
         LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(auction.getStartTime()) || now.isAfter(auction.getEndTime()) || auction.getStatus() == StatusOfAuction.CANCELLED) {
-            return false; 
+        if (auction.getStatus() == StatusOfAuction.CANCELLED) {
+            throw new IllegalStateException("Phiên đấu giá đã bị hủy!");
+        }
+        if (now.isBefore(auction.getStartTime())) {
+            throw new IllegalStateException("Phiên đấu giá chưa bắt đầu!");
+        }
+        if (now.isAfter(auction.getEndTime())) {
+            throw new IllegalStateException("Phiên đấu giá đã kết thúc!");
         }
         
         if (bid.getBidder().getId() == auction.getHighestBidderId()) {

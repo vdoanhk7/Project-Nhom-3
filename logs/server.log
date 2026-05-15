@@ -539,3 +539,69 @@ Caused by: java.net.SocketException: Connection reset
 	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:436)
 	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:86)
 	... 2 common frames omitted
+2026-05-16 00:34:57 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-16 00:34:57 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-16 00:34:59 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3cf99c87
+2026-05-16 00:34:59 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-16 00:34:59 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-16 00:35:00 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-16 00:35:09 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: b
+2026-05-16 00:35:10 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: Profile VIP đã đăng nhập thành công!
+2026-05-16 00:35:10 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-16 00:35:20 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-16 00:35:21 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-16 00:35:21 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-16 00:35:39 [virtual-35] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 19
+2026-05-16 00:35:40 [virtual-35] INFO  c.n.server.service.AuctionService - Tạo thành công phiên đấu giá ID: 19 cho sản phẩm ID: 19
+2026-05-16 00:36:35 [virtual-35] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 7
+2026-05-16 00:36:38 [virtual-35] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'ip' cho Seller ID: 7
+2026-05-16 00:36:38 [virtual-35] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 7
+2026-05-16 00:36:40 [virtual-35] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'ip' cho Seller ID: 7
+2026-05-16 00:37:21 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-16 00:37:26 [virtual-47] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-16 00:37:28 [virtual-47] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-16 00:37:28 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-16 00:37:37 [AuctionMonitor-Worker] WARN  com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@68a0d0e6 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-05-16 00:38:29 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-16 00:38:29 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-16 00:38:29 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-16 00:38:30 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-16 00:38:30 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-16 00:38:30 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-16 00:38:30 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-16 00:38:30 [virtual-47] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 24
+2026-05-16 00:38:30 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-16 00:38:30 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-16 00:38:30 [virtual-47] INFO  c.n.server.service.AuctionService - Tạo thành công phiên đấu giá ID: 20 cho sản phẩm ID: 24
+2026-05-16 00:38:31 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-16 00:38:31 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-16 00:38:31 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-16 00:38:31 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-16 00:38:31 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-16 00:38:31 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-16 00:38:32 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-16 00:38:32 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-16 00:38:32 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-16 00:38:32 [virtual-35] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-16 00:38:32 [virtual-35] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-16 00:39:40 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-16 00:39:40 [virtual-35] ERROR c.nhom3.server.network.ClientHandler - Client ngắt kết nối
+2026-05-16 00:39:45 [virtual-51] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: b
+2026-05-16 00:39:46 [virtual-51] INFO  c.nhom3.server.service.AuthService - Server: Profile VIP đã đăng nhập thành công!
+2026-05-16 00:39:46 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-16 00:41:19 [virtual-51] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 500000.0 từ User ID: 11
+2026-05-16 00:41:27 [virtual-51] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 500000.0 từ User ID: 11
+2026-05-16 00:41:28 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: true
+2026-05-16 00:41:42 [virtual-51] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 500000.0 từ User ID: 11
+2026-05-16 00:41:42 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: false
+2026-05-16 00:41:48 [virtual-51] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 500000.0 từ User ID: 11
+2026-05-16 00:41:48 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: false
+2026-05-16 00:41:54 [virtual-51] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 500000.0 từ User ID: 11
+2026-05-16 00:41:54 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: false
+2026-05-16 00:42:02 [virtual-51] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 500000.0 từ User ID: 11
+2026-05-16 00:42:02 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: false
+2026-05-16 00:42:10 [virtual-51] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 500000.0 từ User ID: 11
+2026-05-16 00:42:10 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: false
+2026-05-16 00:42:17 [virtual-51] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 500000.0 từ User ID: 11
+2026-05-16 00:42:17 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: false
+2026-05-16 00:42:26 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: false

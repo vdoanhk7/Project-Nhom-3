@@ -46,6 +46,14 @@ public class AuctionHandler {
         }
     }
 
+    // Kill thread nếu server tắt
+
+    public void shutdown() {
+        for (int i = 0; i < AUCTION_SHARDS; i++) {
+            auctionThreads[i].shutdownNow();
+        }
+    }
+
     // Handle Bid/AutoBid
     public ResultPayload handleBid(BidPayload bidData) {
         Callable<ResultPayload> placeBidTask;

@@ -3,8 +3,10 @@ package com.nhom3.server;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
-import com.nhom3.server.service.AuctionMonitorService;
+
+import com.nhom3.server.network.AuctionHandler;
 import com.nhom3.server.network.ClientHandler;
+import com.nhom3.server.service.AuctionMonitorService;
 
 public class ServerMain {
 
@@ -27,6 +29,7 @@ public class ServerMain {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("\nĐang thực hiện Graceful Shutdown...");
             server.shutdown();
+            AuctionHandler.getInstance().shutdown();
             System.out.println("Server đã được tắt an toàn.");
         }));
 

@@ -31,6 +31,7 @@ public class ClientHandler implements Runnable {
         this.clientSocket = socket;
         this.authService = new AuthService();
         this.auctionService = new AuctionService();
+        this.clientSocket.setSoTimeout(600000); // Timeout 1 phút, sau đó tự ngắt kết nối 
         this.dispatcher = new PacketDispatcher(this.authService, this.auctionService, this);
         this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
         this.out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));

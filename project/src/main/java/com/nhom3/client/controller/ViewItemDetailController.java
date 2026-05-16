@@ -133,6 +133,10 @@ public class ViewItemDetailController {
         // Tắt hiệu ứng animation để biểu đồ vẽ ngay lập tức, không bị giật/chậm
         priceHistoryChart.setAnimated(false);
 
+<<<<<<< HEAD
+=======
+        // Mặc định ẩn biểu đồ để giao diện gọn gàng
+>>>>>>> 5f95cf7af5da0ec3be773a229bb2ab3a0917995e
         priceHistoryChart.setVisible(false);
         priceHistoryChart.setManaged(false);
 

@@ -135,7 +135,7 @@ public class AdminDashboardController {
     }
 
     private void handleSystemLogsLoaded(ClientEvents.SystemLogsLoaded event) {
-        handleSystemLogsResult(event.logs());
+        handleSystemLogsResult(event.logs(), event.isAppend());
     }
 
     // Duplicates removed

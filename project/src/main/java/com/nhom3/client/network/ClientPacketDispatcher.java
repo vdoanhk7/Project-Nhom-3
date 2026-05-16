@@ -227,6 +227,6 @@ public class ClientPacketDispatcher {
 
     private void handleSystemLogsResponse(Packet response, Gson gson) {
         SystemLogResponsePayload payload = gson.fromJson(response.getPayload(), SystemLogResponsePayload.class);
-        eventBus.publish(new ClientEvents.SystemLogsLoaded(payload.getLogs()));
+        eventBus.publish(new ClientEvents.SystemLogsLoaded(payload.getLogs(), payload.isAppend()));
     }
 }

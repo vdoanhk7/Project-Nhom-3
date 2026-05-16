@@ -1,5 +1,8 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.client.event.ClientEventBus;
+import com.nhom3.client.event.ClientEvents;
+import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.shared.network.payload.BidHistoryResponsePayload;
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Bidder;
@@ -10,6 +13,8 @@ import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.shared.network.payload.ItemActionPayload;
+import com.nhom3.shared.network.payload.ItemImagePayload;
 import com.nhom3.shared.network.payload.AuctionSubscribePayload;
 import com.nhom3.shared.network.payload.BidPayload;
 import com.nhom3.client.network.ServerConnection;
@@ -34,12 +39,9 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
-        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class ViewItemDetailController {
 
-    @FXML private Label lblItemName, lblItemType, lblStatusBadge;
+    @FXML private Label lblItemName, lblItemType, lblStatusBadge, lblNoImage;
     @FXML private Label lblCurrentPrice, lblStartPrice, lblBidStep;
     @FXML private Label lblTimeTitle, lblCountdown, lblTimeRange;
     
@@ -67,9 +69,12 @@ public class ViewItemDetailController {
 
     private Timeline countdownTimeline;
     private Auction currentAuction;
+    private Item currentItem;
     private int currentBidCount = -1;
-    private static ViewItemDetailController instance;
     private double pendingBidAmount = 0; 
+    private boolean waitingForAutoBidResult;
+    private boolean waitingForAutoBidCheck;
+    private boolean waitingForAutoBidCancelResult;
     private javafx.scene.layout.VBox autoBidInfoBox; 
     
     private void refreshState() {
@@ -86,13 +91,10 @@ public class ViewItemDetailController {
         }
     }
     
-    public static ViewItemDetailController getInstance() {
-        return instance;
-    }
-
     @FXML
     public void initialize() {
-        instance = this; 
+        registerEventHandlers();
+        ControllerLifecycle.unsubscribeOnDetach(lblItemName, this);
         
         colBidder.setCellValueFactory(cellData -> {
             try {
@@ -149,7 +151,19 @@ public class ViewItemDetailController {
         }
     }
 
+    private void registerEventHandlers() {
+        ClientEventBus eventBus = ClientEventBus.getDefault();
+        eventBus.subscribe(ClientEvents.BidResult.class, this, ViewItemDetailController::handleBidEvent);
+        eventBus.subscribe(ClientEvents.BidHistoryLoaded.class, this, ViewItemDetailController::handleBidHistoryLoaded);
+        eventBus.subscribe(ClientEvents.ItemImageLoaded.class, this, ViewItemDetailController::handleItemImageLoaded);
+        eventBus.subscribe(ClientEvents.AutoBidPlaced.class, this, ViewItemDetailController::handleAutoBidPlaced);
+        eventBus.subscribe(ClientEvents.AutoBidChecked.class, this, ViewItemDetailController::handleAutoBidChecked);
+        eventBus.subscribe(ClientEvents.AutoBidCancelled.class, this, ViewItemDetailController::handleAutoBidCancelled);
+        eventBus.subscribe(ClientEvents.ScreenNotified.class, this, ViewItemDetailController::handleScreenNotified);
+    }
+
     public void setItemData(Item item, Auction auction, String status) {
+        this.currentItem = item;
         lblItemName.setText(item.getName());
         lblItemType.setText("Phân loại: " + item.getType());
         lblStartPrice.setText(String.format("Khởi điểm: %,.0f VNĐ", item.getStartPrice()));
@@ -157,12 +171,10 @@ public class ViewItemDetailController {
         this.currentAuction = auction;
         
         if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
-            try {
-                byte[] imageBytes = java.util.Base64.getDecoder().decode(item.getImageBase64());
-                imgItem.setImage(new Image(new java.io.ByteArrayInputStream(imageBytes)));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            renderItemImage(item.getImageBase64());
+        } else {
+            showNoImagePlaceholder("Đang tải...");
+            requestItemImage(item.getId());
         }
         
         if (auction == null) {
@@ -199,6 +211,65 @@ public class ViewItemDetailController {
                 });
             }
         });
+    }
+
+    public void handleItemImageResult(ItemImagePayload payload) {
+        if (payload == null || currentItem == null || payload.getItemId() != currentItem.getId()) {
+            return;
+        }
+
+        String imageBase64 = payload.getImageBase64();
+        if (imageBase64 == null || imageBase64.isEmpty()) {
+            showNoImagePlaceholder("No Image");
+            return;
+        }
+
+        currentItem.setImageBase64(imageBase64);
+        renderItemImage(imageBase64);
+    }
+
+    private void handleItemImageLoaded(ClientEvents.ItemImageLoaded event) {
+        handleItemImageResult(event.payload());
+    }
+
+    private void requestItemImage(int itemId) {
+        if (itemId <= 0) {
+            return;
+        }
+
+        Thread thread = new Thread(() -> {
+            try {
+                ServerConnection.getInstance().sendMessage(
+                        new Packet(PacketType.LOAD_ITEM_IMAGE, new ItemActionPayload(itemId, 0)));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, "Detail-ImageLoader");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void renderItemImage(String imageBase64) {
+        try {
+            byte[] imageBytes = java.util.Base64.getDecoder().decode(imageBase64);
+            imgItem.setImage(new Image(new java.io.ByteArrayInputStream(imageBytes)));
+            imgItem.setVisible(true);
+            if (lblNoImage != null) {
+                lblNoImage.setVisible(false);
+            }
+        } catch (Exception e) {
+            showNoImagePlaceholder("No Image");
+            e.printStackTrace();
+        }
+    }
+
+    private void showNoImagePlaceholder(String text) {
+        imgItem.setImage(null);
+        imgItem.setVisible(false);
+        if (lblNoImage != null) {
+            lblNoImage.setText(text);
+            lblNoImage.setVisible(true);
+        }
     }
 
     private void setupOpenState(Auction auction) {
@@ -380,11 +451,13 @@ public class ViewItemDetailController {
         dialog.showAndWait().ifPresent(payload -> {
             try {
                 Packet packet = new Packet(PacketType.PLACE_AUTO_BID, payload);
+                waitingForAutoBidResult = true;
                 ServerConnection.getInstance().sendMessage(packet);
                 System.out.println("[Client] Đã gửi yêu cầu Auto-Bid: Max=" + payload.getMaxAmount());
                 
                 // Đợi Server xử lý rồi tự động gọi giao diện cập nhật (Không gọi showAlert thủ công để tránh popup đúp)
             } catch (Exception e) {
+                waitingForAutoBidResult = false;
                 e.printStackTrace();
             }
         });
@@ -428,6 +501,7 @@ public class ViewItemDetailController {
         } catch (NumberFormatException e) {
             showAlert(Alert.AlertType.ERROR, "Lỗi nhập liệu", "Vui lòng chỉ nhập số tiền hợp lệ (VD: 5500000 hoặc 5.500.000)");
         } catch (Exception e) {
+            this.pendingBidAmount = 0;
             e.printStackTrace(); 
             showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi yêu cầu đặt giá.");
         }
@@ -458,6 +532,10 @@ public class ViewItemDetailController {
     }
 
     public void handleBidResult(boolean isSuccess, String message) {
+        if (pendingBidAmount <= 0) {
+            return;
+        }
+
         if (isSuccess) {
             showAlert(Alert.AlertType.INFORMATION, "Thành công", "Bạn đã đặt giá " + String.format("%,.0f VNĐ", pendingBidAmount) + " thành công!");
             currentAuction.getItem().setCurHighest(pendingBidAmount);
@@ -469,6 +547,11 @@ public class ViewItemDetailController {
         } else {
             showAlert(Alert.AlertType.ERROR, "Thất bại", message);
         }
+        pendingBidAmount = 0;
+    }
+
+    private void handleBidEvent(ClientEvents.BidResult event) {
+        handleBidResult(event.success(), event.message());
     }
 
     private void loadBidHistory() {
@@ -538,6 +621,10 @@ public class ViewItemDetailController {
         });
     }
 
+    private void handleBidHistoryLoaded(ClientEvents.BidHistoryLoaded event) {
+        handleLoadHistoryResult(event.auctionId(), event.historyList());
+    }
+
     private void refreshChartFromBidList(List<BidTransaction> history) {
         priceSeries.getData().clear();
         if (history == null) return;
@@ -574,6 +661,16 @@ public class ViewItemDetailController {
         loadBidHistory();
     }
 
+    private void handleScreenNotified(ClientEvents.ScreenNotified event) {
+        if (currentAuction == null) {
+            return;
+        }
+        if (event.auctionId() > 0 && event.auctionId() != currentAuction.getId()) {
+            return;
+        }
+        handleScreenNotify(event.highestPrice());
+    }
+
     private void updateBidInputHint() {
         if (currentAuction == null || txtBidAmount == null) return;
 
@@ -603,7 +700,13 @@ public class ViewItemDetailController {
         
         com.nhom3.shared.network.payload.AutoBidPayload payload = new com.nhom3.shared.network.payload.AutoBidPayload(currentUser.getId(), currentAuction.getId(), 0, 0);
         Packet packet = new Packet(PacketType.CHECK_AUTO_BID, payload);
-        try { ServerConnection.getInstance().sendMessage(packet); } catch (Exception e) { e.printStackTrace(); }
+        try {
+            waitingForAutoBidCheck = true;
+            ServerConnection.getInstance().sendMessage(packet);
+        } catch (Exception e) {
+            waitingForAutoBidCheck = false;
+            e.printStackTrace();
+        }
     }
 
     public void handleCheckAutoBidResult(com.nhom3.shared.network.payload.AutoBidPayload config) {
@@ -671,6 +774,51 @@ public class ViewItemDetailController {
         }
     }
 
+    private void handleAutoBidPlaced(ClientEvents.AutoBidPlaced event) {
+        if (!waitingForAutoBidResult) {
+            return;
+        }
+        waitingForAutoBidResult = false;
+
+        Alert alert = new Alert(event.success() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
+        alert.setTitle("Auto-Bid");
+        alert.setHeaderText(null);
+        alert.setContentText(event.message());
+        alert.showAndWait();
+        if (event.success()) {
+            checkAutoBidStatus();
+        }
+    }
+
+    private void handleAutoBidChecked(ClientEvents.AutoBidChecked event) {
+        if (!waitingForAutoBidCheck) {
+            return;
+        }
+        waitingForAutoBidCheck = false;
+
+        com.nhom3.shared.network.payload.AutoBidPayload config = event.config();
+        if (config != null && currentAuction != null && config.getAuctionId() != currentAuction.getId()) {
+            return;
+        }
+        handleCheckAutoBidResult(config);
+    }
+
+    private void handleAutoBidCancelled(ClientEvents.AutoBidCancelled event) {
+        if (!waitingForAutoBidCancelResult) {
+            return;
+        }
+        waitingForAutoBidCancelResult = false;
+
+        Alert alert = new Alert(event.success() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
+        alert.setTitle("Hủy Auto-Bid");
+        alert.setHeaderText(null);
+        alert.setContentText(event.message());
+        alert.showAndWait();
+        if (event.success()) {
+            checkAutoBidStatus();
+        }
+    }
+
     private void handleCancelAutoBid() {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Bạn có chắc chắn muốn dừng hệ thống đấu giá tự động?\nSau khi dừng, bạn sẽ phải tự đặt giá bằng tay.", ButtonType.YES, ButtonType.NO);
         confirm.setTitle("Xác nhận dừng");
@@ -684,8 +832,10 @@ public class ViewItemDetailController {
             Packet packet = new Packet(PacketType.CANCEL_AUTO_BID, payload);
             
             try { 
+                waitingForAutoBidCancelResult = true;
                 ServerConnection.getInstance().sendMessage(packet); 
             } catch (Exception e) { 
+                waitingForAutoBidCancelResult = false;
                 e.printStackTrace(); 
             }
         }

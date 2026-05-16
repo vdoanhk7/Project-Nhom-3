@@ -55,6 +55,7 @@ public class PacketDispatcher {
         handlers.put(PacketType.LOAD_ACTIVE_AUCTIONS, this::handleLoadActiveAuctions);
         handlers.put(PacketType.LOAD_ALL_AUCTIONS, this::handleLoadAllAuctions);
         handlers.put(PacketType.LOAD_AUCTION_BY_ITEM, this::handleLoadAuctionByItem);
+        handlers.put(PacketType.LOAD_ITEM_IMAGE, this::handleLoadItemImage);
         handlers.put(PacketType.SAVE_ITEM, this::handleSaveItem);
         handlers.put(PacketType.UPDATE_ITEM, this::handleUpdateItem);
         handlers.put(PacketType.DELETE_ITEM, this::handleDeleteItem);
@@ -162,7 +163,7 @@ public class PacketDispatcher {
         for (Item itm : itemsFromDb) {
             String stt = statusMap.getOrDefault(itm.getId(), "");
             dtoList.add(new SellerItemsResponsePayload.SellerItemDTO(itm.getId(), itm.getName(), itm.getType().name(),
-                    itm.getStartPrice(), itm.getCurHighest(), stt, itm.getImageBase64()));
+                    itm.getStartPrice(), itm.getCurHighest(), stt));
         }
         return new Packet(PacketType.LOAD_SELLER_ITEMS, new SellerItemsResponsePayload(dtoList));
     }
@@ -195,6 +196,13 @@ public class PacketDispatcher {
             dtoList.add(toAuctionDto(auction));
         }
         return new Packet(PacketType.LOAD_AUCTION_BY_ITEM, new AuctionListResponsePayload(dtoList));
+    }
+
+    private Packet handleLoadItemImage(Packet request, Gson gson) {
+        ItemActionPayload payload = gson.fromJson(request.getPayload(), ItemActionPayload.class);
+        String imageBase64 = new ItemDAOImpl().getItemImageBase64(payload.getItemId());
+        return new Packet(PacketType.LOAD_ITEM_IMAGE,
+                new ItemImagePayload(payload.getItemId(), imageBase64));
     }
 
     private Packet handleSaveItem(Packet request, Gson gson) {
@@ -440,7 +448,8 @@ public class PacketDispatcher {
                 auction.getEndTime() != null ? auction.getEndTime().toString() : "",
                 auction.getStatus() != null ? auction.getStatus().name() : "",
                 auction.getHighestBidderId(),
-                item != null ? item.getImageBase64() : null);
+                item != null ? item.getImageBase64() : null,
+                item != null && item.getSellerName() != null ? item.getSellerName() : "");
     }
 
     private UserListResponsePayload.UserDTO toUserDto(User user) {

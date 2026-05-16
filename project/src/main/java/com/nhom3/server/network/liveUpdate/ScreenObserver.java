@@ -12,8 +12,8 @@ public class ScreenObserver extends AuctionObserver {
     }
 
     @Override
-    public void update(double amount) throws IOException {
-        ScreenNotifyPayload UpdatePrice = new ScreenNotifyPayload(amount);
+    public void update(int auctionId, double amount) throws IOException {
+        ScreenNotifyPayload UpdatePrice = new ScreenNotifyPayload(auctionId, amount);
         Packet ScreenNotifyPacket = new Packet(PacketType.SCREEN_NOTIFY, UpdatePrice);
         client.send(ScreenNotifyPacket);
     }

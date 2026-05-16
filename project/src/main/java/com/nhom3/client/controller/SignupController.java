@@ -1,6 +1,9 @@
 package com.nhom3.client.controller;
 
 import javafx.animation.PauseTransition;
+import com.nhom3.client.event.ClientEventBus;
+import com.nhom3.client.event.ClientEvents;
+import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
@@ -20,9 +23,6 @@ import javafx.scene.control.TextInputControl;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
-        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class SignupController {
     private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     private static final String PHONE_REGEX = "^0\\d{9}$";
@@ -37,13 +37,13 @@ public class SignupController {
     @FXML private RadioButton radioSeller;
     @FXML private Label lblMessage;
 
-    // 1. TẠO SINGLETON ĐỂ LUỒNG MẠNG CÓ THỂ GỌI ĐẾN
-    private static SignupController instance;
     private ActionEvent currentEvent; // Lưu lại sự kiện click để lát chuyển trang
 
     @FXML
     public void initialize() {
-        instance = this;
+        ClientEventBus.getDefault().subscribe(
+                ClientEvents.SignupResult.class, this, SignupController::handleSignupEvent);
+        ControllerLifecycle.unsubscribeOnDetach(txtUsername, this);
         clearMessage();
         txtPhone.textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.matches("\\d*")) {
@@ -56,10 +56,6 @@ public class SignupController {
         txtConfirmPassword.textProperty().addListener((observable, oldValue, newValue) -> clearMessage());
         txtEmail.textProperty().addListener((observable, oldValue, newValue) -> clearMessage());
         txtPhone.textProperty().addListener((observable, oldValue, newValue) -> clearMessage());
-    }
-
-    public static SignupController getInstance() {
-        return instance;
     }
 
     @FXML
@@ -119,6 +115,10 @@ public class SignupController {
         } else {
             showMessage(message, false);
         }
+    }
+
+    private void handleSignupEvent(ClientEvents.SignupResult event) {
+        handleSignupResult(event.success(), event.message());
     }
 
     @FXML

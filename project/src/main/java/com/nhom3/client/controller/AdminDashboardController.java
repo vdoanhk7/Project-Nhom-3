@@ -1,5 +1,8 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.client.event.ClientEventBus;
+import com.nhom3.client.event.ClientEvents;
+import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
@@ -18,9 +21,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.text.Text;
 
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
-        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class AdminDashboardController {
 
     @FXML private Text txtTotalUsers;
@@ -49,15 +49,10 @@ public class AdminDashboardController {
     @FXML private javafx.scene.control.TextArea txtSystemLogs;
     private boolean isSubscribedToLogs = false;
 
-    private static AdminDashboardController instance;
-
-    public static AdminDashboardController getInstance() {
-        return instance;
-    }
-
     @FXML
     public void initialize() {
-        instance = this;
+        registerEventHandlers();
+        ControllerLifecycle.unsubscribeOnDetach(tableUsers, this);
         setupUserTable();
         setupAuctionTable();
         
@@ -110,6 +105,15 @@ public class AdminDashboardController {
         }
     }
 
+    private void registerEventHandlers() {
+        ClientEventBus eventBus = ClientEventBus.getDefault();
+        eventBus.subscribe(ClientEvents.UsersLoaded.class, this, AdminDashboardController::handleUsersLoaded);
+        eventBus.subscribe(ClientEvents.AllAuctionsLoaded.class, this, AdminDashboardController::handleAllAuctionsLoaded);
+        eventBus.subscribe(ClientEvents.CancelAuctionResult.class, this, AdminDashboardController::handleCancelAuctionEvent);
+        eventBus.subscribe(ClientEvents.UserDeleted.class, this, AdminDashboardController::handleUserDeleted);
+        eventBus.subscribe(ClientEvents.SystemLogsLoaded.class, this, AdminDashboardController::handleSystemLogsLoaded);
+    }
+
     // Removed activity log methods
 
     private void subscribeSystemLogs() {
@@ -130,11 +134,19 @@ public class AdminDashboardController {
         }
     }
 
+    private void handleSystemLogsLoaded(ClientEvents.SystemLogsLoaded event) {
+        handleSystemLogsResult(event.logs());
+    }
+
     // Duplicates removed
 
     public void handleLoadUserDataResult(List<UserListResponsePayload.UserDTO> users) {
         tableUsers.setItems(FXCollections.observableArrayList(users));
         txtTotalUsers.setText(String.format("%,d", users == null ? 0 : users.size()));
+    }
+
+    private void handleUsersLoaded(ClientEvents.UsersLoaded event) {
+        handleLoadUserDataResult(event.users());
     }
 
     public void handleLoadAuctionDataResult(List<AuctionListResponsePayload.AuctionDTO> auctions) {
@@ -156,6 +168,10 @@ public class AdminDashboardController {
         txtTotalValue.setText(String.format("%,.0f", totalValue));
     }
 
+    private void handleAllAuctionsLoaded(ClientEvents.AllAuctionsLoaded event) {
+        handleLoadAuctionDataResult(event.auctions());
+    }
+
     public void handleCancelAuctionResult(boolean success, String message) {
         showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
                 success ? "Thành Công" : "Thất Bại", message);
@@ -164,12 +180,20 @@ public class AdminDashboardController {
         }
     }
 
+    private void handleCancelAuctionEvent(ClientEvents.CancelAuctionResult event) {
+        handleCancelAuctionResult(event.success(), event.message());
+    }
+
     public void handleDeleteUserResult(boolean success, String message) {
         showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
                 success ? "Thành Công" : "Thất Bại", message);
         if (success) {
             loadUserData();
         }
+    }
+
+    private void handleUserDeleted(ClientEvents.UserDeleted event) {
+        handleDeleteUserResult(event.success(), event.message());
     }
 
     private void setupUserTable() {

@@ -1,5 +1,8 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.client.event.ClientEventBus;
+import com.nhom3.client.event.ClientEvents;
+import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.user.User;
@@ -19,29 +22,22 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
-        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class LoginController {
 
     @FXML private TextField txtUsername;
     @FXML private PasswordField txtPassword;
     @FXML private Label lblMessage;
 
-    // Lưu lại instance hiện tại để luồng mạng (ServerHandler) có thể gọi tới
-    private static LoginController instance;
     private Stage currentStage; // Lưu lại màn hình hiện tại để chuyển trang
 
     @FXML
     public void initialize() {
-        instance = this; // Gán thể hiện hiện tại
+        ClientEventBus.getDefault().subscribe(
+                ClientEvents.LoginResult.class, this, LoginController::handleLoginEvent);
+        ControllerLifecycle.unsubscribeOnDetach(txtUsername, this);
         clearMessage();
         txtUsername.textProperty().addListener((observable, oldValue, newValue) -> clearMessage());
         txtPassword.textProperty().addListener((observable, oldValue, newValue) -> clearMessage());
-    }
-
-    public static LoginController getInstance() {
-        return instance;
     }
 
     @FXML
@@ -81,6 +77,10 @@ public class LoginController {
         } else {
             showMessage("Sai tên đăng nhập hoặc mật khẩu!", false);
         }
+    }
+
+    private void handleLoginEvent(ClientEvents.LoginResult event) {
+        handleLoginResult(event.success(), event.user());
     }
 
     private void goToMainLayout() {

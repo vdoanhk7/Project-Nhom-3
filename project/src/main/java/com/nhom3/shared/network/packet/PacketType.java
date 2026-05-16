@@ -12,6 +12,7 @@ public enum PacketType {
     LOAD_ACTIVE_AUCTIONS("load active auctions"),
     LOAD_ALL_AUCTIONS("load all auctions"),
     LOAD_AUCTION_BY_ITEM("load auction by item"),
+    LOAD_ITEM_IMAGE("load item image"),
     SAVE_ITEM("save item"),
     UPDATE_ITEM("update item"),
     DELETE_ITEM("delete item"),

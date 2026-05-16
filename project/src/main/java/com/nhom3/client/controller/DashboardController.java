@@ -1,5 +1,8 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.client.event.ClientEventBus;
+import com.nhom3.client.event.ClientEvents;
+import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.user.Role;
@@ -19,9 +22,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
-        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class DashboardController {
 
     @FXML private Label lblTotalUsers;
@@ -39,14 +39,11 @@ public class DashboardController {
     @FXML private TableColumn<DashboardResponsePayload.TopItemDTO, String> colItemPrice;
     @FXML private Button btnGoToAssetManagement;
 
-    // Singleton để ServerHandler gọi về
-    private static DashboardController instance;
-    public static DashboardController getInstance() { 
-        return instance; 
-    }
     @FXML
     public void initialize() {
-        instance = this;
+        ClientEventBus.getDefault().subscribe(
+                ClientEvents.DashboardLoaded.class, this, DashboardController::handleDashboardLoaded);
+        ControllerLifecycle.unsubscribeOnDetach(lblTotalUsers, this);
         setupTables();
         setupQuickActions();
         
@@ -57,6 +54,10 @@ public class DashboardController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void handleDashboardLoaded(ClientEvents.DashboardLoaded event) {
+        handleDashboardData(event.data());
     }
 
     private void setupTables() {
@@ -100,30 +101,27 @@ public class DashboardController {
 
     @FXML
     void handleGoToMarket(ActionEvent event) {
-        MainController mainController = MainController.getInstance();
-        if (mainController != null) {
-            mainController.navigateToMarket();
-            return;
-        }
-        showAlert(Alert.AlertType.ERROR, "Lỗi điều hướng", "Không thể chuyển sang trang Chợ đấu giá lúc này.");
+        ClientEventBus.getDefault().publish(
+                new ClientEvents.NavigationRequested(ClientEvents.Route.MARKET));
     }
 
     @FXML
     void handleGoToAssetManagement(ActionEvent event) {
         User currentUser = UserSession.getInstance().getLoggedInUser();
-        MainController mainController = MainController.getInstance();
-        if (currentUser == null || mainController == null) {
+        if (currentUser == null) {
             showAlert(Alert.AlertType.ERROR, "Lỗi điều hướng", "Không thể chuyển trang lúc này.");
             return;
         }
 
+        ClientEvents.Route route;
         if (currentUser.getRole() == Role.SELLER) {
-            mainController.navigateToManageItem();
+            route = ClientEvents.Route.MANAGE_ITEM;
         } else if (currentUser.getRole() == Role.BIDDER) {
-            mainController.navigateToPurchaseHistory();
+            route = ClientEvents.Route.PURCHASE_HISTORY;
         } else {
-            mainController.navigateToAdminPanel();
+            route = ClientEvents.Route.ADMIN_PANEL;
         }
+        ClientEventBus.getDefault().publish(new ClientEvents.NavigationRequested(route));
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {

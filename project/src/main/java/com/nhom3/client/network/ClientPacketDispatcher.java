@@ -1,20 +1,37 @@
 package com.nhom3.client.network;
 
+import com.google.gson.Gson;
+import com.nhom3.client.event.ClientEventBus;
+import com.nhom3.client.event.ClientEvents;
+import com.nhom3.shared.model.user.Admin;
+import com.nhom3.shared.model.user.Bidder;
+import com.nhom3.shared.model.user.Seller;
+import com.nhom3.shared.model.user.User;
+import com.nhom3.shared.model.user.UserContact;
+import com.nhom3.shared.model.user.UserInfo;
+import com.nhom3.shared.network.packet.Packet;
+import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.shared.network.payload.AuctionListResponsePayload;
+import com.nhom3.shared.network.payload.AutoBidPayload;
+import com.nhom3.shared.network.payload.BidHistoryResponsePayload;
+import com.nhom3.shared.network.payload.DashboardResponsePayload;
+import com.nhom3.shared.network.payload.ItemImagePayload;
+import com.nhom3.shared.network.payload.PurchaseHistoryResponsePayload;
+import com.nhom3.shared.network.payload.ResultPayload;
+import com.nhom3.shared.network.payload.ScreenNotifyPayload;
+import com.nhom3.shared.network.payload.SellerItemsResponsePayload;
+import com.nhom3.shared.network.payload.SystemLogResponsePayload;
+import com.nhom3.shared.network.payload.UserListResponsePayload;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.gson.Gson;
-import com.nhom3.shared.network.packet.Packet;
-import com.nhom3.shared.network.packet.PacketType;
-import com.nhom3.shared.network.payload.*;
-import com.nhom3.shared.model.user.*;
-import javafx.scene.control.Alert;
-import com.nhom3.client.controller.*;
 
 public class ClientPacketDispatcher {
     private static final Logger logger = LoggerFactory.getLogger(ClientPacketDispatcher.class);
+
     private final Map<PacketType, ClientPacketHandler> handlers = new HashMap<>();
+    private final ClientEventBus eventBus = ClientEventBus.getDefault();
 
     public ClientPacketDispatcher() {
         registerHandlers();
@@ -29,6 +46,7 @@ public class ClientPacketDispatcher {
         handlers.put(PacketType.LOAD_ACTIVE_AUCTIONS, this::handleLoadActiveAuctions);
         handlers.put(PacketType.LOAD_ALL_AUCTIONS, this::handleLoadAllAuctions);
         handlers.put(PacketType.LOAD_AUCTION_BY_ITEM, this::handleLoadAuctionByItem);
+        handlers.put(PacketType.LOAD_ITEM_IMAGE, this::handleLoadItemImage);
         handlers.put(PacketType.SAVE_ITEM, this::handleItemMutation);
         handlers.put(PacketType.UPDATE_ITEM, this::handleItemMutation);
         handlers.put(PacketType.DELETE_ITEM, this::handleDeleteItem);
@@ -51,245 +69,151 @@ public class ClientPacketDispatcher {
 
     public void dispatch(Packet response, Gson gson) {
         ClientPacketHandler handler = handlers.get(response.getType());
-        if (handler != null) {
-            try {
-                handler.handle(response, gson);
-            } catch (Exception e) {
-                logger.error("Lỗi khi xử lý gói tin Client: " + response.getType(), e);
-            }
-        } else {
+        if (handler == null) {
             logger.warn("Loại gói tin không xác định: {}", response.getType());
+            return;
+        }
+
+        try {
+            handler.handle(response, gson);
+        } catch (Exception e) {
+            logger.error("Lỗi khi xử lý gói tin Client: " + response.getType(), e);
         }
     }
 
     private void handleLogin(Packet response, Gson gson) {
         ResultPayload loginResult = gson.fromJson(response.getPayload(), ResultPayload.class);
         logger.info("Server phản hồi Đăng nhập: {}", loginResult.getResult());
-        try {
-            if (LoginController.getInstance() != null) {
-                User loggedInUser = null;
-                if (loginResult.getResult()) {
-                    UserInfo info = new UserInfo(loginResult.getUsername(), "", loginResult.getFullName());
-                    info.setProfileImageBase64(loginResult.getProfileImageBase64());
-                    UserContact contact = new UserContact(loginResult.getEmail(), loginResult.getPhone());
-                    if ("BIDDER".equals(loginResult.getRole())) {
-                        loggedInUser = new Bidder(loginResult.getUserId(), info, contact);
-                    } else if ("SELLER".equals(loginResult.getRole())) {
-                        loggedInUser = new Seller(loginResult.getUserId(), info, contact);
-                    } else {
-                        loggedInUser = new Admin(loginResult.getUserId(), info, contact);
-                    }
-                }
-                LoginController.getInstance().handleLoginResult(loginResult.getResult(), loggedInUser);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        eventBus.publish(new ClientEvents.LoginResult(loginResult.getResult(), toUser(loginResult)));
+    }
+
+    private User toUser(ResultPayload loginResult) {
+        if (!loginResult.getResult()) {
+            return null;
         }
+
+        UserInfo info = new UserInfo(loginResult.getUsername(), "", loginResult.getFullName());
+        info.setProfileImageBase64(loginResult.getProfileImageBase64());
+        UserContact contact = new UserContact(loginResult.getEmail(), loginResult.getPhone());
+        return switch (loginResult.getRole()) {
+            case "BIDDER" -> new Bidder(loginResult.getUserId(), info, contact);
+            case "SELLER" -> new Seller(loginResult.getUserId(), info, contact);
+            default -> new Admin(loginResult.getUserId(), info, contact);
+        };
     }
 
     private void handleRegister(Packet response, Gson gson) {
-        ResultPayload regResultPayload = gson.fromJson(response.getPayload(), ResultPayload.class);
-        logger.info("Server phản hồi Đăng ký: {}", regResultPayload.getResult());
-        try {
-            if (SignupController.getInstance() != null) {
-                SignupController.getInstance().handleSignupResult(regResultPayload.getResult(), regResultPayload.getMessage());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        logger.info("Server phản hồi Đăng ký: {}", result.getResult());
+        eventBus.publish(new ClientEvents.SignupResult(result.getResult(), result.getMessage()));
     }
 
     private void handlePlaceBid(Packet response, Gson gson) {
-        ResultPayload bidRes = gson.fromJson(response.getPayload(), ResultPayload.class);
-        logger.info("Server phản hồi Đặt giá: {}", bidRes.getResult());
-        try {
-            if (ViewItemDetailController.getInstance() != null) {
-                ViewItemDetailController.getInstance().handleBidResult(bidRes.getResult(), bidRes.getMessage());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        logger.info("Server phản hồi Đặt giá: {}", result.getResult());
+        eventBus.publish(new ClientEvents.BidResult(result.getResult(), result.getMessage()));
     }
 
     private void handleLoadBidHistory(Packet response, Gson gson) {
-        BidHistoryResponsePayload histResult = gson.fromJson(response.getPayload(), BidHistoryResponsePayload.class);
-        try {
-            if (ViewItemDetailController.getInstance() != null) {
-                ViewItemDetailController.getInstance().handleLoadHistoryResult(histResult.getAuctionId(), histResult.getHistoryList());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        BidHistoryResponsePayload payload = gson.fromJson(response.getPayload(), BidHistoryResponsePayload.class);
+        eventBus.publish(new ClientEvents.BidHistoryLoaded(payload.getAuctionId(), payload.getHistoryList()));
     }
 
     private void handleLoadSellerItems(Packet response, Gson gson) {
-        SellerItemsResponsePayload itemsResult = gson.fromJson(response.getPayload(), SellerItemsResponsePayload.class);
-        try {
-            if (ManageItemController.getInstance() != null) {
-                ManageItemController.getInstance().handleLoadItemsResult(itemsResult.getItems());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        SellerItemsResponsePayload payload = gson.fromJson(response.getPayload(), SellerItemsResponsePayload.class);
+        eventBus.publish(new ClientEvents.SellerItemsLoaded(payload.getItems()));
     }
 
     private void handleLoadActiveAuctions(Packet response, Gson gson) {
-        AuctionListResponsePayload payload =
-                gson.fromJson(response.getPayload(), AuctionListResponsePayload.class);
-        try {
-            if (MarketController.getInstance() != null) {
-                MarketController.getInstance().handleLoadActiveAuctionsResult(payload.getAuctions());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        AuctionListResponsePayload payload = gson.fromJson(response.getPayload(), AuctionListResponsePayload.class);
+        eventBus.publish(new ClientEvents.ActiveAuctionsLoaded(payload.getAuctions()));
     }
 
     private void handleLoadAllAuctions(Packet response, Gson gson) {
-        AuctionListResponsePayload payload =
-                gson.fromJson(response.getPayload(), AuctionListResponsePayload.class);
-        try {
-            if (AdminDashboardController.getInstance() != null) {
-                AdminDashboardController.getInstance().handleLoadAuctionDataResult(payload.getAuctions());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        AuctionListResponsePayload payload = gson.fromJson(response.getPayload(), AuctionListResponsePayload.class);
+        eventBus.publish(new ClientEvents.AllAuctionsLoaded(payload.getAuctions()));
     }
 
     private void handleLoadAuctionByItem(Packet response, Gson gson) {
-        AuctionListResponsePayload payload =
-                gson.fromJson(response.getPayload(), AuctionListResponsePayload.class);
-        try {
-            if (ManageItemController.getInstance() != null) {
-                ManageItemController.getInstance().handleLoadAuctionByItemResult(payload.getAuctions());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        AuctionListResponsePayload payload = gson.fromJson(response.getPayload(), AuctionListResponsePayload.class);
+        eventBus.publish(new ClientEvents.AuctionByItemLoaded(payload.getAuctions()));
+    }
+
+    private void handleLoadItemImage(Packet response, Gson gson) {
+        ItemImagePayload payload = gson.fromJson(response.getPayload(), ItemImagePayload.class);
+        eventBus.publish(new ClientEvents.ItemImageLoaded(payload));
     }
 
     private void handleItemMutation(Packet response, Gson gson) {
         ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
-        try {
-            if (AddItemController.getInstance() != null) {
-                AddItemController.getInstance().handleItemMutationResult(
-                        response.getType(), result.getResult(), result.getMessage());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        eventBus.publish(new ClientEvents.ItemMutationResult(
+                response.getType(), result.getResult(), result.getMessage()));
     }
 
     private void handleDeleteItem(Packet response, Gson gson) {
         ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
-        try {
-            if (ManageItemController.getInstance() != null) {
-                ManageItemController.getInstance().handleDeleteItemResult(
-                        result.getResult(), result.getMessage());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        eventBus.publish(new ClientEvents.DeleteItemResult(result.getResult(), result.getMessage()));
     }
 
     private void handleConfirmPayment(Packet response, Gson gson) {
         ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
-        try {
-            if (ManageItemController.getInstance() != null) {
-                ManageItemController.getInstance().handleConfirmPaymentResult(
-                        result.getResult(), result.getMessage());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        eventBus.publish(new ClientEvents.ConfirmPaymentResult(result.getResult(), result.getMessage()));
     }
 
     private void handleCancelAuction(Packet response, Gson gson) {
         ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
-        try {
-            if (AdminDashboardController.getInstance() != null) {
-                AdminDashboardController.getInstance().handleCancelAuctionResult(
-                        result.getResult(), result.getMessage());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        eventBus.publish(new ClientEvents.CancelAuctionResult(result.getResult(), result.getMessage()));
     }
 
     private void handleUpdateProfile(Packet response, Gson gson) {
         ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
-        try {
-            if (ProfileController.getInstance() != null) {
-                ProfileController.getInstance().handleUpdateProfileResult(result);
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        eventBus.publish(new ClientEvents.ProfileUpdateResult(result));
     }
 
     private void handleChangePassword(Packet response, Gson gson) {
         ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
-        try {
-            if (ChangePasswordController.getInstance() != null) {
-                ChangePasswordController.getInstance().handleChangePasswordResult(
-                        result.getResult(), result.getMessage());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        eventBus.publish(new ClientEvents.ChangePasswordResult(result.getResult(), result.getMessage()));
     }
 
     private void handleLoadUsers(Packet response, Gson gson) {
         UserListResponsePayload payload = gson.fromJson(response.getPayload(), UserListResponsePayload.class);
-        try {
-            if (AdminDashboardController.getInstance() != null) {
-                AdminDashboardController.getInstance().handleLoadUserDataResult(payload.getUsers());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        eventBus.publish(new ClientEvents.UsersLoaded(payload.getUsers()));
     }
 
     private void handlePublishAuction(Packet response, Gson gson) {
-        ResultPayload pubRes = gson.fromJson(response.getPayload(), ResultPayload.class);
-        try {
-            if (PublishAuctionController.getInstance() != null) {
-                PublishAuctionController.getInstance().handlePublishResult(pubRes.getResult(), pubRes.getMessage());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        eventBus.publish(new ClientEvents.PublishAuctionResult(result.getResult(), result.getMessage()));
     }
 
     private void handleLoadPurchaseHistory(Packet response, Gson gson) {
-        PurchaseHistoryResponsePayload purHistRes = gson.fromJson(response.getPayload(), PurchaseHistoryResponsePayload.class);
-        try {
-            if (PurchaseHistoryController.getInstance() != null) {
-                PurchaseHistoryController.getInstance().handleLoadHistoryResult(purHistRes.getHistoryList());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        PurchaseHistoryResponsePayload payload =
+                gson.fromJson(response.getPayload(), PurchaseHistoryResponsePayload.class);
+        eventBus.publish(new ClientEvents.PurchaseHistoryLoaded(payload.getHistoryList()));
     }
 
     private void handlePlaceAutoBid(Packet response, Gson gson) {
-        ResultPayload autoRes = gson.fromJson(response.getPayload(), ResultPayload.class);
-        Alert alert = new Alert(autoRes.getResult() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
-        alert.setTitle("Auto-Bid");
-        alert.setHeaderText(null);
-        alert.setContentText(autoRes.getMessage());
-        alert.showAndWait();
-        if (autoRes.getResult() && ViewItemDetailController.getInstance() != null) {
-            ViewItemDetailController.getInstance().checkAutoBidStatus();
-        }
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        eventBus.publish(new ClientEvents.AutoBidPlaced(result.getResult(), result.getMessage()));
     }
 
     private void handleCheckAutoBid(Packet response, Gson gson) {
-        AutoBidPayload config = gson.fromJson(response.getPayload(), AutoBidPayload.class);
-        try {
-            if (ViewItemDetailController.getInstance() != null) {
-                ViewItemDetailController.getInstance().handleCheckAutoBidResult(config);
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        AutoBidPayload payload = gson.fromJson(response.getPayload(), AutoBidPayload.class);
+        eventBus.publish(new ClientEvents.AutoBidChecked(payload));
     }
 
     private void handleCancelAutoBid(Packet response, Gson gson) {
-        ResultPayload cancelRes = gson.fromJson(response.getPayload(), ResultPayload.class);
-        Alert alert = new Alert(cancelRes.getResult() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
-        alert.setTitle("Hủy Auto-Bid");
-        alert.setHeaderText(null);
-        alert.setContentText(cancelRes.getMessage());
-        alert.showAndWait();
-        if (cancelRes.getResult() && ViewItemDetailController.getInstance() != null) {
-            ViewItemDetailController.getInstance().checkAutoBidStatus();
-        }
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        eventBus.publish(new ClientEvents.AutoBidCancelled(result.getResult(), result.getMessage()));
     }
 
     private void handleLoadDashboard(Packet response, Gson gson) {
-        DashboardResponsePayload dashResult = gson.fromJson(response.getPayload(), DashboardResponsePayload.class);
-        try {
-            if (DashboardController.getInstance() != null) {
-                DashboardController.getInstance().handleDashboardData(dashResult);
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        DashboardResponsePayload payload = gson.fromJson(response.getPayload(), DashboardResponsePayload.class);
+        eventBus.publish(new ClientEvents.DashboardLoaded(payload));
     }
 
     private void handleScreenNotify(Packet response, Gson gson) {
-        ScreenNotifyPayload notifyPayload = gson.fromJson(response.getPayload(), ScreenNotifyPayload.class);
-        try {
-            if (ViewItemDetailController.getInstance() != null) {
-                ViewItemDetailController.getInstance().handleScreenNotify(notifyPayload.getHighestPrice());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        ScreenNotifyPayload payload = gson.fromJson(response.getPayload(), ScreenNotifyPayload.class);
+        eventBus.publish(new ClientEvents.ScreenNotified(payload.getAuctionId(), payload.getHighestPrice()));
     }
 
     private void handleAuctionSubscribe(Packet response, Gson gson) {
@@ -298,20 +222,11 @@ public class ClientPacketDispatcher {
 
     private void handleDeleteUser(Packet response, Gson gson) {
         ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
-        try {
-            if (AdminDashboardController.getInstance() != null) {
-                AdminDashboardController.getInstance().handleDeleteUserResult(
-                        result.getResult(), result.getMessage());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        eventBus.publish(new ClientEvents.UserDeleted(result.getResult(), result.getMessage()));
     }
 
     private void handleSystemLogsResponse(Packet response, Gson gson) {
         SystemLogResponsePayload payload = gson.fromJson(response.getPayload(), SystemLogResponsePayload.class);
-        try {
-            if (AdminDashboardController.getInstance() != null) {
-                AdminDashboardController.getInstance().handleSystemLogsResult(payload.getLogs(), payload.isAppend());
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        eventBus.publish(new ClientEvents.SystemLogsLoaded(payload.getLogs()));
     }
 }

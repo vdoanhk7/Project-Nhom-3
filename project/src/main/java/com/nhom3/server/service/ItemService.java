@@ -54,11 +54,11 @@ public class ItemService {
     }
 
     public boolean updateItem(Item item) throws IllegalArgumentException {
-        log.info("Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: {}", item.getId());
         if (item == null || item.getName() == null || item.getName().trim().isEmpty()) {
             log.warn("Cập nhật thất bại: Tên sản phẩm trống.");
             throw new IllegalArgumentException("Tên sản phẩm không được để trống!");
         }
+        log.info("Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: {}", item.getId());
         if (item.getStartPrice() < 0) {
             log.warn("Cập nhật thất bại: Giá khởi điểm âm ({}).", item.getStartPrice());
             throw new IllegalArgumentException("Giá khởi điểm không hợp lệ!");

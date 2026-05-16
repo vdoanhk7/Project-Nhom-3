@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
@@ -141,6 +143,74 @@ public class ItemServiceTest {
         boolean result = itemService.createItem(seller, item);
         assertTrue(result);
         verify(itemDAO).saveItem(item, 1);
+    }
+
+    // --- Tests for updateItem ---
+
+    @Test
+    void updateItem_WithItemNull_ShouldThrowIllegalArgumentException() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            itemService.updateItem(null);
+        });
+
+        assertEquals("Tên sản phẩm không được để trống!", exception.getMessage());
+        verify(itemDAO, never()).updateItem(any(Item.class));
+    }
+
+    @Test
+    void updateItem_WithItemNameEmpty_ShouldThrowIllegalArgumentException() {
+        Item item = mock(Item.class);
+        when(item.getName()).thenReturn("   ");
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            itemService.updateItem(item);
+        });
+
+        assertEquals("Tên sản phẩm không được để trống!", exception.getMessage());
+        verify(itemDAO, never()).updateItem(item);
+    }
+
+    @Test
+    void updateItem_WithNegativeStartPrice_ShouldThrowIllegalArgumentException() {
+        Item item = mock(Item.class);
+        when(item.getId()).thenReturn(10);
+        when(item.getName()).thenReturn("Valid Name");
+        when(item.getStartPrice()).thenReturn(-1.0);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            itemService.updateItem(item);
+        });
+
+        assertEquals("Giá khởi điểm không hợp lệ!", exception.getMessage());
+        verify(itemDAO, never()).updateItem(item);
+    }
+
+    @Test
+    void updateItem_DBFailure_ShouldReturnFalse() {
+        Item item = mock(Item.class);
+        when(item.getId()).thenReturn(10);
+        when(item.getName()).thenReturn("Valid Name");
+        when(item.getStartPrice()).thenReturn(100.0);
+        when(itemDAO.updateItem(item)).thenReturn(false);
+
+        boolean result = itemService.updateItem(item);
+
+        assertFalse(result);
+        verify(itemDAO).updateItem(item);
+    }
+
+    @Test
+    void updateItem_Success_ShouldReturnTrue() {
+        Item item = mock(Item.class);
+        when(item.getId()).thenReturn(10);
+        when(item.getName()).thenReturn("Valid Name");
+        when(item.getStartPrice()).thenReturn(100.0);
+        when(itemDAO.updateItem(item)).thenReturn(true);
+
+        boolean result = itemService.updateItem(item);
+
+        assertTrue(result);
+        verify(itemDAO).updateItem(item);
     }
 
     // --- Tests for removeItem ---

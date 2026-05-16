@@ -17,6 +17,7 @@ import com.nhom3.server.service.AuctionService;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.model.auction.StatusOfAuction;
+import com.nhom3.shared.model.item.Art;
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.Bidder;
 
@@ -207,5 +208,111 @@ class AuctionServiceTest {
         BidTransaction bid = new BidTransaction(1, bidder, 150.0, LocalDateTime.now(), "Test");
 
         assertThrows(IllegalStateException.class, () -> auctionService.placeBid(auction, bid));
+    }
+
+    @Test
+    void testPlaceBid_CancelledAuction_ThrowsExceptionAndDoesNotUpdateDb() {
+        Auction auction = runningAuctionWithRealItem();
+        auction.setStatus(StatusOfAuction.CANCELLED);
+        BidTransaction bid = bidFromUser(2, 200.0);
+
+        assertThrows(IllegalStateException.class, () -> auctionService.placeBid(auction, bid));
+        verify(auctionDAO, never()).updateHighestBid(anyInt(), anyInt(), anyDouble());
+        verify(auctionDAO, never()).saveBidTransaction(any(), anyInt());
+    }
+
+    @Test
+    void testPlaceBid_BeforeStartTime_ThrowsExceptionAndDoesNotUpdateDb() {
+        Auction auction = new Auction(
+                1,
+                new Art(1, "Future item", 100.0),
+                LocalDateTime.now().plusMinutes(10),
+                LocalDateTime.now().plusHours(1));
+        auction.setBidStep(50.0);
+        auction.setStatus(StatusOfAuction.OPEN);
+        BidTransaction bid = bidFromUser(2, 200.0);
+
+        assertThrows(IllegalStateException.class, () -> auctionService.placeBid(auction, bid));
+        verify(auctionDAO, never()).updateHighestBid(anyInt(), anyInt(), anyDouble());
+        verify(auctionDAO, never()).saveBidTransaction(any(), anyInt());
+    }
+
+    @Test
+    void testPlaceBid_AfterEndTime_ThrowsExceptionAndDoesNotUpdateDb() {
+        Auction auction = new Auction(
+                1,
+                new Art(1, "Closed item", 100.0),
+                LocalDateTime.now().minusHours(2),
+                LocalDateTime.now().minusMinutes(1));
+        auction.setBidStep(50.0);
+        auction.setStatus(StatusOfAuction.RUNNING);
+        BidTransaction bid = bidFromUser(2, 200.0);
+
+        assertThrows(IllegalStateException.class, () -> auctionService.placeBid(auction, bid));
+        verify(auctionDAO, never()).updateHighestBid(anyInt(), anyInt(), anyDouble());
+        verify(auctionDAO, never()).saveBidTransaction(any(), anyInt());
+    }
+
+    @Test
+    void testPlaceBid_WhenDaoRejectsBid_DoesNotSaveTransactionOrMutateAuction() {
+        Auction auction = runningAuctionWithRealItem();
+        Bidder previousLeader = new Bidder(1, null, null);
+        auction.setHighestBidder(previousLeader);
+        BidTransaction bid = bidFromUser(2, 200.0);
+
+        when(auctionDAO.updateHighestBid(1, 2, 200.0)).thenReturn(false);
+
+        boolean result = auctionService.placeBid(auction, bid);
+
+        assertFalse(result);
+        assertEquals(100.0, auction.getItem().getCurHighest());
+        assertEquals(previousLeader, auction.getHighestBidder());
+        verify(auctionDAO, never()).saveBidTransaction(any(), anyInt());
+        verify(auctionDAO, never()).extendAuctionTime(anyInt(), anyInt());
+    }
+
+    @Test
+    void testPlaceBid_NearEndTime_ExtendsAuctionForAntiSniping() {
+        Auction auction = runningAuctionWithRealItem();
+        BidTransaction bid = bidFromUser(2, 200.0);
+        LocalDateTime endTimeWithinThreshold = LocalDateTime.now().plusSeconds(20);
+
+        when(auctionDAO.updateHighestBid(1, 2, 200.0)).thenReturn(true);
+        when(auctionDAO.getEndTime(1)).thenReturn(endTimeWithinThreshold);
+
+        boolean result = auctionService.placeBid(auction, bid);
+
+        assertTrue(result);
+        verify(auctionDAO).saveBidTransaction(bid, 1);
+        verify(auctionDAO).extendAuctionTime(1, 2);
+    }
+
+    @Test
+    void testPlaceBid_NotNearEndTime_DoesNotExtendAuction() {
+        Auction auction = runningAuctionWithRealItem();
+        BidTransaction bid = bidFromUser(2, 200.0);
+        LocalDateTime endTimeOutsideThreshold = LocalDateTime.now().plusMinutes(10);
+
+        when(auctionDAO.updateHighestBid(1, 2, 200.0)).thenReturn(true);
+        when(auctionDAO.getEndTime(1)).thenReturn(endTimeOutsideThreshold);
+
+        boolean result = auctionService.placeBid(auction, bid);
+
+        assertTrue(result);
+        verify(auctionDAO).saveBidTransaction(bid, 1);
+        verify(auctionDAO, never()).extendAuctionTime(anyInt(), anyInt());
+    }
+
+    private Auction runningAuctionWithRealItem() {
+        Art item = new Art(1, "Auction item", 100.0);
+        Auction auction = new Auction(1, item, LocalDateTime.now().minusHours(1), LocalDateTime.now().plusHours(1));
+        auction.setBidStep(50.0);
+        auction.setStatus(StatusOfAuction.RUNNING);
+        auction.setHighestBidder(new Bidder(1, null, null));
+        return auction;
+    }
+
+    private BidTransaction bidFromUser(int bidderId, double amount) {
+        return new BidTransaction(1, new Bidder(bidderId, null, null), amount, LocalDateTime.now(), "Test");
     }
 }

@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,6 +20,7 @@ import org.mockito.MockitoAnnotations;
 
 import com.nhom3.server.dao.UserDAO;
 import com.nhom3.server.service.AuthService;
+import com.nhom3.shared.model.user.Bidder;
 import com.nhom3.shared.model.user.Role;
 import com.nhom3.shared.model.user.User;
 import com.nhom3.shared.model.user.UserContact;
@@ -86,6 +89,28 @@ public class AuthServiceTest {
     }
 
     @Test
+    void register_WithInvalidEmail_ShouldThrowIllegalArgumentExceptionAndNotCallDao() {
+        User user = new Bidder(
+                1,
+                new UserInfo("testuser", "password", "Test User"),
+                new UserContact("bad-email", "0123456789"));
+
+        assertThrows(IllegalArgumentException.class, () -> authService.register(user));
+        verify(userDAO, never()).register(user);
+    }
+
+    @Test
+    void register_WithInvalidPhone_ShouldThrowIllegalArgumentExceptionAndNotCallDao() {
+        User user = new Bidder(
+                1,
+                new UserInfo("testuser", "password", "Test User"),
+                new UserContact("test@example.com", "123"));
+
+        assertThrows(IllegalArgumentException.class, () -> authService.register(user));
+        verify(userDAO, never()).register(user);
+    }
+
+    @Test
     void updateUser_Success_ShouldReturnTrue() {
         // SỬ DỤNG HÀM TẠO USER HỢP LỆ (CÓ EMAIL VÀ SĐT CHUẨN) THAY VÌ USER RỖNG
         User mockUser = createValidUser();
@@ -107,6 +132,17 @@ public class AuthServiceTest {
 
         assertFalse(result);
         verify(userDAO).updateUser(mockUser);
+    }
+
+    @Test
+    void updateUser_WithInvalidContact_ShouldThrowIllegalArgumentExceptionAndNotCallDao() {
+        User user = new Bidder(
+                1,
+                new UserInfo("testuser", "password", "Test User"),
+                new UserContact("test@example.com", "not-a-phone"));
+
+        assertThrows(IllegalArgumentException.class, () -> authService.updateUser(user));
+        verify(userDAO, never()).updateUser(user);
     }
 
     @Test

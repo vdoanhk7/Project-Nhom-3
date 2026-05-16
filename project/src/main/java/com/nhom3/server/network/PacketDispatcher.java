@@ -72,7 +72,7 @@ public class PacketDispatcher {
         handlers.put(PacketType.LOAD_DASHBOARD, this::handleLoadDashboard);
         handlers.put(PacketType.AUCTION_SUBSCRIBE, this::handleAuctionSubscribe);
         handlers.put(PacketType.DELETE_USER, this::handleDeleteUser);
-        handlers.put(PacketType.GET_SYSTEM_LOGS, this::handleGetSystemLogs);
+        handlers.put(PacketType.SUBSCRIBE_SYSTEM_LOGS, this::handleSubscribeSystemLogs);
     }
 
     public Packet dispatch(Packet request, Gson gson) {
@@ -472,23 +472,13 @@ public class PacketDispatcher {
                 -1, "", "", "", "", ""));
     }
 
-    private Packet handleGetSystemLogs(Packet request, Gson gson) {
-        StringBuilder logs = new StringBuilder();
-        try {
-            java.io.File file = new java.io.File("logs/server.log");
-            if (file.exists()) {
-                try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(file))) {
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        logs.append(line).append("\n");
-                    }
-                }
-            } else {
-                logs.append("Không tìm thấy file log hệ thống (logs/server.log).\n");
-            }
-        } catch (Exception e) {
-            logs.append("Lỗi đọc file log: ").append(e.getMessage());
+    private Packet handleSubscribeSystemLogs(Packet request, Gson gson) {
+        SystemLogSubscribePayload payload = gson.fromJson(request.getPayload(), SystemLogSubscribePayload.class);
+        if (payload != null && payload.isSub()) {
+            com.nhom3.server.network.liveUpdate.SystemLogAnnouncer.getInstance().addObserver(currentClient);
+        } else {
+            com.nhom3.server.network.liveUpdate.SystemLogAnnouncer.getInstance().removeObserver(currentClient);
         }
-        return new Packet(PacketType.SYSTEM_LOGS_RESPONSE, new SystemLogResponsePayload(logs.toString()));
+        return new Packet(PacketType.SUBSCRIBE_SYSTEM_LOGS, new ResultPayload(true, "", -1, "", "", "", "", ""));
     }
 }

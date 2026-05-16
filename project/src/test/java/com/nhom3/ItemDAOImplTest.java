@@ -142,9 +142,7 @@ public class ItemDAOImplTest {
         }
     }
 
-    // ĐÃ THÊM @Disabled Ở ĐÂY
     @Test
-    @Disabled("Vô hiệu hóa do việc thêm cột image làm thay đổi thứ tự index của PreparedStatement")
     void testUpdateItemSuccess() throws Exception {
         Item item = mock(Item.class);
         when(item.getId()).thenReturn(1);
@@ -152,6 +150,7 @@ public class ItemDAOImplTest {
         when(item.getStartPrice()).thenReturn(200.0);
         when(item.getCurHighest()).thenReturn(250.0);
         when(item.getType()).thenReturn(ItemType.ART);
+        when(item.getImageBase64()).thenReturn("dummyBase64");
 
         try (MockedStatic<DbConnection> mockedDb = Mockito.mockStatic(DbConnection.class)) {
             mockedDb.when(DbConnection::getConnection).thenReturn(conn);
@@ -162,7 +161,8 @@ public class ItemDAOImplTest {
 
             assertTrue(result);
             verify(stmt).setString(1, "Updated");
-            verify(stmt).setInt(5, 1);
+            verify(stmt).setString(5, "dummyBase64");
+            verify(stmt).setInt(6, 1);
         }
     }
 }

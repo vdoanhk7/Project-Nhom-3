@@ -58,7 +58,7 @@ public class ClientHandler implements Runnable {
                     continue; 
                 }
                 
-                if (request.getType() != com.nhom3.shared.network.packet.PacketType.GET_SYSTEM_LOGS) {
+                if (request.getType() != com.nhom3.shared.network.packet.PacketType.SUBSCRIBE_SYSTEM_LOGS) {
                     System.out.println("[SERVER - RAW RECEIVE] Vừa nhận được gói tin loại: " + request.getType());
                 }
 
@@ -71,6 +71,7 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             logger.error("Client ngắt kết nối");
         } finally {
+            com.nhom3.server.network.liveUpdate.SystemLogAnnouncer.getInstance().removeObserver(this);
             try {
                 clientSocket.close();
             } catch (IOException ex) {

@@ -28,7 +28,7 @@ public enum PacketType {
     AUCTION_SUBSCRIBE("auction subscribe"),
     LOAD_DASHBOARD("load dashboard"),
     DELETE_USER("delete user"),
-    GET_SYSTEM_LOGS("get system logs"),
+    SUBSCRIBE_SYSTEM_LOGS("subscribe system logs"),
     SYSTEM_LOGS_RESPONSE("system logs response");
 
 

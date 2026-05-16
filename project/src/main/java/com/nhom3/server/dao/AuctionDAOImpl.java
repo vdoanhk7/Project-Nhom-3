@@ -275,7 +275,6 @@ public class AuctionDAOImpl implements AuctionDAO {
                             com.nhom3.shared.model.item.ItemType.valueOf(rs.getString("item_type"))) {
                     };
                     item.setCurHighest(rs.getDouble("cur_highest"));
-                    item.setImageBase64(rs.getString("image"));
                     item.setSellerName(rs.getString("seller_name"));
                     int id = rs.getInt("id");
                     java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();

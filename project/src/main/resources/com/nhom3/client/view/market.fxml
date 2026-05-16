@@ -35,12 +35,14 @@
                      </Label>
                   </VBox>
                   
-                  <HBox alignment="CENTER_RIGHT" spacing="15.0" HBox.hgrow="ALWAYS">
-                     <children>
-                        <TextField fx:id="txtSearch" prefHeight="42.0" prefWidth="350.0" promptText="🔍 Tìm kiếm sản phẩm..." style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #bdc3c7; -fx-background-color: #ffffff; -fx-padding: 0 15; -fx-font-size: 14px;" />
-                        <ComboBox fx:id="cbCategory" prefHeight="42.0" prefWidth="160.0" promptText="Tất Cả" style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #bdc3c7; -fx-background-color: #ffffff; -fx-font-size: 14px;" />
-                        <Button fx:id="btnReload" mnemonicParsing="false" prefHeight="42.0" prefWidth="110.0" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-weight: bold; -fx-font-size: 14px;" text="🔄 Làm Mới" />
-                     </children>
+                  <HBox spacing="10" alignment="CENTER_LEFT">
+                     <TextField fx:id="txtSearch" promptText="Tìm theo tên sản phẩm..." prefWidth="200" />
+                     <TextField fx:id="txtSellerName" promptText="Tìm theo người bán..." prefWidth="150" />
+    
+                     <ComboBox fx:id="cbCategory" promptText="Danh mục" prefWidth="120" />
+                     <ComboBox fx:id="cbTimeLeft" promptText="Thời gian còn lại" prefWidth="120" />
+    
+                     <Button fx:id="btnReload" text="Làm mới ↻" />
                   </HBox>
                </children>
             </HBox>

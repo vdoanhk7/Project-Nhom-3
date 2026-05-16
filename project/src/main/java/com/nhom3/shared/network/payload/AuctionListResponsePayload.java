@@ -26,13 +26,14 @@ public class AuctionListResponsePayload {
         public final String status;
         public final int highestBidderId;
         public final String imageBase64;
+        public final String sellerName;
 
         public AuctionDTO(int auctionId, int itemId, String itemName, String itemType,
                 double startPrice, double curHighest, String startTime, String endTime,
                 String status, int highestBidderId) {
             this(auctionId, itemId, itemName, itemType, startPrice, curHighest,
                     com.nhom3.shared.model.auction.Auction.DEFAULT_BID_STEP,
-                    startTime, endTime, status, highestBidderId, null);
+                    startTime, endTime, status, highestBidderId, null, "");
         }
 
         public AuctionDTO(int auctionId, int itemId, String itemName, String itemType,
@@ -40,12 +41,12 @@ public class AuctionListResponsePayload {
                 String status, int highestBidderId, String imageBase64) {
             this(auctionId, itemId, itemName, itemType, startPrice, curHighest,
                     com.nhom3.shared.model.auction.Auction.DEFAULT_BID_STEP,
-                    startTime, endTime, status, highestBidderId, imageBase64);
+                    startTime, endTime, status, highestBidderId, imageBase64, "");
         }
 
         public AuctionDTO(int auctionId, int itemId, String itemName, String itemType,
                 double startPrice, double curHighest, double bidStep, String startTime, String endTime,
-                String status, int highestBidderId, String imageBase64) {
+                String status, int highestBidderId, String imageBase64, String sellerName) {
             this.auctionId = auctionId;
             this.itemId = itemId;
             this.itemName = itemName;
@@ -58,6 +59,7 @@ public class AuctionListResponsePayload {
             this.status = status;
             this.highestBidderId = highestBidderId;
             this.imageBase64 = imageBase64;
+            this.sellerName = sellerName;
         }
     }
 }

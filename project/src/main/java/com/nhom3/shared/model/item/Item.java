@@ -8,6 +8,7 @@ public abstract class Item extends Entity{
 	protected double curHighest;
 	protected ItemType type;
 	protected String imageBase64;
+	protected String sellerName;
 
 	public Item(int id, String name, double startPrice, ItemType type) {
 		super(id);
@@ -46,5 +47,10 @@ public abstract class Item extends Entity{
 	public String getImageBase64() {
 		return imageBase64;
 	}
-
+	public String getSellerName() {
+		return sellerName;
+	}
+	public void setSellerName(String sellerName) {
+		this.sellerName = sellerName;
+	}
 }

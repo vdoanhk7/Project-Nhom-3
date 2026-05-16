@@ -47,7 +47,7 @@ public class AdminDashboardController {
 
     // System Log fields
     @FXML private javafx.scene.control.TextArea txtSystemLogs;
-    private javafx.animation.Timeline timeline;
+    private boolean isSubscribedToLogs = false;
 
     private static AdminDashboardController instance;
 
@@ -104,29 +104,17 @@ public class AdminDashboardController {
         loadUserData();
         loadAuctionData();
         
-        loadSystemLogs();
-        if (timeline != null) {
-            timeline.stop();
+        if (!isSubscribedToLogs) {
+            subscribeSystemLogs();
+            isSubscribedToLogs = true;
         }
-        timeline = new javafx.animation.Timeline(new javafx.animation.KeyFrame(
-            javafx.util.Duration.seconds(3),
-            ev -> {
-                if (txtSystemLogs.getScene() != null) {
-                    loadSystemLogs();
-                } else {
-                    timeline.stop(); // Dừng hoàn toàn khi Admin thoát hoặc đóng màn hình
-                }
-            }
-        ));
-        timeline.setCycleCount(javafx.animation.Animation.INDEFINITE);
-        timeline.play();
     }
 
     // Removed activity log methods
 
-    private void loadSystemLogs() {
+    private void subscribeSystemLogs() {
         try {
-            ServerConnection.getInstance().sendMessage(new Packet(PacketType.GET_SYSTEM_LOGS, null));
+            ServerConnection.getInstance().sendMessage(new Packet(PacketType.SUBSCRIBE_SYSTEM_LOGS, new com.nhom3.shared.network.payload.SystemLogSubscribePayload(true)));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -134,8 +122,12 @@ public class AdminDashboardController {
 
 
 
-    public void handleSystemLogsResult(String logs) {
-        txtSystemLogs.setText(logs);
+    public void handleSystemLogsResult(String logs, boolean isAppend) {
+        if (isAppend) {
+            txtSystemLogs.appendText(logs);
+        } else {
+            txtSystemLogs.setText(logs);
+        }
     }
 
     // Duplicates removed

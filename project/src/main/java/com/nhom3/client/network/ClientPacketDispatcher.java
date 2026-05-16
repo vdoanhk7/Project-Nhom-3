@@ -310,7 +310,7 @@ public class ClientPacketDispatcher {
         SystemLogResponsePayload payload = gson.fromJson(response.getPayload(), SystemLogResponsePayload.class);
         try {
             if (AdminDashboardController.getInstance() != null) {
-                AdminDashboardController.getInstance().handleSystemLogsResult(payload.getLogs());
+                AdminDashboardController.getInstance().handleSystemLogsResult(payload.getLogs(), payload.isAppend());
             }
         } catch (Exception e) { e.printStackTrace(); }
     }

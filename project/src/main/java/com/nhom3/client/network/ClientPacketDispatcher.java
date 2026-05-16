@@ -29,6 +29,7 @@ public class ClientPacketDispatcher {
         handlers.put(PacketType.LOAD_ACTIVE_AUCTIONS, this::handleLoadActiveAuctions);
         handlers.put(PacketType.LOAD_ALL_AUCTIONS, this::handleLoadAllAuctions);
         handlers.put(PacketType.LOAD_AUCTION_BY_ITEM, this::handleLoadAuctionByItem);
+        handlers.put(PacketType.LOAD_ITEM_IMAGE, this::handleLoadItemImage);
         handlers.put(PacketType.SAVE_ITEM, this::handleItemMutation);
         handlers.put(PacketType.UPDATE_ITEM, this::handleItemMutation);
         handlers.put(PacketType.DELETE_ITEM, this::handleDeleteItem);
@@ -151,6 +152,21 @@ public class ClientPacketDispatcher {
         try {
             if (ManageItemController.getInstance() != null) {
                 ManageItemController.getInstance().handleLoadAuctionByItemResult(payload.getAuctions());
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void handleLoadItemImage(Packet response, Gson gson) {
+        ItemImagePayload payload = gson.fromJson(response.getPayload(), ItemImagePayload.class);
+        try {
+            if (MarketController.getInstance() != null) {
+                MarketController.getInstance().handleItemImageResult(payload);
+            }
+            if (ManageItemController.getInstance() != null) {
+                ManageItemController.getInstance().handleItemImageResult(payload);
+            }
+            if (ViewItemDetailController.getInstance() != null) {
+                ViewItemDetailController.getInstance().handleItemImageResult(payload);
             }
         } catch (Exception e) { e.printStackTrace(); }
     }

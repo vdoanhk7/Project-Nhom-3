@@ -13,6 +13,7 @@ import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
 import com.nhom3.shared.network.payload.AuctionListResponsePayload;
 import com.nhom3.shared.network.payload.ItemActionPayload;
+import com.nhom3.shared.network.payload.ItemImagePayload;
 import com.nhom3.shared.network.payload.SellerIdPayload;
 import com.nhom3.shared.network.payload.SellerItemsResponsePayload;
 import java.io.IOException;
@@ -20,12 +21,17 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -40,6 +46,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -59,8 +66,17 @@ public class ManageItemController {
     @FXML private TableColumn<Item, Double> colCurHighest;
     @FXML private TableColumn<Item, Void> colAction;
 
+    private static final ExecutorService IMAGE_LOADER = Executors.newFixedThreadPool(4, runnable -> {
+        Thread thread = new Thread(runnable, "ManageItem-ImageLoader");
+        thread.setDaemon(true);
+        return thread;
+    });
+
     private final ObservableList<Item> itemList = FXCollections.observableArrayList();
     private final Map<Integer, String> itemStatusMap = new HashMap<>();
+    private final Map<Integer, String> imageCache = new ConcurrentHashMap<>();
+    private final Set<Integer> requestedImageIds = ConcurrentHashMap.newKeySet();
+    private final Set<Integer> noImageIds = ConcurrentHashMap.newKeySet();
     private Item pendingDeleteItem;
     private Item pendingViewItem;
 
@@ -100,17 +116,44 @@ public class ManageItemController {
 
         List<Item> realItems = new java.util.ArrayList<>();
         itemStatusMap.clear();
+        requestedImageIds.clear();
+        imageCache.clear();
+        noImageIds.clear();
         for (SellerItemsResponsePayload.SellerItemDTO dto : dtoList) {
             ItemType type = ItemType.valueOf(dto.type);
             Item item = type.createItem(dto.id, dto.name, dto.startPrice);
             item.setCurHighest(dto.curHighest);
-            item.setImageBase64(dto.imageBase64);
             realItems.add(item);
             if (dto.status != null && !dto.status.isEmpty()) {
                 itemStatusMap.put(dto.id, dto.status);
             }
         }
         itemList.setAll(realItems);
+        tableItems.refresh();
+    }
+
+    public void handleItemImageResult(ItemImagePayload payload) {
+        if (payload == null || payload.getItemId() <= 0) {
+            return;
+        }
+
+        String imageBase64 = payload.getImageBase64();
+        if (imageBase64 == null || imageBase64.isEmpty()) {
+            noImageIds.add(payload.getItemId());
+            tableItems.refresh();
+            return;
+        }
+
+        imageCache.put(payload.getItemId(), imageBase64);
+        for (Item item : itemList) {
+            if (item.getId() == payload.getItemId()) {
+                item.setImageBase64(imageBase64);
+                break;
+            }
+        }
+        if (pendingViewItem != null && pendingViewItem.getId() == payload.getItemId()) {
+            pendingViewItem.setImageBase64(imageBase64);
+        }
         tableItems.refresh();
     }
 
@@ -177,7 +220,10 @@ public class ManageItemController {
                         setGraphic(null);
                     }
                 } else {
-                    setGraphic(null);
+                    setGraphic(createImagePlaceholder(
+                            noImageIds.contains(currentItem.getId()) ? "No Image" : "..."));
+                    setAlignment(Pos.CENTER);
+                    requestItemImage(currentItem.getId());
                 }
             }
         });
@@ -198,6 +244,34 @@ public class ManageItemController {
                 setText(empty || price == null ? null : String.format("%,.0f VND", price));
             }
         };
+    }
+
+    private StackPane createImagePlaceholder(String text) {
+        StackPane placeholder = new StackPane();
+        placeholder.setPrefSize(60, 60);
+        placeholder.setMaxSize(60, 60);
+        placeholder.setStyle("-fx-background-color: #e5e7eb; -fx-background-radius: 6;");
+        Label label = new Label(text);
+        label.setStyle("-fx-text-fill: #6b7280; -fx-font-weight: bold; -fx-font-size: 10px;");
+        placeholder.getChildren().add(label);
+        return placeholder;
+    }
+
+    private void requestItemImage(int itemId) {
+        if (itemId <= 0 || imageCache.containsKey(itemId) || noImageIds.contains(itemId)
+                || !requestedImageIds.add(itemId)) {
+            return;
+        }
+
+        IMAGE_LOADER.submit(() -> {
+            try {
+                ServerConnection.getInstance().sendMessage(
+                        new Packet(PacketType.LOAD_ITEM_IMAGE, new ItemActionPayload(itemId, 0)));
+            } catch (Exception e) {
+                requestedImageIds.remove(itemId);
+                e.printStackTrace();
+            }
+        });
     }
 
     private void setupSearchAndFilter() {
@@ -392,6 +466,9 @@ public class ManageItemController {
 
     private void handleViewDetail(Item item) {
         pendingViewItem = item;
+        if (item.getImageBase64() == null || item.getImageBase64().isEmpty()) {
+            requestItemImage(item.getId());
+        }
         try {
             ItemActionPayload payload = new ItemActionPayload(item.getId(), 0);
             ServerConnection.getInstance().sendMessage(new Packet(PacketType.LOAD_AUCTION_BY_ITEM, payload));

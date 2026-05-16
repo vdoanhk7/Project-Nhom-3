@@ -10,6 +10,8 @@ import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.shared.network.payload.ItemActionPayload;
+import com.nhom3.shared.network.payload.ItemImagePayload;
 import com.nhom3.shared.network.payload.AuctionSubscribePayload;
 import com.nhom3.shared.network.payload.BidPayload;
 import com.nhom3.client.network.ServerConnection;
@@ -39,7 +41,7 @@ import java.util.List;
         justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class ViewItemDetailController {
 
-    @FXML private Label lblItemName, lblItemType, lblStatusBadge;
+    @FXML private Label lblItemName, lblItemType, lblStatusBadge, lblNoImage;
     @FXML private Label lblCurrentPrice, lblStartPrice, lblBidStep;
     @FXML private Label lblTimeTitle, lblCountdown, lblTimeRange;
     
@@ -67,6 +69,7 @@ public class ViewItemDetailController {
 
     private Timeline countdownTimeline;
     private Auction currentAuction;
+    private Item currentItem;
     private int currentBidCount = -1;
     private static ViewItemDetailController instance;
     private double pendingBidAmount = 0; 
@@ -146,6 +149,7 @@ public class ViewItemDetailController {
     }
 
     public void setItemData(Item item, Auction auction, String status) {
+        this.currentItem = item;
         lblItemName.setText(item.getName());
         lblItemType.setText("Phân loại: " + item.getType());
         lblStartPrice.setText(String.format("Khởi điểm: %,.0f VNĐ", item.getStartPrice()));
@@ -153,12 +157,10 @@ public class ViewItemDetailController {
         this.currentAuction = auction;
         
         if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
-            try {
-                byte[] imageBytes = java.util.Base64.getDecoder().decode(item.getImageBase64());
-                imgItem.setImage(new Image(new java.io.ByteArrayInputStream(imageBytes)));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            renderItemImage(item.getImageBase64());
+        } else {
+            showNoImagePlaceholder("Đang tải...");
+            requestItemImage(item.getId());
         }
         
         if (auction == null) {
@@ -195,6 +197,61 @@ public class ViewItemDetailController {
                 });
             }
         });
+    }
+
+    public void handleItemImageResult(ItemImagePayload payload) {
+        if (payload == null || currentItem == null || payload.getItemId() != currentItem.getId()) {
+            return;
+        }
+
+        String imageBase64 = payload.getImageBase64();
+        if (imageBase64 == null || imageBase64.isEmpty()) {
+            showNoImagePlaceholder("No Image");
+            return;
+        }
+
+        currentItem.setImageBase64(imageBase64);
+        renderItemImage(imageBase64);
+    }
+
+    private void requestItemImage(int itemId) {
+        if (itemId <= 0) {
+            return;
+        }
+
+        Thread thread = new Thread(() -> {
+            try {
+                ServerConnection.getInstance().sendMessage(
+                        new Packet(PacketType.LOAD_ITEM_IMAGE, new ItemActionPayload(itemId, 0)));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, "Detail-ImageLoader");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void renderItemImage(String imageBase64) {
+        try {
+            byte[] imageBytes = java.util.Base64.getDecoder().decode(imageBase64);
+            imgItem.setImage(new Image(new java.io.ByteArrayInputStream(imageBytes)));
+            imgItem.setVisible(true);
+            if (lblNoImage != null) {
+                lblNoImage.setVisible(false);
+            }
+        } catch (Exception e) {
+            showNoImagePlaceholder("No Image");
+            e.printStackTrace();
+        }
+    }
+
+    private void showNoImagePlaceholder(String text) {
+        imgItem.setImage(null);
+        imgItem.setVisible(false);
+        if (lblNoImage != null) {
+            lblNoImage.setText(text);
+            lblNoImage.setVisible(true);
+        }
     }
 
     private void setupOpenState(Auction auction) {

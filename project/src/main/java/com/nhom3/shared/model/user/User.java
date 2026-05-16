@@ -22,5 +22,21 @@ public abstract class User extends Entity{
     }
 
     public Role getRole() {return role;}
+
+    protected String formatUserInfo(String roleName) {
+        String username = userInfo == null ? "N/A" : userInfo.getUserName();
+        String fullName = userInfo == null ? "N/A" : userInfo.getName();
+        String email = userContact == null ? "N/A" : userContact.getEmail();
+        String phone = userContact == null ? "N/A" : userContact.getPhoneNumber();
+
+        return String.format(
+                "%s[id=%d, username=%s, fullName=%s, email=%s, phone=%s]",
+                roleName,
+                id,
+                username,
+                fullName,
+                email,
+                phone);
+    }
     
 }

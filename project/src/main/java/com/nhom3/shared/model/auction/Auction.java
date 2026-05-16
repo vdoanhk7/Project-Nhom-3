@@ -92,5 +92,19 @@ public class Auction extends Entity{
     public int getHighestBidderId() {
         return highestBidder != null ? highestBidder.getId() : -1;
     }
+
+    @Override
+    public String printInfo() {
+        String itemName = item == null ? "N/A" : item.getName();
+        return String.format(
+                "Auction[id=%d, item=%s, startTime=%s, endTime=%s, bidStep=%.0f, status=%s, highestBidderId=%d]",
+                id,
+                itemName,
+                startTime,
+                endTime,
+                bidStep,
+                status,
+                getHighestBidderId());
+    }
     
 }

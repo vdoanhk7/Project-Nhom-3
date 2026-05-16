@@ -45,6 +45,7 @@ public class ItemService {
 
         if (isSuccess) {
             log.info("Đã lưu thành công sản phẩm '{}' cho Seller ID: {}", newItem.getName(), seller.getId());
+            log.info("[OOP printInfo] Created item detail: {}", newItem.printInfo());
             return true;
         } else {
             log.error("Lỗi Database khi lưu sản phẩm '{}'", newItem.getName());
@@ -67,6 +68,7 @@ public class ItemService {
 
         if (isSuccess) {
             log.info("Đã cập nhật thành công sản phẩm ID: {}", item.getId());
+            log.info("[OOP printInfo] Updated item detail: {}", item.printInfo());
             return true;
         } else {
             log.error("Lỗi Database khi cập nhật sản phẩm ID: {}", item.getId());

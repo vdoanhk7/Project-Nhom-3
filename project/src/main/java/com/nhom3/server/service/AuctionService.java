@@ -72,6 +72,7 @@ public class AuctionService {
 
         if (isSuccess) {
             log.info("Tạo thành công phiên đấu giá ID: {} cho sản phẩm ID: {}", auction.getId(), auction.getItem().getId());
+            log.info("[OOP printInfo] Created auction detail: {}", auction.printInfo());
             return true;
         } else {
             log.error("Lỗi Database khi tạo phiên đấu giá cho sản phẩm ID: {}", auction.getItem().getId());
@@ -180,9 +181,11 @@ public class AuctionService {
         
         if (isSuccess) {
             auctionDAO.saveBidTransaction(bid, auction.getId());
+            log.info("[OOP printInfo] Accepted bid detail: {}", bid.printInfo());
             
             auction.getItem().setCurHighest(bid.getAmount());
             auction.setHighestBidder(bid.getBidder());
+            log.info("[OOP printInfo] Auction after bid: {}", auction.printInfo());
 
             // Chống Snipe
             LocalDateTime realEndTime = auctionDAO.getEndTime(auction.getId());

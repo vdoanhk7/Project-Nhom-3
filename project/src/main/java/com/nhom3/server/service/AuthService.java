@@ -24,6 +24,7 @@ public class AuthService {
         User user = userDAO.login(username, password);
         if (user != null) {
             log.info("Server: " + user.getUserInfo().getName() + " đã đăng nhập thành công!");
+            log.info("[OOP printInfo] Logged-in user detail: {}", user.printInfo());
         } else {
             log.info("Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.");
         }
@@ -35,6 +36,7 @@ public class AuthService {
         boolean success = userDAO.register(user);
         if (success) {
             log.info("Server: " + user.getUserInfo().getName() + " đã đăng ký thành công với vai trò " + user.getRole() + "!");
+            log.info("[OOP printInfo] Registered user detail: {}", user.printInfo());
         } else {
             log.info("Server: Đăng ký thất bại. Tài khoản có thể đã tồn tại.");
         }

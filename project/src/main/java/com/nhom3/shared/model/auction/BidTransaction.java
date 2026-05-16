@@ -32,5 +32,16 @@ public class BidTransaction extends Entity {
         return note;
     }
 
+    @Override
+    public String printInfo() {
+        int bidderId = bidder == null ? -1 : bidder.getId();
+        return String.format(
+                "BidTransaction[id=%d, bidderId=%d, amount=%.0f, time=%s, note=%s]",
+                id,
+                bidderId,
+                amount,
+                time,
+                note);
+    }
 
 }

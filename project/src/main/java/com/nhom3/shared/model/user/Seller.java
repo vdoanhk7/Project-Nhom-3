@@ -19,5 +19,13 @@ public class Seller extends User {
     public List<Auction> getManagedAuctions() {
         return managedAuctions;
     }
-}
 
+    @Override
+    public String printInfo() {
+        return formatUserInfo("Seller")
+                + String.format(
+                        "[managedItems=%d, managedAuctions=%d]",
+                        managedItems.size(),
+                        managedAuctions.size());
+    }
+}

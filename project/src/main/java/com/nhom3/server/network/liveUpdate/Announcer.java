@@ -46,7 +46,7 @@ public class Announcer {
         }
         for (AuctionObserver observer : observers) {
             try {
-                observer.update(amount);
+                observer.update(auctionId, amount);
             } catch (IOException e) {
                 // Client mat ket noi voi server
                 removeObserver(auctionId, observer.client);

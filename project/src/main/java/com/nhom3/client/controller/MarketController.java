@@ -2,8 +2,16 @@ package com.nhom3.client.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.time.LocalDateTime;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import com.nhom3.client.event.ClientEventBus;
+import com.nhom3.client.event.ClientEvents;
+import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
@@ -16,6 +24,8 @@ import com.nhom3.shared.model.user.Bidder;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
 import com.nhom3.shared.network.payload.AuctionListResponsePayload;
+import com.nhom3.shared.network.payload.ItemActionPayload;
+import com.nhom3.shared.network.payload.ItemImagePayload;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -41,9 +51,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
-        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class MarketController {
 
     @FXML private FlowPane flowMarket;
@@ -51,16 +58,24 @@ public class MarketController {
     @FXML private ComboBox<String> cbCategory;
     @FXML private Button btnReload;
 
-    private List<Auction> allActiveAuctions = new ArrayList<>();
-    private static MarketController instance;
+    private static final ExecutorService IMAGE_LOADER = Executors.newFixedThreadPool(4, runnable -> {
+        Thread thread = new Thread(runnable, "Market-ImageLoader");
+        thread.setDaemon(true);
+        return thread;
+    });
 
-    public static MarketController getInstance() {
-        return instance;
-    }
+    private List<Auction> allActiveAuctions = new ArrayList<>();
+    private final Map<Integer, String> imageCache = new ConcurrentHashMap<>();
+    private final Set<Integer> requestedImageIds = ConcurrentHashMap.newKeySet();
+    private final Set<Integer> noImageIds = ConcurrentHashMap.newKeySet();
+    private final Map<Integer, StackPane> imageSlots = new ConcurrentHashMap<>();
 
     @FXML
     public void initialize() {
-        instance = this;
+        ClientEventBus eventBus = ClientEventBus.getDefault();
+        eventBus.subscribe(ClientEvents.ActiveAuctionsLoaded.class, this, MarketController::handleActiveAuctionsLoaded);
+        eventBus.subscribe(ClientEvents.ItemImageLoaded.class, this, MarketController::handleItemImageLoaded);
+        ControllerLifecycle.unsubscribeOnDetach(flowMarket, this);
         cbCategory.setItems(FXCollections.observableArrayList("Tất Cả", "ART", "ELECTRONICS", "VEHICLE"));
         cbCategory.setValue("Tất Cả");
 
@@ -91,6 +106,10 @@ public class MarketController {
 
     public void handleLoadActiveAuctionsResult(List<AuctionListResponsePayload.AuctionDTO> dtoList) {
         allActiveAuctions = new ArrayList<>();
+        requestedImageIds.clear();
+        imageSlots.clear();
+        imageCache.clear();
+        noImageIds.clear();
         if (dtoList != null) {
             for (AuctionListResponsePayload.AuctionDTO dto : dtoList) {
                 allActiveAuctions.add(toAuction(dto));
@@ -99,11 +118,48 @@ public class MarketController {
         javafx.application.Platform.runLater(this::filterMarket);
     }
 
+    private void handleActiveAuctionsLoaded(ClientEvents.ActiveAuctionsLoaded event) {
+        handleLoadActiveAuctionsResult(event.auctions());
+    }
+
+    public void handleItemImageResult(ItemImagePayload payload) {
+        if (payload == null || payload.getItemId() <= 0) {
+            return;
+        }
+
+        String imageBase64 = payload.getImageBase64();
+        if (imageBase64 == null || imageBase64.isEmpty()) {
+            noImageIds.add(payload.getItemId());
+            StackPane imageSlot = imageSlots.get(payload.getItemId());
+            if (imageSlot != null) {
+                showImagePlaceholder(imageSlot, "No Image");
+            }
+            return;
+        }
+
+        imageCache.put(payload.getItemId(), imageBase64);
+        for (Auction auction : allActiveAuctions) {
+            if (auction.getItem() != null && auction.getItem().getId() == payload.getItemId()) {
+                auction.getItem().setImageBase64(imageBase64);
+                break;
+            }
+        }
+
+        StackPane imageSlot = imageSlots.get(payload.getItemId());
+        if (imageSlot != null) {
+            renderImage(imageSlot, imageBase64);
+        }
+    }
+
+    private void handleItemImageLoaded(ClientEvents.ItemImageLoaded event) {
+        handleItemImageResult(event.payload());
+    }
+
     private Auction toAuction(AuctionListResponsePayload.AuctionDTO dto) {
         ItemType type = ItemType.valueOf(dto.itemType);
         Item item = type.createItem(dto.itemId, dto.itemName, dto.startPrice);
         item.setCurHighest(dto.curHighest);
-        item.setImageBase64(dto.imageBase64);
+        item.setImageBase64(imageCache.getOrDefault(dto.itemId, dto.imageBase64));
         
         Auction auction = new Auction(
                 dto.auctionId,
@@ -122,6 +178,7 @@ public class MarketController {
 
     private void filterMarket() {
         flowMarket.getChildren().clear();
+        imageSlots.clear();
 
         if (allActiveAuctions == null || allActiveAuctions.isEmpty()) {
             showEmptyMessage("Hiện tại chưa có sản phẩm nào đang lên sàn.");
@@ -193,37 +250,14 @@ public class MarketController {
         imageWrapper.setPrefSize(210, 160);
         imageWrapper.setStyle("-fx-background-color: linear-gradient(to bottom right, #f1f2f6, #dfe4ea); -fx-background-radius: 8;");
 
-        boolean imageLoaded = false;
-        
         if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
-            try {
-                byte[] imageBytes = Base64.getDecoder().decode(item.getImageBase64());
-                Image img = new Image(new ByteArrayInputStream(imageBytes));
-                ImageView imageView = new ImageView(img);
-                
-                // Set kích thước theo wrapper của main
-                imageView.setFitWidth(210);
-                imageView.setFitHeight(160);
-                imageView.setPreserveRatio(false);
-                
-                // Bo góc cho ImageView để không bị tràn ra ngoài background-radius của wrapper
-                Rectangle clip = new Rectangle(210, 160);
-                clip.setArcWidth(16);
-                clip.setArcHeight(16);
-                imageView.setClip(clip);
-
-                imageWrapper.getChildren().add(imageView);
-                imageLoaded = true;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } 
-        
-        // Nếu không có ảnh hoặc lỗi, thêm Icon Placeholder của main
-        if (!imageLoaded) {
-            Label imgIcon = new Label("📸");
-            imgIcon.setStyle("-fx-font-size: 40px; -fx-opacity: 0.3;");
-            imageWrapper.getChildren().add(imgIcon);
+            renderImage(imageWrapper, item.getImageBase64());
+        } else if (noImageIds.contains(item.getId())) {
+            showImagePlaceholder(imageWrapper, "No Image");
+        } else {
+            showImagePlaceholder(imageWrapper, "Đang tải...");
+            imageSlots.put(item.getId(), imageWrapper);
+            requestItemImage(item.getId());
         }
 
         // 3. Phân loại sản phẩm (Badge)
@@ -268,6 +302,50 @@ public class MarketController {
         card.getChildren().addAll(imageWrapper, lblType, lblName, priceBox, spacer, btnBid);
         
         return card;
+    }
+
+    private void requestItemImage(int itemId) {
+        if (itemId <= 0 || imageCache.containsKey(itemId) || noImageIds.contains(itemId)
+                || !requestedImageIds.add(itemId)) {
+            return;
+        }
+
+        IMAGE_LOADER.submit(() -> {
+            try {
+                ServerConnection.getInstance().sendMessage(
+                        new Packet(PacketType.LOAD_ITEM_IMAGE, new ItemActionPayload(itemId, 0)));
+            } catch (Exception e) {
+                requestedImageIds.remove(itemId);
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private void renderImage(StackPane imageWrapper, String imageBase64) {
+        imageWrapper.getChildren().clear();
+        try {
+            byte[] imageBytes = Base64.getDecoder().decode(imageBase64);
+            Image img = new Image(new ByteArrayInputStream(imageBytes));
+            ImageView imageView = new ImageView(img);
+            imageView.setFitWidth(210);
+            imageView.setFitHeight(160);
+            imageView.setPreserveRatio(false);
+
+            Rectangle clip = new Rectangle(210, 160);
+            clip.setArcWidth(16);
+            clip.setArcHeight(16);
+            imageView.setClip(clip);
+            imageWrapper.getChildren().add(imageView);
+        } catch (Exception e) {
+            showImagePlaceholder(imageWrapper, "Không có ảnh");
+        }
+    }
+
+    private void showImagePlaceholder(StackPane imageWrapper, String text) {
+        imageWrapper.getChildren().clear();
+        Label placeholder = new Label(text);
+        placeholder.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 13px; -fx-font-weight: bold;");
+        imageWrapper.getChildren().add(placeholder);
     }
 
     private String getActionButtonText() {

@@ -1,5 +1,8 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.client.event.ClientEventBus;
+import com.nhom3.client.event.ClientEvents;
+import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.client.utils.MoneyInputFormatter;
 import javafx.fxml.FXML;
@@ -10,9 +13,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
-        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class PublishAuctionController {
     @FXML private Label lblItemName;
     @FXML private RadioButton rbPublishNow;
@@ -27,13 +27,15 @@ public class PublishAuctionController {
     @FXML private Button btnConfirm;
 
     private Item currentItem;
-    private static PublishAuctionController instance;
+    private boolean waitingForPublishResult;
     private final ToggleGroup publishModeGroup = new ToggleGroup();
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     @FXML
     public void initialize() {
-        instance = this;
+        ClientEventBus.getDefault().subscribe(
+                ClientEvents.PublishAuctionResult.class, this, PublishAuctionController::handlePublishEvent);
+        ControllerLifecycle.unsubscribeOnDetach(lblItemName, this);
         rbPublishNow.setToggleGroup(publishModeGroup);
         rbSchedule.setToggleGroup(publishModeGroup);
         rbSchedule.setSelected(true);
@@ -43,8 +45,6 @@ public class PublishAuctionController {
         setupButtonStyles(); // Gọi hàm làm đẹp nút bấm
         updatePublishModeUI();
     }
-
-    public static PublishAuctionController getInstance() { return instance; }
 
     // HÀM MỚI: Trang trí hiệu ứng Hover chuyên nghiệp cho 2 nút bấm
     private void setupButtonStyles() {
@@ -124,31 +124,38 @@ public class PublishAuctionController {
             );
             com.nhom3.shared.network.packet.Packet packet = new com.nhom3.shared.network.packet.Packet(com.nhom3.shared.network.packet.PacketType.PUBLISH_AUCTION, payload);
             
+            waitingForPublishResult = true;
             com.nhom3.client.network.ServerConnection.getInstance().sendMessage(packet);
             System.out.println("[Client] Đã gửi yêu cầu đăng bán sản phẩm ID: " + currentItem.getId());
 
         } catch (Exception e) {
+            waitingForPublishResult = false;
             e.printStackTrace();
             showAlert("Lỗi định dạng", "Vui lòng nhập giờ đúng định dạng HH:mm và bước giá hợp lệ.");
         }
     }
 
     public void handlePublishResult(boolean isSuccess, String message) {
+        if (!waitingForPublishResult) {
+            return;
+        }
+        waitingForPublishResult = false;
+
         javafx.application.Platform.runLater(() -> {
             if (isSuccess) {
                 showAlert("Thành công", isPublishNowMode()
                     ? "Sản phẩm đã được đăng bán ngay thành công!"
                     : "Sản phẩm đã được lên lịch đấu giá thành công!");
                 ((Stage) lblItemName.getScene().getWindow()).close();
-                
-                // Cập nhật lại bảng của Seller ngay lập tức
-                if (com.nhom3.client.controller.ManageItemController.getInstance() != null) {
-                    com.nhom3.client.controller.ManageItemController.getInstance().loadSellerItems();
-                }
+                ClientEventBus.getDefault().publish(new ClientEvents.SellerItemsChanged());
             } else {
                 showAlert("Lỗi", message);
             }
         });
+    }
+
+    private void handlePublishEvent(ClientEvents.PublishAuctionResult event) {
+        handlePublishResult(event.success(), event.message());
     }
 
     @FXML void handleCancel() { ((Stage) lblItemName.getScene().getWindow()).close(); }

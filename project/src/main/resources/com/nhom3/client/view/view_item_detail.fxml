@@ -25,7 +25,16 @@
       <HBox alignment="CENTER_LEFT" spacing="15.0">
          <children>
             <!-- Hình ảnh sản phẩm (Từ nhánh TienDung) -->
-            <javafx.scene.image.ImageView fx:id="imgItem" fitHeight="80.0" fitWidth="80.0" preserveRatio="false" style="-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);" />
+            <StackPane prefHeight="80.0" prefWidth="80.0" style="-fx-background-color: #E5E7EB; -fx-background-radius: 8;">
+               <children>
+                  <javafx.scene.image.ImageView fx:id="imgItem" fitHeight="80.0" fitWidth="80.0" preserveRatio="false" style="-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);" />
+                  <Label fx:id="lblNoImage" text="No Image" textFill="#6B7280" visible="false">
+                     <font>
+                        <Font name="System Bold" size="11.0" />
+                     </font>
+                  </Label>
+               </children>
+            </StackPane>
             
             <!-- VBox chứa thông tin (Giữ spacing="2.0" từ nhánh main) -->
             <VBox HBox.hgrow="ALWAYS" spacing="2.0">

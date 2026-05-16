@@ -1,5 +1,8 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.client.event.ClientEventBus;
+import com.nhom3.client.event.ClientEvents;
+import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.MoneyInputFormatter;
 import com.nhom3.client.utils.UserSession;
@@ -23,9 +26,6 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.util.Base64;
 
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
-        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class AddItemController {
 
     @FXML private TextField txtName;
@@ -37,15 +37,13 @@ public class AddItemController {
     private String selectedImageBase64 = null;
 
     private Item editingItem;
-    private static AddItemController instance;
-
-    public static AddItemController getInstance() {
-        return instance;
-    }
+    private boolean waitingForSaveResult;
 
     @FXML
     public void initialize() {
-        instance = this;
+        ClientEventBus.getDefault().subscribe(
+                ClientEvents.ItemMutationResult.class, this, AddItemController::handleItemMutationEvent);
+        ControllerLifecycle.unsubscribeOnDetach(txtName, this);
         cbType.setItems(FXCollections.observableArrayList("ART", "ELECTRONICS", "VEHICLE"));
         MoneyInputFormatter.install(txtStartPrice);
     }
@@ -126,24 +124,33 @@ public class AddItemController {
             PacketType packetType = editingItem == null ? PacketType.SAVE_ITEM : PacketType.UPDATE_ITEM;
             Packet packet = new Packet(packetType, payload);
             
+            waitingForSaveResult = true;
             ServerConnection.getInstance().sendMessage(packet);
         } catch (Exception e) {
+            waitingForSaveResult = false;
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể kết nối đến máy chủ để lưu sản phẩm!");
         }
     }
 
     public void handleItemMutationResult(PacketType type, boolean success, String message) {
+        if (!waitingForSaveResult) {
+            return;
+        }
+        waitingForSaveResult = false;
+
         javafx.application.Platform.runLater(() -> {
             showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR, 
                      success ? "Thành công" : "Lỗi Server", message);
             if (success) {
                 closeWindow();
-                if (ManageItemController.getInstance() != null) {
-                    ManageItemController.getInstance().loadSellerItems();
-                }
+                ClientEventBus.getDefault().publish(new ClientEvents.SellerItemsChanged());
             }
         });
+    }
+
+    private void handleItemMutationEvent(ClientEvents.ItemMutationResult event) {
+        handleItemMutationResult(event.packetType(), event.success(), event.message());
     }
 
     @FXML

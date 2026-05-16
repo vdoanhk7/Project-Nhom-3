@@ -40,6 +40,7 @@ public abstract class IntegrationTestBase {
                     "start_price DOUBLE NOT NULL," +
                     "cur_highest DOUBLE DEFAULT 0," +
                     "item_type VARCHAR(50) NOT NULL," +
+                    "image MEDIUMTEXT," +
                     "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
                     "FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE" +
                     ");");

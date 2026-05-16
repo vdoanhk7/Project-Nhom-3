@@ -18,8 +18,6 @@ import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// THÊM @Disabled Ở ĐÂY ĐỂ BỎ QUA TOÀN BỘ CÁC TEST TRONG FILE NÀY
-@Disabled("Tạm thời bỏ qua Integration Test do chưa đồng bộ cột 'image' vào bảng items ở môi trường Test H2")
 public class ItemServiceIntegrationTest extends IntegrationTestBase {
 
     private ItemDAOImpl itemDAO;

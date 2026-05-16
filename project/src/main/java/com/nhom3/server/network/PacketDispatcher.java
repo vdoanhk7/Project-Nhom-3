@@ -448,7 +448,8 @@ public class PacketDispatcher {
                 auction.getEndTime() != null ? auction.getEndTime().toString() : "",
                 auction.getStatus() != null ? auction.getStatus().name() : "",
                 auction.getHighestBidderId(),
-                item != null ? item.getImageBase64() : null);
+                item != null ? item.getImageBase64() : null,
+                item != null && item.getSellerName() != null ? item.getSellerName() : "");
     }
 
     private UserListResponsePayload.UserDTO toUserDto(User user) {

@@ -6,6 +6,9 @@ import com.nhom3.shared.model.Entity;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.item.Art;
 import com.nhom3.shared.model.item.Electronics;
+import com.nhom3.shared.model.item.Item;
+import com.nhom3.shared.model.item.ItemType;
+import com.nhom3.shared.model.item.Other;
 import com.nhom3.shared.model.item.Vehicle;
 import com.nhom3.shared.model.user.Admin;
 import com.nhom3.shared.model.user.Bidder;
@@ -27,10 +30,11 @@ class PrintInfoPolymorphismTest {
                 new Art(1, "Painting", 1_000_000),
                 new Electronics(2, "Laptop", 12_000_000),
                 new Vehicle(3, "Motorbike", 25_000_000),
-                new Bidder(4, userInfo, contact),
-                new Seller(5, userInfo, contact),
-                new Admin(6, userInfo, contact),
-                new Auction(7, new Art(8, "Statue", 3_000_000),
+                new Other(4, "Collectible box", 500_000),
+                new Bidder(5, userInfo, contact),
+                new Seller(6, userInfo, contact),
+                new Admin(7, userInfo, contact),
+                new Auction(8, new Art(9, "Statue", 3_000_000),
                         LocalDateTime.now(), LocalDateTime.now().plusDays(1)));
 
         List<String> infos = entities.stream().map(Entity::printInfo).toList();
@@ -38,9 +42,18 @@ class PrintInfoPolymorphismTest {
         assertTrue(infos.get(0).startsWith("Art["));
         assertTrue(infos.get(1).startsWith("Electronics["));
         assertTrue(infos.get(2).startsWith("Vehicle["));
-        assertTrue(infos.get(3).startsWith("Bidder["));
-        assertTrue(infos.get(4).startsWith("Seller["));
-        assertTrue(infos.get(5).startsWith("Admin["));
-        assertTrue(infos.get(6).startsWith("Auction["));
+        assertTrue(infos.get(3).startsWith("Other["));
+        assertTrue(infos.get(4).startsWith("Bidder["));
+        assertTrue(infos.get(5).startsWith("Seller["));
+        assertTrue(infos.get(6).startsWith("Admin["));
+        assertTrue(infos.get(7).startsWith("Auction["));
+    }
+
+    @Test
+    void otherItemTypeCreatesOtherItem() {
+        Item item = ItemType.OTHER.createItem(10, "Mystery box", 1000);
+
+        assertTrue(item instanceof Other);
+        assertTrue(item.printInfo().startsWith("Other["));
     }
 }

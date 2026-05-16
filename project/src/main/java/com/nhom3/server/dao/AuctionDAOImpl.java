@@ -268,12 +268,12 @@ public class AuctionDAOImpl implements AuctionDAO {
             stmt.setTimestamp(1, java.sql.Timestamp.valueOf(LocalDateTime.now()));
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    Item item = new Item(
+                    com.nhom3.shared.model.item.ItemType type =
+                            com.nhom3.shared.model.item.ItemType.valueOf(rs.getString("item_type"));
+                    Item item = type.createItem(
                             rs.getInt("item_id"),
                             rs.getString("name"),
-                            rs.getDouble("start_price"),
-                            com.nhom3.shared.model.item.ItemType.valueOf(rs.getString("item_type"))) {
-                    };
+                            rs.getDouble("start_price"));
                     item.setCurHighest(rs.getDouble("cur_highest"));
                     item.setSellerName(rs.getString("seller_name"));
                     int id = rs.getInt("id");
@@ -310,12 +310,12 @@ public class AuctionDAOImpl implements AuctionDAO {
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    Item item = new Item(
+                    com.nhom3.shared.model.item.ItemType type =
+                            com.nhom3.shared.model.item.ItemType.valueOf(rs.getString("item_type"));
+                    Item item = type.createItem(
                             rs.getInt("item_id"),
                             rs.getString("name"),
-                            rs.getDouble("start_price"),
-                            com.nhom3.shared.model.item.ItemType.valueOf(rs.getString("item_type"))) {
-                    };
+                            rs.getDouble("start_price"));
                     item.setCurHighest(rs.getDouble("cur_highest"));
                     int id = rs.getInt("id");
                     java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
@@ -408,9 +408,12 @@ public class AuctionDAOImpl implements AuctionDAO {
             LocalDateTime javaNow = LocalDateTime.now();
 
             while (rs.next()) {
-                Item item = new Item(rs.getInt("item_id"), rs.getString("item_name"), rs.getDouble("start_price"),
-                        com.nhom3.shared.model.item.ItemType.valueOf(rs.getString("item_type"))) {
-                };
+                com.nhom3.shared.model.item.ItemType type =
+                        com.nhom3.shared.model.item.ItemType.valueOf(rs.getString("item_type"));
+                Item item = type.createItem(
+                        rs.getInt("item_id"),
+                        rs.getString("item_name"),
+                        rs.getDouble("start_price"));
                 item.setCurHighest(rs.getDouble("cur_highest"));
                 item.setImageBase64(rs.getString("image"));
 

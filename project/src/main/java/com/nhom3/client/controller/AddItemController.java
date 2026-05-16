@@ -7,6 +7,7 @@ import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.MoneyInputFormatter;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.item.Item;
+import com.nhom3.shared.model.item.ItemType;
 import com.nhom3.shared.model.user.Seller;
 import com.nhom3.shared.model.user.User;
 import com.nhom3.shared.network.packet.Packet;
@@ -44,7 +45,8 @@ public class AddItemController {
         ClientEventBus.getDefault().subscribe(
                 ClientEvents.ItemMutationResult.class, this, AddItemController::handleItemMutationEvent);
         ControllerLifecycle.unsubscribeOnDetach(txtName, this);
-        cbType.setItems(FXCollections.observableArrayList("ART", "ELECTRONICS", "VEHICLE"));
+        cbType.setItems(FXCollections.observableArrayList(
+                java.util.Arrays.stream(ItemType.values()).map(Enum::name).toList()));
         MoneyInputFormatter.install(txtStartPrice);
     }
 

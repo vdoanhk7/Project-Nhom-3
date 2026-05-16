@@ -81,7 +81,10 @@ public class MarketController {
         eventBus.subscribe(ClientEvents.ActiveAuctionsLoaded.class, this, MarketController::handleActiveAuctionsLoaded);
         eventBus.subscribe(ClientEvents.ItemImageLoaded.class, this, MarketController::handleItemImageLoaded);
         ControllerLifecycle.unsubscribeOnDetach(flowMarket, this);
-        cbCategory.setItems(FXCollections.observableArrayList("Tất Cả", "ART", "ELECTRONICS", "VEHICLE"));
+        List<String> categories = new ArrayList<>();
+        categories.add("Tất Cả");
+        categories.addAll(java.util.Arrays.stream(ItemType.values()).map(Enum::name).toList());
+        cbCategory.setItems(FXCollections.observableArrayList(categories));
         cbCategory.setValue("Tất Cả");
 
         // Cấu hình ComboBox Thời gian còn lại (Bảo vệ NPE nếu FXML chưa kịp thêm)

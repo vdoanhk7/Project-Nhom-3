@@ -6,6 +6,7 @@ import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.item.Item;
+import com.nhom3.shared.model.item.ItemType;
 import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.model.user.Bidder;
 import com.nhom3.shared.model.auction.StatusOfAuction;
@@ -194,11 +195,12 @@ public class PurchaseHistoryController {
         for (PurchaseHistoryResponsePayload.HistoryDTO dto : dtoList) {
             
             // 1. TÁI TẠO ITEM ĐẦY ĐỦ (Dùng Factory để có đúng class)
-            Item item = null;
-            if ("ART".equals(dto.itemType)) item = new com.nhom3.shared.factory.ArtCreator().createItem(dto.itemId, dto.itemName, dto.startPrice);
-            else if ("ELECTRONICS".equals(dto.itemType)) item = new com.nhom3.shared.factory.ElectronicsCreator().createItem(dto.itemId, dto.itemName, dto.startPrice);
-            else if ("VEHICLE".equals(dto.itemType)) item = new com.nhom3.shared.factory.VehicleCreator().createItem(dto.itemId, dto.itemName, dto.startPrice);
-            else item = new com.nhom3.shared.model.item.Art(dto.itemId, dto.itemName, dto.startPrice); // Fallback
+            Item item;
+            try {
+                item = ItemType.valueOf(dto.itemType).createItem(dto.itemId, dto.itemName, dto.startPrice);
+            } catch (Exception e) {
+                item = ItemType.OTHER.createItem(dto.itemId, dto.itemName, dto.startPrice);
+            }
             item.setCurHighest(dto.curHighest);
 
             // 2. TÁI TẠO THỜI GIAN ĐẦY ĐỦ

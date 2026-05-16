@@ -84,7 +84,10 @@ public class ManageItemController {
     public void initialize() {
         registerEventHandlers();
         ControllerLifecycle.unsubscribeOnDetach(tableItems, this);
-        cbCategory.setItems(FXCollections.observableArrayList("Tất cả", "ART", "ELECTRONICS", "VEHICLE"));
+        List<String> categories = new java.util.ArrayList<>();
+        categories.add("Tất cả");
+        categories.addAll(java.util.Arrays.stream(ItemType.values()).map(Enum::name).toList());
+        cbCategory.setItems(FXCollections.observableArrayList(categories));
         setupTableColumns();
         setupActionColumn();
         setupSearchAndFilter();

@@ -1,5 +1,8 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.client.event.ClientEventBus;
+import com.nhom3.client.event.ClientEvents;
+import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
@@ -50,9 +53,6 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
-        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class ManageItemController {
 
     @FXML private TextField txtSearch;
@@ -80,20 +80,25 @@ public class ManageItemController {
     private Item pendingDeleteItem;
     private Item pendingViewItem;
 
-    private static ManageItemController instance;
-
-    public static ManageItemController getInstance() {
-        return instance;
-    }
-
     @FXML
     public void initialize() {
-        instance = this;
+        registerEventHandlers();
+        ControllerLifecycle.unsubscribeOnDetach(tableItems, this);
         cbCategory.setItems(FXCollections.observableArrayList("Tất cả", "ART", "ELECTRONICS", "VEHICLE"));
         setupTableColumns();
         setupActionColumn();
         setupSearchAndFilter();
         loadSellerItems();
+    }
+
+    private void registerEventHandlers() {
+        ClientEventBus eventBus = ClientEventBus.getDefault();
+        eventBus.subscribe(ClientEvents.SellerItemsLoaded.class, this, ManageItemController::handleSellerItemsLoaded);
+        eventBus.subscribe(ClientEvents.ItemImageLoaded.class, this, ManageItemController::handleItemImageLoaded);
+        eventBus.subscribe(ClientEvents.DeleteItemResult.class, this, ManageItemController::handleDeleteItemEvent);
+        eventBus.subscribe(ClientEvents.ConfirmPaymentResult.class, this, ManageItemController::handleConfirmPaymentEvent);
+        eventBus.subscribe(ClientEvents.AuctionByItemLoaded.class, this, ManageItemController::handleAuctionByItemLoaded);
+        eventBus.subscribe(ClientEvents.SellerItemsChanged.class, this, ManageItemController::handleSellerItemsChanged);
     }
 
     public void loadSellerItems() {
@@ -132,6 +137,10 @@ public class ManageItemController {
         tableItems.refresh();
     }
 
+    private void handleSellerItemsLoaded(ClientEvents.SellerItemsLoaded event) {
+        handleLoadItemsResult(event.items());
+    }
+
     public void handleItemImageResult(ItemImagePayload payload) {
         if (payload == null || payload.getItemId() <= 0) {
             return;
@@ -157,6 +166,10 @@ public class ManageItemController {
         tableItems.refresh();
     }
 
+    private void handleItemImageLoaded(ClientEvents.ItemImageLoaded event) {
+        handleItemImageResult(event.payload());
+    }
+
     public void handleDeleteItemResult(boolean success, String message) {
         showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
                 success ? "Thành công" : "Thất bại", message);
@@ -166,12 +179,20 @@ public class ManageItemController {
         pendingDeleteItem = null;
     }
 
+    private void handleDeleteItemEvent(ClientEvents.DeleteItemResult event) {
+        handleDeleteItemResult(event.success(), event.message());
+    }
+
     public void handleConfirmPaymentResult(boolean success, String message) {
         showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
                 success ? "Thành công" : "Thất bại", message);
         if (success) {
             loadSellerItems();
         }
+    }
+
+    private void handleConfirmPaymentEvent(ClientEvents.ConfirmPaymentResult event) {
+        handleConfirmPaymentResult(event.success(), event.message());
     }
 
     public void handleLoadAuctionByItemResult(List<AuctionListResponsePayload.AuctionDTO> dtoList) {
@@ -185,6 +206,14 @@ public class ManageItemController {
         }
         openDetailWindow(pendingViewItem, auction, getAuctionStatus(pendingViewItem));
         pendingViewItem = null;
+    }
+
+    private void handleAuctionByItemLoaded(ClientEvents.AuctionByItemLoaded event) {
+        handleLoadAuctionByItemResult(event.auctions());
+    }
+
+    private void handleSellerItemsChanged(ClientEvents.SellerItemsChanged event) {
+        loadSellerItems();
     }
 
     private void setupTableColumns() {
@@ -394,7 +423,6 @@ public class ManageItemController {
             popupStage.setScene(new Scene(root));
             popupStage.setResizable(false);
             popupStage.showAndWait();
-            loadSellerItems();
         } catch (IOException e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể mở cửa sổ thêm sản phẩm!");
@@ -415,7 +443,6 @@ public class ManageItemController {
             stage.setTitle("Đăng Bán Sản Phẩm");
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
-            loadSellerItems();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -435,7 +462,6 @@ public class ManageItemController {
             popupStage.setScene(new Scene(root));
             popupStage.setResizable(false);
             popupStage.showAndWait();
-            loadSellerItems();
         } catch (Exception e) {
             e.printStackTrace();
         }

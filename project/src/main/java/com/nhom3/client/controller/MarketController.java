@@ -9,6 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.nhom3.client.event.ClientEventBus;
+import com.nhom3.client.event.ClientEvents;
+import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
@@ -48,9 +51,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
-        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class MarketController {
 
     @FXML private FlowPane flowMarket;
@@ -69,15 +69,13 @@ public class MarketController {
     private final Set<Integer> requestedImageIds = ConcurrentHashMap.newKeySet();
     private final Set<Integer> noImageIds = ConcurrentHashMap.newKeySet();
     private final Map<Integer, StackPane> imageSlots = new ConcurrentHashMap<>();
-    private static MarketController instance;
-
-    public static MarketController getInstance() {
-        return instance;
-    }
 
     @FXML
     public void initialize() {
-        instance = this;
+        ClientEventBus eventBus = ClientEventBus.getDefault();
+        eventBus.subscribe(ClientEvents.ActiveAuctionsLoaded.class, this, MarketController::handleActiveAuctionsLoaded);
+        eventBus.subscribe(ClientEvents.ItemImageLoaded.class, this, MarketController::handleItemImageLoaded);
+        ControllerLifecycle.unsubscribeOnDetach(flowMarket, this);
         cbCategory.setItems(FXCollections.observableArrayList("Tất Cả", "ART", "ELECTRONICS", "VEHICLE"));
         cbCategory.setValue("Tất Cả");
 
@@ -120,6 +118,10 @@ public class MarketController {
         javafx.application.Platform.runLater(this::filterMarket);
     }
 
+    private void handleActiveAuctionsLoaded(ClientEvents.ActiveAuctionsLoaded event) {
+        handleLoadActiveAuctionsResult(event.auctions());
+    }
+
     public void handleItemImageResult(ItemImagePayload payload) {
         if (payload == null || payload.getItemId() <= 0) {
             return;
@@ -147,6 +149,10 @@ public class MarketController {
         if (imageSlot != null) {
             renderImage(imageSlot, imageBase64);
         }
+    }
+
+    private void handleItemImageLoaded(ClientEvents.ItemImageLoaded event) {
+        handleItemImageResult(event.payload());
     }
 
     private Auction toAuction(AuctionListResponsePayload.AuctionDTO dto) {

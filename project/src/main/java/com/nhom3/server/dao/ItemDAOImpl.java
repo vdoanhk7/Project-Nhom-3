@@ -47,7 +47,7 @@ public class ItemDAOImpl implements ItemDAO {
 
     public List<Item> getItemsBySellerId(int sellerId) {
         List<Item> list = new ArrayList<>();
-        String sql = "SELECT * FROM items WHERE seller_id = ?";
+        String sql = "SELECT id, name, start_price, cur_highest, item_type FROM items WHERE seller_id = ?";
         
         try (Connection conn = DbConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {     
@@ -59,13 +59,11 @@ public class ItemDAOImpl implements ItemDAO {
                 double startPrice = rs.getDouble("start_price");
                 String type = rs.getString("item_type");
                 double curHighest = rs.getDouble("cur_highest");
-                String image = rs.getString("image");
                 Item item = null;
                 com.nhom3.shared.model.item.ItemType itemType = com.nhom3.shared.model.item.ItemType.valueOf(type);
                 item = itemType.createItem(id, name, startPrice);
                 if (item != null) {
                     item.setCurHighest(curHighest);
-                    item.setImageBase64(image);
                     list.add(item);
                 }
             } 
@@ -73,6 +71,23 @@ public class ItemDAOImpl implements ItemDAO {
             e.printStackTrace(); 
         }
         return list;
+    }
+
+    @Override
+    public String getItemImageBase64(int itemId) {
+        String sql = "SELECT image FROM items WHERE id = ?";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, itemId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("image");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
@@ -92,15 +107,25 @@ public class ItemDAOImpl implements ItemDAO {
 
     @Override
     public boolean updateItem(Item item) {
-        String sql = "UPDATE items SET name = ?, start_price = ?, cur_highest = ?, item_type = ?, image = ? WHERE id = ?"; 
+        String sql;
+        boolean shouldUpdateImage = item.getImageBase64() != null;
+        if (shouldUpdateImage) {
+            sql = "UPDATE items SET name = ?, start_price = ?, cur_highest = ?, item_type = ?, image = ? WHERE id = ?";
+        } else {
+            sql = "UPDATE items SET name = ?, start_price = ?, cur_highest = ?, item_type = ? WHERE id = ?";
+        }
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) { 
             stmt.setString(1, item.getName());
             stmt.setDouble(2, item.getStartPrice());
             stmt.setDouble(3, item.getCurHighest());  
             stmt.setString(4, item.getType().name());
-            stmt.setString(5, item.getImageBase64());
-            stmt.setInt(6, item.getId()); 
+            if (shouldUpdateImage) {
+                stmt.setString(5, item.getImageBase64());
+                stmt.setInt(6, item.getId());
+            } else {
+                stmt.setInt(5, item.getId());
+            }
             return stmt.executeUpdate() > 0;     
         } catch (Exception e) {
             e.printStackTrace();

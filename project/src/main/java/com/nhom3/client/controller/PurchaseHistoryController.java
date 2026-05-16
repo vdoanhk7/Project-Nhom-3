@@ -1,5 +1,8 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.client.event.ClientEventBus;
+import com.nhom3.client.event.ClientEvents;
+import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.item.Item;
@@ -31,9 +34,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
-        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class PurchaseHistoryController {
 
     @FXML private TableView<Auction> tableHistory;
@@ -48,13 +48,11 @@ public class PurchaseHistoryController {
 
     private ObservableList<Auction> masterDataList = FXCollections.observableArrayList();
 
-    // ---- THÊM SINGLETON CHO SERVER HANDLER GỌI VỀ ----
-    private static PurchaseHistoryController instance;
-    public static PurchaseHistoryController getInstance() { return instance; }
-
     @FXML
     public void initialize() {
-        instance = this; // Gán instance
+        ClientEventBus.getDefault().subscribe(
+                ClientEvents.PurchaseHistoryLoaded.class, this, PurchaseHistoryController::handlePurchaseHistoryLoaded);
+        ControllerLifecycle.unsubscribeOnDetach(tableHistory, this);
         tableHistory.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         cbFilter.setItems(FXCollections.observableArrayList(
@@ -232,6 +230,10 @@ public class PurchaseHistoryController {
         // Ép vẽ lại trên giao diện
         masterDataList.setAll(realList);
         tableHistory.refresh();
+    }
+
+    private void handlePurchaseHistoryLoaded(ClientEvents.PurchaseHistoryLoaded event) {
+        handleLoadHistoryResult(event.historyList());
     }
 
     private void navigateToDetail(Auction auction) {

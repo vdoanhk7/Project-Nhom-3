@@ -67,7 +67,7 @@ public class ServerConnection {
     }
 
     // Gửi yêu cầu đến server
-    public void sendMessage(Packet request) throws IOException {
+    public synchronized void sendMessage(Packet request) throws IOException {
         try {
             String jsonRequest = gson.toJson(request);
             out.write(jsonRequest);

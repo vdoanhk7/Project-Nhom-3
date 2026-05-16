@@ -1,5 +1,8 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.client.event.ClientEventBus;
+import com.nhom3.client.event.ClientEvents;
+import com.nhom3.client.event.ControllerLifecycle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.layout.StackPane;
@@ -43,19 +46,18 @@ public class MainController {
     @FXML private Button btnAdminPanel;
     @FXML private Button btnProfile;
 
-    private static MainController instance;
     private long currentNavigationId = 0; 
     
     private List<Button> allMenuButtons; 
 
-    public static MainController getInstance() {
-        return instance;
-    }
-
     @FXML
     public void initialize() {
-        instance = this;
         System.out.println("Giao diện chính đã tải thành công!");
+        ClientEventBus.getDefault().subscribe(
+                ClientEvents.NavigationRequested.class, this, MainController::handleNavigationRequested);
+        ClientEventBus.getDefault().subscribe(
+                ClientEvents.UserProfileChanged.class, this, MainController::handleUserProfileChanged);
+        ControllerLifecycle.unsubscribeOnDetach(contentArea, this);
         
         allMenuButtons = Arrays.asList(btnDashboard, btnMarket, btnPurchaseHistory, btnManageItem, btnAdminPanel, btnProfile);
         
@@ -78,6 +80,21 @@ public class MainController {
         }
         System.out.println("Đang tự động tải trang Tổng quan mặc định...");
         navigateToDashboard(); 
+    }
+
+    private void handleNavigationRequested(ClientEvents.NavigationRequested event) {
+        switch (event.route()) {
+            case DASHBOARD -> navigateToDashboard();
+            case MARKET -> navigateToMarket();
+            case PURCHASE_HISTORY -> navigateToPurchaseHistory();
+            case MANAGE_ITEM -> navigateToManageItem();
+            case ADMIN_PANEL -> navigateToAdminPanel();
+            case PROFILE -> navigateToProfile();
+        }
+    }
+
+    private void handleUserProfileChanged(ClientEvents.UserProfileChanged event) {
+        refreshUserProfileHeader();
     }
 
     public void refreshUserProfileHeader() {

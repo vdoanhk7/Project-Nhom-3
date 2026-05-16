@@ -1,5 +1,8 @@
 package com.nhom3.client.controller;
 
+import com.nhom3.client.event.ClientEventBus;
+import com.nhom3.client.event.ClientEvents;
+import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.user.Admin;
@@ -29,9 +32,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD",
-        justification = "JavaFX controllers are reached from the socket dispatcher through the active screen instance.")
 public class ProfileController {
     private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     private static final String PHONE_REGEX = "^0\\d{9}$";
@@ -48,15 +48,13 @@ public class ProfileController {
 
     private boolean editMode;
     private String selectedProfileImageBase64;
-    private static ProfileController instance;
-
-    public static ProfileController getInstance() {
-        return instance;
-    }
+    private boolean waitingForProfileUpdateResult;
 
     @FXML
     public void initialize() {
-        instance = this;
+        ClientEventBus.getDefault().subscribe(
+                ClientEvents.ProfileUpdateResult.class, this, ProfileController::handleProfileUpdateEvent);
+        ControllerLifecycle.unsubscribeOnDetach(txtName, this);
         setupAvatarClip();
         loadUserToForm();
         txtPhone.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -144,11 +142,17 @@ public class ProfileController {
         }
         selectedProfileImageBase64 = result.getProfileImageBase64();
         renderProfileImage(selectedProfileImageBase64);
-        if (MainController.getInstance() != null) {
-            MainController.getInstance().refreshUserProfileHeader();
-        }
+        ClientEventBus.getDefault().publish(new ClientEvents.UserProfileChanged());
         resetToViewMode();
         showAlert(Alert.AlertType.INFORMATION, "Thành công", result.getMessage());
+    }
+
+    private void handleProfileUpdateEvent(ClientEvents.ProfileUpdateResult event) {
+        if (!waitingForProfileUpdateResult) {
+            return;
+        }
+        waitingForProfileUpdateResult = false;
+        handleUpdateProfileResult(event.result());
     }
 
     private void sendUpdateProfileRequest() {
@@ -188,8 +192,10 @@ public class ProfileController {
                     email,
                     phone,
                     selectedProfileImageBase64);
+            waitingForProfileUpdateResult = true;
             ServerConnection.getInstance().sendMessage(new Packet(PacketType.UPDATE_PROFILE, payload));
         } catch (Exception e) {
+            waitingForProfileUpdateResult = false;
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi yêu cầu cập nhật!");
         }

@@ -20,6 +20,7 @@ public class PublishAuctionController {
     @FXML private DatePicker dpStartDate, dpEndDate;
     @FXML private TextField txtStartTime, txtEndTime;
     @FXML private TextField txtBidStep;
+    @FXML private javafx.scene.image.ImageView imgPreview;
 
     // Khai báo thêm 2 nút để cấu hình hiệu ứng Hover ở initialize
     @FXML private Button btnCancel;
@@ -71,6 +72,17 @@ public class PublishAuctionController {
         dpEndDate.setValue(LocalDate.now().plusDays(1)); // Mặc định kết thúc sau 1 ngày
         txtStartTime.setText("08:00");
         txtEndTime.setText("22:00");
+        txtBidStep.setText(MoneyInputFormatter.formatAmount(com.nhom3.shared.model.auction.Auction.DEFAULT_BID_STEP));
+        
+        if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
+            try {
+                byte[] imageBytes = java.util.Base64.getDecoder().decode(item.getImageBase64());
+                imgPreview.setImage(new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imageBytes)));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
         // Kiểm tra xem class Auction có hằng số DEFAULT_BID_STEP không, nếu có lỗi đoạn này bạn thay bằng 50000 nhé
         try {
             txtBidStep.setText(MoneyInputFormatter.formatAmount(com.nhom3.shared.model.auction.Auction.DEFAULT_BID_STEP));

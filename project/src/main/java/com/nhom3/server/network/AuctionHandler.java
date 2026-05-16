@@ -92,6 +92,7 @@ public class AuctionHandler {
                 Auction currentAuction = dao.getAuctionById(auctionId);
                 if (currentAuction == null)
                     throw new IllegalStateException("Không tìm thấy phiên đấu giá này!");
+                
                 List<AutoBidPayload> autoBids = dao.getActiveAutoBids(auctionId);
                 if (autoBids.isEmpty())
                     return;
@@ -99,35 +100,77 @@ public class AuctionHandler {
                 double currentHighest = currentAuction.getItem().getCurHighest();
                 int highestBidderId = currentAuction.getHighestBidderId();
 
-                if (autoBids.size() == 1) {
-                    if (autoBids.get(0).getUserId() == highestBidderId)
-                        return;
-                    else if (autoBids.get(0).getMaxAmount() < currentHighest) {
-                        dao.cancelAutoBid(auctionId, autoBids.get(0).getUserId());
-                    } else {
-                        double maxAmount = autoBids.get(0).getMaxAmount();
-                        double intendedAmount = currentHighest + autoBids.get(0).getIncrement();
-                        if (intendedAmount > maxAmount)
-                            intendedAmount = maxAmount;
-                        Bidder bidder = new Bidder(autoBids.get(0).getUserId(), null, null);
-                        BidTransaction newBid = new BidTransaction(0, bidder, intendedAmount, LocalDateTime.now(),
-                                "Đặt giá qua 🤖 Auto-Bid");
-                        boolean isBidSuccess = auctionService.placeBid(currentAuction, newBid);
+                // Dùng Map để lưu thứ tự đăng ký (đảm bảo người đăng ký trước thắng nếu bằng giá)
+                java.util.Map<Integer, Integer> timeOrder = new java.util.HashMap<>();
+                for (int i = 0; i < autoBids.size(); i++) {
+                    timeOrder.put(autoBids.get(i).getUserId(), i);
+                }
 
-                        if (isBidSuccess) {
-                            announcer.notify(auctionId, intendedAmount);
-                        }
+                // Hàng đợi ưu tiên: So sánh maxAmount giảm dần. Nếu bằng nhau, ưu tiên người đăng ký trước.
+                java.util.PriorityQueue<AutoBidPayload> pq = new java.util.PriorityQueue<>((a, b) -> {
+                    int maxCmp = Double.compare(b.getMaxAmount(), a.getMaxAmount());
+                    if (maxCmp != 0) return maxCmp;
+                    return Integer.compare(timeOrder.get(a.getUserId()), timeOrder.get(b.getUserId()));
+                });
+                pq.addAll(autoBids);
+
+                AutoBidPayload winnerBot = pq.poll();
+                if (winnerBot == null) return;
+
+                double bidStep = currentAuction.getBidStep();
+                AutoBidPayload secondBot = null;
+                
+                // Tìm đối thủ mạnh nhất còn khả năng trả giá
+                while (!pq.isEmpty()) {
+                    AutoBidPayload bot = pq.poll();
+                    if (bot.getMaxAmount() >= currentHighest + bidStep) {
+                        secondBot = bot;
+                        break;
+                    } else {
+                        dao.cancelAutoBid(auctionId, bot.getUserId()); // Bot này hết tiền, hủy.
+                    }
+                }
+
+                if (secondBot == null) {
+                    // CHỈ CÒN 1 NGƯỜI DUY NHẤT
+                    if (winnerBot.getUserId() == highestBidderId) {
+                        return; // Đang dẫn đầu, không cần tự tự nâng giá mình lên
+                    }
+                    
+                    double requiredMin = currentHighest + bidStep;
+                    if (winnerBot.getMaxAmount() < requiredMin) {
+                        dao.cancelAutoBid(auctionId, winnerBot.getUserId());
+                        return;
+                    }
+                    
+                    double intendedAmount = currentHighest + winnerBot.getIncrement();
+                    if (intendedAmount < requiredMin) intendedAmount = requiredMin;
+                    if (intendedAmount > winnerBot.getMaxAmount()) intendedAmount = winnerBot.getMaxAmount();
+
+                    Bidder bidder = new Bidder(winnerBot.getUserId(), null, null);
+                    BidTransaction newBid = new BidTransaction(0, bidder, intendedAmount, LocalDateTime.now(), "Đặt giá qua \ud83e\udd16 Auto-Bid");
+                    boolean isBidSuccess = auctionService.placeBid(currentAuction, newBid);
+                    if (isBidSuccess) {
+                        announcer.notify(auctionId, intendedAmount);
                     }
                 } else {
-                    int winner = autoBids.get(0).getMaxAmount() > autoBids.get(1).getMaxAmount() ? 0 : 1;
-                    int loser = winner ^ 1; // XOR để ra id autobid còn lại
-                    double maxAmount = autoBids.get(winner).getMaxAmount();
-                    double intendedAmount = autoBids.get(loser).getMaxAmount() + autoBids.get(winner).getIncrement();
-                    if (intendedAmount > maxAmount)
-                        intendedAmount = maxAmount;
-                    Bidder bidder = new Bidder(autoBids.get(winner).getUserId(), null, null);
-                    BidTransaction newBid = new BidTransaction(0, bidder, intendedAmount, LocalDateTime.now(),
-                            "Đặt giá qua 🤖 Auto-Bid");
+                    // CÓ 2 NGƯỜI ĐẤU VỚI NHAU TRỞ LÊN
+                    // Giá cuối cùng sẽ được đẩy lên bằng giá max của người thứ 2 + bước nhảy của người thứ 1
+                    double intendedAmount = secondBot.getMaxAmount() + winnerBot.getIncrement();
+                    
+                    double requiredMin = currentHighest + bidStep;
+                    if (intendedAmount < requiredMin) intendedAmount = requiredMin;
+                    if (intendedAmount > winnerBot.getMaxAmount()) intendedAmount = winnerBot.getMaxAmount();
+
+                    // Hủy người thua cuộc (secondBot) và tất cả các bot yếu hơn trong hàng đợi
+                    dao.cancelAutoBid(auctionId, secondBot.getUserId());
+                    while (!pq.isEmpty()) {
+                        dao.cancelAutoBid(auctionId, pq.poll().getUserId());
+                    }
+
+                    // Chốt giá chiến thắng cho winnerBot (chỉ gọi 1 lần duy nhất vào DB, tránh spam đệ quy)
+                    Bidder bidder = new Bidder(winnerBot.getUserId(), null, null);
+                    BidTransaction newBid = new BidTransaction(0, bidder, intendedAmount, LocalDateTime.now(), "Đặt giá qua \ud83e\udd16 Auto-Bid");
                     boolean isBidSuccess = auctionService.placeBid(currentAuction, newBid);
                     if (isBidSuccess) {
                         announcer.notify(auctionId, intendedAmount);

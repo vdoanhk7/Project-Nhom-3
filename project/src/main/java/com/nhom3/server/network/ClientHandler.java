@@ -58,7 +58,9 @@ public class ClientHandler implements Runnable {
                     continue; 
                 }
                 
-                System.out.println("[SERVER - RAW RECEIVE] Vừa nhận được gói tin loại: " + request.getType());
+                if (request.getType() != com.nhom3.shared.network.packet.PacketType.GET_SYSTEM_LOGS) {
+                    System.out.println("[SERVER - RAW RECEIVE] Vừa nhận được gói tin loại: " + request.getType());
+                }
 
                 // Sử dụng Dispatcher thay vì Switch Case khổng lồ
                 Packet response = dispatcher.dispatch(request, gson);

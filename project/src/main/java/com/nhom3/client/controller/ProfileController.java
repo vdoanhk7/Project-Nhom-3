@@ -12,7 +12,6 @@ import com.nhom3.shared.network.payload.UserProfilePayload;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Base64;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -36,7 +35,6 @@ import javafx.stage.Stage;
 public class ProfileController {
     private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     private static final String PHONE_REGEX = "^0\\d{9}$";
-    private static final long MAX_PROFILE_IMAGE_BYTES = 2L * 1024 * 1024;
 
     @FXML private TextField txtName;
     @FXML private TextField txtEmail;
@@ -92,6 +90,7 @@ public class ProfileController {
                     getClass().getResource("/com/nhom3/client/view/change_password.fxml"));
             Parent root = loader.load();
             Stage popupStage = new Stage();
+            popupStage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             popupStage.setTitle("Thay đổi mật khẩu");
             popupStage.initModality(Modality.APPLICATION_MODAL);
             popupStage.setScene(new Scene(root));
@@ -116,23 +115,15 @@ public class ProfileController {
             return;
         }
 
-        if (selectedFile.length() > MAX_PROFILE_IMAGE_BYTES) {
-            showAlert(Alert.AlertType.WARNING, "Ảnh quá lớn", "Vui lòng chọn ảnh nhỏ hơn 2MB.");
-            return;
-        }
-
         try {
-            byte[] imageBytes = Files.readAllBytes(selectedFile.toPath());
-            Image image = new Image(new ByteArrayInputStream(imageBytes));
-            if (image.isError()) {
-                showAlert(Alert.AlertType.ERROR, "Ảnh không hợp lệ", "Không thể đọc file ảnh đã chọn.");
+            selectedProfileImageBase64 = com.nhom3.client.utils.ImageUtils.compressAndEncodeImage(selectedFile);
+            if (selectedProfileImageBase64 == null) {
+                showAlert(Alert.AlertType.ERROR, "Ảnh không hợp lệ", "Không thể xử lý ảnh.");
                 return;
             }
-
-            selectedProfileImageBase64 = Base64.getEncoder().encodeToString(imageBytes);
             renderProfileImage(selectedProfileImageBase64);
             enterEditMode();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi đọc file", "Không thể mở ảnh đã chọn.");
         }

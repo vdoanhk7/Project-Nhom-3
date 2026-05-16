@@ -55,6 +55,13 @@
                 </Tab>
                 <Tab text="Quản lý Đấu giá">
                     <VBox spacing="10" style="-fx-padding: 15;">
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Button fx:id="btnAllAuctions" text="Tất cả Phiên Đấu Giá" style="-fx-background-color: #3498db; -fx-text-fill: white;" />
+                            <Button fx:id="btnOpenAuctions" text="Chờ Mở" style="-fx-background-color: #f39c12; -fx-text-fill: white;" />
+                            <Button fx:id="btnRunningAuctions" text="Đang Đấu Giá" style="-fx-background-color: #9b59b6; -fx-text-fill: white;" />
+                            <Button fx:id="btnSuccessfulSales" text="Đã Bán" style="-fx-background-color: #27ae60; -fx-text-fill: white;" />
+                            <Button fx:id="btnCancelledAuctions" text="Đã Hủy" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" />
+                        </HBox>
                         <TableView fx:id="tableAuctions" VBox.vgrow="ALWAYS">
                             <columns>
                                 <TableColumn fx:id="colAuctionId" text="ID" prefWidth="50" />

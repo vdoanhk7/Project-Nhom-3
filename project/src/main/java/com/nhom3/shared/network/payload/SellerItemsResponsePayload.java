@@ -11,14 +11,20 @@ public class SellerItemsResponsePayload {
         public double startPrice;
         public double curHighest;
         public String status; 
+        public String imageBase64;
 
         public SellerItemDTO(int id, String name, String type, double startPrice, double curHighest, String status) {
+            this(id, name, type, startPrice, curHighest, status, null);
+        }
+
+        public SellerItemDTO(int id, String name, String type, double startPrice, double curHighest, String status, String imageBase64) {
             this.id = id;
             this.name = name;
             this.type = type;
             this.startPrice = startPrice;
             this.curHighest = curHighest;
             this.status = status;
+            this.imageBase64 = imageBase64;
         }
     }
 

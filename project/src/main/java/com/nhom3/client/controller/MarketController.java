@@ -28,11 +28,16 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import java.io.ByteArrayInputStream;
+import java.util.Base64;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -98,6 +103,7 @@ public class MarketController {
         ItemType type = ItemType.valueOf(dto.itemType);
         Item item = type.createItem(dto.itemId, dto.itemName, dto.startPrice);
         item.setCurHighest(dto.curHighest);
+        item.setImageBase64(dto.imageBase64);
         
         Auction auction = new Auction(
                 dto.auctionId,
@@ -182,13 +188,43 @@ public class MarketController {
             card.setTranslateY(0); // Trả về vị trí cũ
         });
 
-        // 2. Khu vực Ảnh Sản Phẩm (Gradient + Icon)
+        // 2. Khu vực Ảnh Sản Phẩm (Kết hợp Logic của TienDung và UI của main)
         StackPane imageWrapper = new StackPane();
         imageWrapper.setPrefSize(210, 160);
         imageWrapper.setStyle("-fx-background-color: linear-gradient(to bottom right, #f1f2f6, #dfe4ea); -fx-background-radius: 8;");
-        Label imgIcon = new Label("📸");
-        imgIcon.setStyle("-fx-font-size: 40px; -fx-opacity: 0.3;");
-        imageWrapper.getChildren().add(imgIcon);
+
+        boolean imageLoaded = false;
+        
+        if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
+            try {
+                byte[] imageBytes = Base64.getDecoder().decode(item.getImageBase64());
+                Image img = new Image(new ByteArrayInputStream(imageBytes));
+                ImageView imageView = new ImageView(img);
+                
+                // Set kích thước theo wrapper của main
+                imageView.setFitWidth(210);
+                imageView.setFitHeight(160);
+                imageView.setPreserveRatio(false);
+                
+                // Bo góc cho ImageView để không bị tràn ra ngoài background-radius của wrapper
+                Rectangle clip = new Rectangle(210, 160);
+                clip.setArcWidth(16);
+                clip.setArcHeight(16);
+                imageView.setClip(clip);
+
+                imageWrapper.getChildren().add(imageView);
+                imageLoaded = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } 
+        
+        // Nếu không có ảnh hoặc lỗi, thêm Icon Placeholder của main
+        if (!imageLoaded) {
+            Label imgIcon = new Label("📸");
+            imgIcon.setStyle("-fx-font-size: 40px; -fx-opacity: 0.3;");
+            imageWrapper.getChildren().add(imgIcon);
+        }
 
         // 3. Phân loại sản phẩm (Badge)
         Label lblType = new Label(item.getType().name());
@@ -228,8 +264,9 @@ public class MarketController {
         btnBid.setOnMouseExited(e -> btnBid.setStyle(btnDefaultStyle));
         btnBid.setOnAction(e -> openItemDetail(item, auction, this::loadMarket));
 
-        // Ráp tất cả vào Card
+        // Ráp tất cả vào Card theo chuẩn giao diện của nhánh main
         card.getChildren().addAll(imageWrapper, lblType, lblName, priceBox, spacer, btnBid);
+        
         return card;
     }
 
@@ -251,6 +288,7 @@ public class MarketController {
             detailController.setItemData(item, auction, auction.getStatus().name());
 
             Stage stage = new Stage();
+            stage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Chi tiết sản phẩm - " + item.getName());
             stage.setScene(new Scene(root));

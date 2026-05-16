@@ -52,6 +52,28 @@ public class ItemService {
         }
     }
 
+    public boolean updateItem(Item item) throws IllegalArgumentException {
+        log.info("Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: {}", item.getId());
+        if (item == null || item.getName() == null || item.getName().trim().isEmpty()) {
+            log.warn("Cập nhật thất bại: Tên sản phẩm trống.");
+            throw new IllegalArgumentException("Tên sản phẩm không được để trống!");
+        }
+        if (item.getStartPrice() < 0) {
+            log.warn("Cập nhật thất bại: Giá khởi điểm âm ({}).", item.getStartPrice());
+            throw new IllegalArgumentException("Giá khởi điểm không hợp lệ!");
+        }
+
+        boolean isSuccess = itemDAO.updateItem(item);
+
+        if (isSuccess) {
+            log.info("Đã cập nhật thành công sản phẩm ID: {}", item.getId());
+            return true;
+        } else {
+            log.error("Lỗi Database khi cập nhật sản phẩm ID: {}", item.getId());
+            return false;
+        }
+    }
+
     public boolean removeItem(int sellerId, int itemId) throws IllegalStateException {
         log.info("Bắt đầu xử lý yêu cầu xóa sản phẩm ID: {} từ Seller ID: {}", itemId, sellerId);
 

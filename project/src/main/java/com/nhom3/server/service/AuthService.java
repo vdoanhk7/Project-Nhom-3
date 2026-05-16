@@ -51,6 +51,16 @@ public class AuthService {
         return userDAO.changePassword(userId, oldPassword, newPassword);
     }
 
+    public boolean deleteUser(int userId) {
+        boolean success = userDAO.deleteUser(userId);
+        if (success) {
+            log.info("Server: Đã xóa tài khoản ID " + userId);
+        } else {
+            log.info("Server: Xóa tài khoản thất bại ID " + userId);
+        }
+        return success;
+    }
+
     private void validateRegistrationData(User user) {
         if (user == null || user.getUserInfo() == null || user.getUserContact() == null) {
             throw new IllegalArgumentException("Dữ liệu đăng ký không hợp lệ!");

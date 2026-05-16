@@ -224,7 +224,7 @@ public class PacketDispatcher {
         ItemPayload payload = gson.fromJson(request.getPayload(), ItemPayload.class);
         try {
             Item item = buildItem(payload);
-            boolean success = new ItemDAOImpl().updateItem(item);
+            boolean success = new ItemService().updateItem(item);
             return new Packet(PacketType.UPDATE_ITEM, new ResultPayload(success,
                     success ? "Đã cập nhật thông tin sản phẩm!" : "Không thể cập nhật sản phẩm!",
                     -1, "", "", "", "", ""));
@@ -290,7 +290,7 @@ public class PacketDispatcher {
 
     private Packet handleChangePassword(Packet request, Gson gson) {
         ChangePasswordPayload payload = gson.fromJson(request.getPayload(), ChangePasswordPayload.class);
-        boolean success = new UserDAOImpl().changePassword(
+        boolean success = authService.updatePassword(
                 payload.getUserId(), payload.getOldPassword(), payload.getNewPassword());
         return new Packet(PacketType.CHANGE_PASSWORD, new ResultPayload(success,
                 success ? "Mật khẩu đã được thay đổi thành công!"
@@ -464,8 +464,7 @@ public class PacketDispatcher {
 
     private Packet handleDeleteUser(Packet request, Gson gson) {
         UserIdPayload payload = gson.fromJson(request.getPayload(), UserIdPayload.class);
-        UserDAO userDAO = new UserDAOImpl();
-        boolean success = userDAO.deleteUser(payload.getUserId());
+        boolean success = authService.deleteUser(payload.getUserId());
         
         return new Packet(PacketType.DELETE_USER, new ResultPayload(success,
                 success ? "Đã xóa tài khoản thành công!" : "Lỗi: Không thể xóa tài khoản!",

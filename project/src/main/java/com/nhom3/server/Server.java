@@ -8,15 +8,17 @@ import java.util.concurrent.*;
 import com.nhom3.server.network.ClientHandler;
 
 public class Server {
-    public static final int PORT = 8080;
+    public static final int DEFAULT_PORT = 8080;
     public static final int MAX_CLIENTS = 100; 
     private final ServerSocket serverSocket;
+    private final int port;
     private final ExecutorService clientThreadPool;
     private final List<ClientHandler> connectedClients;
     private final Semaphore clientLimiter;
 
     public Server() throws IOException {
-        serverSocket = new ServerSocket(PORT);
+        port = readIntConfig("AUCTION_SERVER_PORT", "auction.server.port", DEFAULT_PORT);
+        serverSocket = new ServerSocket(port);
         // Sử dụng Virtual Threads thay cho FixedThreadPool để tối ưu I/O
         clientThreadPool = Executors.newVirtualThreadPerTaskExecutor();
         // Cấu trúc dữ liệu Thread-safe cho danh sách clients
@@ -27,6 +29,10 @@ public class Server {
 
     public ServerSocket getServerSocket() {
         return serverSocket;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public List<ClientHandler> getConnectedClients() {
@@ -69,6 +75,21 @@ public class Server {
             }
         } catch (IOException e) {
             System.err.println("Lỗi khi tắt server: " + e.getMessage());
+        }
+    }
+
+    private static int readIntConfig(String envName, String propertyName, int defaultValue) {
+        String propertyValue = System.getProperty(propertyName);
+        String value = propertyValue != null && !propertyValue.isBlank()
+                ? propertyValue
+                : System.getenv(envName);
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
         }
     }
 }

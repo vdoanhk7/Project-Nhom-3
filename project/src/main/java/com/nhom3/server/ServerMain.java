@@ -17,7 +17,7 @@ public class ServerMain {
         Server server;
         try {
             server = new Server();
-            System.out.println("Server đang lắng nghe tại cổng " + Server.PORT);
+            System.out.println("Server đang lắng nghe tại cổng " + server.getPort());
         } catch (IOException e) {
             System.err.println("Không thể khởi động server: " + e.getMessage());
             return;

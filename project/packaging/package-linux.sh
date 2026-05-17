@@ -38,6 +38,11 @@ mkdir -p "$CLIENT_INPUT_DIR" "$SERVER_INPUT_DIR"
 cp "$BUILD_DIR/client-app.jar" "$CLIENT_INPUT_DIR/"
 cp "$BUILD_DIR/server-app.jar" "$SERVER_INPUT_DIR/"
 
+LINUX_PACKAGE_OPTIONS=()
+if [[ "$TYPE" != "app-image" ]]; then
+  LINUX_PACKAGE_OPTIONS+=(--linux-app-category Utility)
+fi
+
 "$JPACKAGE" \
   --type "$TYPE" \
   --name auction-client-nhom3 \
@@ -47,7 +52,7 @@ cp "$BUILD_DIR/server-app.jar" "$SERVER_INPUT_DIR/"
   --main-class com.nhom3.client.Main \
   --app-version 1.0.0 \
   --vendor "Nhom 3" \
-  --linux-app-category Utility \
+  "${LINUX_PACKAGE_OPTIONS[@]}" \
   --java-options "-Dauction.server.host=$SERVER_HOST" \
   --java-options "-Dauction.server.port=$SERVER_PORT"
 
@@ -60,7 +65,7 @@ cp "$BUILD_DIR/server-app.jar" "$SERVER_INPUT_DIR/"
   --main-class com.nhom3.server.ServerMain \
   --app-version 1.0.0 \
   --vendor "Nhom 3" \
-  --linux-app-category Utility \
+  "${LINUX_PACKAGE_OPTIONS[@]}" \
   --java-options "-Dauction.server.port=$SERVER_PORT"
 
 if [[ "$TYPE" == "app-image" ]]; then

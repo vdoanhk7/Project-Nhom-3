@@ -3,24 +3,24 @@ set -euo pipefail
 
 SERVER_HOST="${1:-34.126.166.158}"
 SERVER_PORT="${2:-8080}"
+TYPE="${3:-deb}"
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
-RELEASE_DIR="$PROJECT_DIR/release/macos"
+RELEASE_DIR="$PROJECT_DIR/release/linux"
 BUILD_DIR="$PROJECT_DIR/target"
 CLIENT_INPUT_DIR="$BUILD_DIR/package-input/client"
 SERVER_INPUT_DIR="$BUILD_DIR/package-input/server"
 
-if [[ "$(uname -s)" != "Darwin" ]]; then
-  echo "This script must be run on macOS." >&2
+if [[ "$(uname -s)" != "Linux" ]]; then
+  echo "This script must be run on Linux." >&2
   exit 1
 fi
 
-case "$(uname -m)" in
-  arm64) JAVAFX_PLATFORM="mac-aarch64" ;;
-  x86_64) JAVAFX_PLATFORM="mac" ;;
-  *) echo "Unsupported macOS architecture: $(uname -m)" >&2; exit 1 ;;
-esac
+if [[ "$TYPE" != "deb" && "$TYPE" != "rpm" && "$TYPE" != "app-image" ]]; then
+  echo "Package type must be deb, rpm, or app-image." >&2
+  exit 1
+fi
 
 if [[ -n "${JAVA_HOME:-}" && -x "$JAVA_HOME/bin/jpackage" ]]; then
   JPACKAGE="$JAVA_HOME/bin/jpackage"
@@ -29,7 +29,7 @@ else
 fi
 
 cd "$PROJECT_DIR"
-mvn --batch-mode -DskipTests "-Djavafx.platform=$JAVAFX_PLATFORM" package
+mvn --batch-mode -DskipTests -Djavafx.platform=linux package
 
 rm -rf "$RELEASE_DIR/client" "$RELEASE_DIR/server"
 mkdir -p "$RELEASE_DIR/client" "$RELEASE_DIR/server"
@@ -39,34 +39,39 @@ cp "$BUILD_DIR/client-app.jar" "$CLIENT_INPUT_DIR/"
 cp "$BUILD_DIR/server-app.jar" "$SERVER_INPUT_DIR/"
 
 "$JPACKAGE" \
-  --type app-image \
-  --name AuctionClientNhom3 \
+  --type "$TYPE" \
+  --name auction-client-nhom3 \
   --dest "$RELEASE_DIR/client" \
   --input "$CLIENT_INPUT_DIR" \
   --main-jar client-app.jar \
   --main-class com.nhom3.client.Main \
   --app-version 1.0.0 \
   --vendor "Nhom 3" \
+  --linux-app-category Utility \
   --java-options "-Dauction.server.host=$SERVER_HOST" \
   --java-options "-Dauction.server.port=$SERVER_PORT"
 
 "$JPACKAGE" \
-  --type app-image \
-  --name AuctionServerNhom3 \
+  --type "$TYPE" \
+  --name auction-server-nhom3 \
   --dest "$RELEASE_DIR/server" \
   --input "$SERVER_INPUT_DIR" \
   --main-jar server-app.jar \
   --main-class com.nhom3.server.ServerMain \
   --app-version 1.0.0 \
   --vendor "Nhom 3" \
+  --linux-app-category Utility \
   --java-options "-Dauction.server.port=$SERVER_PORT"
 
-cd "$RELEASE_DIR/client"
-ditto -c -k --sequesterRsrc --keepParent AuctionClientNhom3.app ../AuctionClientNhom3-macos.zip
+if [[ "$TYPE" == "app-image" ]]; then
+  tar -czf "$RELEASE_DIR/AuctionClientNhom3-linux.tar.gz" -C "$RELEASE_DIR/client" auction-client-nhom3
+  tar -czf "$RELEASE_DIR/AuctionServerNhom3-linux.tar.gz" -C "$RELEASE_DIR/server" auction-server-nhom3
 
-cd "$RELEASE_DIR/server"
-ditto -c -k --sequesterRsrc --keepParent AuctionServerNhom3.app ../AuctionServerNhom3-macos.zip
-
-echo "Created:"
-echo "$RELEASE_DIR/AuctionClientNhom3-macos.zip"
-echo "$RELEASE_DIR/AuctionServerNhom3-macos.zip"
+  echo "Created:"
+  echo "$RELEASE_DIR/AuctionClientNhom3-linux.tar.gz"
+  echo "$RELEASE_DIR/AuctionServerNhom3-linux.tar.gz"
+else
+  echo "Created Linux packages in:"
+  echo "$RELEASE_DIR/client"
+  echo "$RELEASE_DIR/server"
+fi

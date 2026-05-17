@@ -1,0 +1,83 @@
+name: Package Apps
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_host:
+        description: Server IP or domain used by the client package
+        default: 34.126.166.158
+        required: true
+      server_port:
+        description: Server port
+        default: "8080"
+        required: true
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        working-directory: ./project
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+          cache: maven
+
+      - name: Package Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./packaging/package-windows.ps1 -ServerHost "${{ inputs.server_host }}" -ServerPort "${{ inputs.server_port }}"
+
+      - name: Package macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          chmod +x ./packaging/package-macos.sh
+          ./packaging/package-macos.sh "${{ inputs.server_host }}" "${{ inputs.server_port }}"
+
+      - name: Package Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          chmod +x ./packaging/package-linux.sh
+          ./packaging/package-linux.sh "${{ inputs.server_host }}" "${{ inputs.server_port }}" app-image
+
+      - name: Upload Windows artifacts
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: auction-windows
+          path: |
+            project/release/windows/AuctionClientNhom3-windows.zip
+            project/release/windows/AuctionServerNhom3-windows.zip
+
+      - name: Upload macOS artifacts
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: auction-macos
+          path: |
+            project/release/macos/AuctionClientNhom3-macos.zip
+            project/release/macos/AuctionServerNhom3-macos.zip
+
+      - name: Upload Linux artifacts
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: auction-linux
+          path: |
+            project/release/linux/AuctionClientNhom3-linux.tar.gz
+            project/release/linux/AuctionServerNhom3-linux.tar.gz

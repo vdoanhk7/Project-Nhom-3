@@ -187,11 +187,17 @@ public class UserDAOImpl implements UserDAO {
         try {
             conn = DbConnection.getConnection();
             conn.setAutoCommit(false);
+            if (hasLockedWinningAuctions(conn, userId)) {
+                throw new IllegalStateException(
+                        "Không thể xóa tài khoản này vì đang là người thắng của phiên đã kết thúc hoặc đã thanh toán.");
+            }
+            deleteAutoBidsForSellerAuctions(conn, userId);
+            deleteAutoBidsForUser(conn, userId);
 
             // 1. Tìm tất cả các phiên đấu giá mà user này đang giữ top 1 (highest_bidder_id)
             String sqlGetAuctions = "SELECT a.id AS auction_id, a.item_id, i.start_price " +
                                     "FROM auctions a JOIN items i ON a.item_id = i.id " +
-                                    "WHERE a.highest_bidder_id = ?";
+                                    "WHERE a.highest_bidder_id = ? AND a.status IN ('OPEN', 'RUNNING')";
             PreparedStatement stmtGet = conn.prepareStatement(sqlGetAuctions);
             stmtGet.setInt(1, userId);
             ResultSet rsAuctions = stmtGet.executeQuery();
@@ -265,6 +271,11 @@ public class UserDAOImpl implements UserDAO {
             conn.commit();
             return rowsAffected > 0;
             
+        } catch (IllegalStateException e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
+            throw e;
         } catch (Exception e) {
             if (conn != null) {
                 try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
@@ -294,6 +305,58 @@ public class UserDAOImpl implements UserDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    @Override
+    public List<Integer> getSellerAuctionIds(int sellerId) {
+        List<Integer> auctionIds = new ArrayList<>();
+        String sql = "SELECT a.id FROM auctions a JOIN items i ON a.item_id = i.id WHERE i.seller_id = ?";
+        try (Connection conn = DbConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, sellerId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    auctionIds.add(rs.getInt("id"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return auctionIds;
+    }
+
+    private boolean hasLockedWinningAuctions(Connection conn, int userId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM auctions " +
+                "WHERE highest_bidder_id = ? " +
+                "AND (status IN ('FINISHED', 'PAID') " +
+                "OR (status = 'RUNNING' AND end_time <= CURRENT_TIMESTAMP))";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    private void deleteAutoBidsForUser(Connection conn, int userId) {
+        String sql = "DELETE FROM auto_bids WHERE bidder_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            // Optional table may not exist in older local databases/tests.
+        }
+    }
+
+    private void deleteAutoBidsForSellerAuctions(Connection conn, int sellerId) {
+        String sql = "DELETE FROM auto_bids WHERE auction_id IN (" +
+                "SELECT a.id FROM auctions a JOIN items i ON a.item_id = i.id WHERE i.seller_id = ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, sellerId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            // Optional table may not exist in older local databases/tests.
+        }
     }
 
     private String readOptionalString(ResultSet rs, String columnName) throws SQLException {

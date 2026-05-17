@@ -214,11 +214,16 @@ public class AuctionDAOImpl implements AuctionDAO {
     }
 
     @Override
-    public boolean confirmPayment(int auctionId) {
-        String sql = "UPDATE auctions SET status = 'PAID' WHERE id = ?";
+    public boolean confirmPayment(int auctionId, int sellerId) {
+        String sql = "UPDATE auctions SET status = 'PAID' " +
+                "WHERE id = ? " +
+                "AND highest_bidder_id IS NOT NULL " +
+                "AND (status = 'FINISHED' OR (status = 'RUNNING' AND end_time <= CURRENT_TIMESTAMP)) " +
+                "AND EXISTS (SELECT 1 FROM items WHERE items.id = auctions.item_id AND seller_id = ?)";
         try (Connection conn = DbConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, auctionId);
+            stmt.setInt(2, sellerId);
             return stmt.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -468,12 +473,26 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public boolean cancelAuction(int auctionId) {
         String sql = "UPDATE auctions SET status = 'CANCELLED' WHERE id = ? AND status IN ('OPEN', 'RUNNING')";
+        String deleteAutoBidsSql = "DELETE FROM auto_bids WHERE auction_id = ?";
 
-        try (Connection conn = DbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, auctionId);
-            return stmt.executeUpdate() > 0;
+        try (Connection conn = DbConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, auctionId);
+                int rowsUpdated = stmt.executeUpdate();
+                if (rowsUpdated == 0) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+            try (PreparedStatement stmt = conn.prepareStatement(deleteAutoBidsSql)) {
+                stmt.setInt(1, auctionId);
+                stmt.executeUpdate();
+            } catch (Exception e) {
+                // Optional table may not exist in older local databases/tests.
+            }
+            conn.commit();
+            return true;
 
         } catch (Exception e) {
             System.err.println("[DAO] Lỗi khi hủy phiên đấu giá: " + e.getMessage());
@@ -524,8 +543,20 @@ public class AuctionDAOImpl implements AuctionDAO {
         String sqlCheck = "SELECT id FROM auto_bids WHERE bidder_id = ? AND auction_id = ?";
         String sqlUpdate = "UPDATE auto_bids SET max_amount = ?, increment_amount = ? WHERE bidder_id = ? AND auction_id = ?";
         String sqlInsert = "INSERT INTO auto_bids (bidder_id, auction_id, max_amount, increment_amount) VALUES (?, ?, ?, ?)";
+        String sqlValidate = "SELECT 1 FROM auctions a JOIN users u ON u.id = ? " +
+                "WHERE a.id = ? AND a.status = 'RUNNING'";
 
         try (Connection conn = DbConnection.getConnection()) {
+            try (PreparedStatement validateStmt = conn.prepareStatement(sqlValidate)) {
+                validateStmt.setInt(1, payload.getUserId());
+                validateStmt.setInt(2, payload.getAuctionId());
+                try (ResultSet rs = validateStmt.executeQuery()) {
+                    if (!rs.next()) {
+                        return false;
+                    }
+                }
+            }
+
             boolean exists = false;
             try (PreparedStatement checkStmt = conn.prepareStatement(sqlCheck)) {
                 checkStmt.setInt(1, payload.getUserId());

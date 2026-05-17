@@ -2,6 +2,7 @@ package com.nhom3.server.service;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import java.util.List;
 import com.nhom3.server.dao.UserDAO;
 import com.nhom3.server.dao.UserDAOImpl;
 import com.nhom3.shared.model.user.User;
@@ -65,6 +66,10 @@ public class AuthService {
 
     public boolean userExists(int userId) {
         return userId > 0 && userDAO.userExists(userId);
+    }
+
+    public List<Integer> getSellerAuctionIds(int sellerId) {
+        return userDAO.getSellerAuctionIds(sellerId);
     }
 
     private void validateRegistrationData(User user) {

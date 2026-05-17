@@ -259,7 +259,7 @@ public class PacketDispatcher {
         ItemActionPayload payload = gson.fromJson(request.getPayload(), ItemActionPayload.class);
         AuctionDAO dao = new AuctionDAOImpl();
         Auction auction = dao.getAuctionByItemId(payload.getItemId());
-        boolean success = auction != null && dao.confirmPayment(auction.getId());
+        boolean success = auction != null && dao.confirmPayment(auction.getId(), payload.getSellerId());
         return new Packet(PacketType.CONFIRM_PAYMENT, new ResultPayload(success,
                 success ? "Đã xác nhận thanh toán!" : "Không thể xác nhận thanh toán!",
                 -1, "", "", "", "", ""));
@@ -483,11 +483,31 @@ public class PacketDispatcher {
 
     private Packet handleDeleteUser(Packet request, Gson gson) {
         UserIdPayload payload = gson.fromJson(request.getPayload(), UserIdPayload.class);
-        boolean success = authService.deleteUser(payload.getUserId());
+        List<Integer> sellerAuctionIds = authService.getSellerAuctionIds(payload.getUserId());
+        boolean success;
+        String message;
+        try {
+            success = authService.deleteUser(payload.getUserId());
+            message = "Đã xóa tài khoản thành công!";
+        } catch (IllegalStateException e) {
+            success = false;
+            message = e.getMessage();
+        }
         if (success) {
             ClientHandler.notifyUserDeleted(payload.getUserId());
+            for (int auctionId : sellerAuctionIds) {
+                announcer.notifyAuctionCancelled(
+                        auctionId, "Phiên đấu giá đã bị hủy vì người bán đã bị xóa.");
+            }
+        } else if (message == null || message.isBlank()) {
+            message = "Lỗi: Không thể xóa tài khoản!";
         }
-        
+        if (!success) {
+            return new Packet(PacketType.DELETE_USER, new ResultPayload(false,
+                    message,
+                    -1, "", "", "", "", ""));
+        }
+
         return new Packet(PacketType.DELETE_USER, new ResultPayload(success,
                 success ? "Đã xóa tài khoản thành công!" : "Lỗi: Không thể xóa tài khoản!",
                 -1, "", "", "", "", ""));

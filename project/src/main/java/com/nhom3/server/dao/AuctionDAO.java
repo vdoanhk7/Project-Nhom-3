@@ -15,7 +15,7 @@ public interface AuctionDAO {
     boolean createAuction(Auction auction);
     Map<Integer, String> getAuctionStatusBySeller(int sellerId);
     Auction getAuctionByItemId(int itemId);
-    boolean confirmPayment(int auctionId);
+    boolean confirmPayment(int auctionId, int sellerId);
     List<Auction> getActiveAuctions();
     List<Auction> getAllAuctions();
     List<BidTransaction> getBidHistory(int auctionId);

@@ -13,4 +13,5 @@ public interface UserDAO {
     List<User> getAllUsers();
     boolean deleteUser(int userId);
     boolean userExists(int userId);
+    List<Integer> getSellerAuctionIds(int sellerId);
 }

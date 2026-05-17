@@ -4,6 +4,7 @@ import com.nhom3.shared.model.Entity;
 
 public abstract class Item extends Entity{
     protected String name;
+    protected String description;
     protected double startPrice;
     protected double curHighest;
     protected ItemType type;
@@ -25,6 +26,12 @@ public abstract class Item extends Entity{
     }
     public String getName(){
         return name;
+    }
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    public String getDescription() {
+        return description;
     }
     public void setStartPrice(double startPrice){
         this.startPrice = startPrice;
@@ -56,11 +63,13 @@ public abstract class Item extends Entity{
 
     protected String formatItemInfo(String categoryName) {
         String owner = sellerName == null || sellerName.isBlank() ? "Chua co thong tin" : sellerName;
+        String itemDescription = description == null || description.isBlank() ? "Chua co mo ta" : description;
         return String.format(
-                "%s[id=%d, name=%s, startPrice=%.0f, currentHighest=%.0f, seller=%s]",
+                "%s[id=%d, name=%s, description=%s, startPrice=%.0f, currentHighest=%.0f, seller=%s]",
                 categoryName,
                 id,
                 name,
+                itemDescription,
                 startPrice,
                 curHighest,
                 owner);

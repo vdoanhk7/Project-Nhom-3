@@ -45,6 +45,8 @@ public class ViewItemDetailController {
     @FXML
     private Label lblItemName, lblItemType, lblStatusBadge, lblNoImage;
     @FXML
+    private Label lblItemDescription;
+    @FXML
     private Label lblCurrentPrice, lblStartPrice, lblBidStep;
     @FXML
     private Label lblTimeTitle, lblCountdown, lblTimeRange;
@@ -191,6 +193,10 @@ public class ViewItemDetailController {
         this.currentItem = item;
         lblItemName.setText(item.getName());
         lblItemType.setText("Phân loại: " + item.getType());
+        String description = item.getDescription();
+        lblItemDescription.setText(description == null || description.isBlank()
+                ? "Chưa có mô tả sản phẩm."
+                : description);
         lblStartPrice.setText(String.format("Khởi điểm: %,.0f VNĐ", item.getStartPrice()));
         lblCurrentPrice.setText(String.format("%,.0f VNĐ", item.getCurHighest()));
         this.currentAuction = auction;

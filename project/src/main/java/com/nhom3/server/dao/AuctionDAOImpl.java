@@ -12,6 +12,7 @@ import com.nhom3.shared.model.item.Item;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -175,14 +176,15 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public Auction getAuctionByItemId(int itemId) {
         // Lấy phiên đấu giá mới nhất của sản phẩm này
-        String sql = "SELECT a.*, i.id AS item_id, i.name AS item_name, i.item_type, "
+        String sql = "SELECT a.*, i.id AS item_id, i.name AS item_name, i.description, i.item_type, "
                 + "i.start_price, i.cur_highest "
                 + "FROM auctions a "
                 + "JOIN items i ON a.item_id = i.id "
                 + "WHERE a.item_id = ? ORDER BY a.id DESC LIMIT 1";
 
-        try (Connection conn = DbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DbConnection.getConnection()) {
+            ensureDescriptionColumn(conn);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, itemId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -193,6 +195,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                         rs.getInt("item_id"),
                         rs.getString("item_name"),
                         rs.getDouble("start_price"));
+                applyDescription(item, rs);
                 item.setCurHighest(rs.getDouble("cur_highest"));
                 java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                 java.time.LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
@@ -206,6 +209,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                     auction.setHighestBidder(new Bidder(highestBidderId, null, null));
                 }
                 return auction;
+            }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -261,15 +265,16 @@ public class AuctionDAOImpl implements AuctionDAO {
     public List<Auction> getActiveAuctions() {
         List<Auction> list = new ArrayList<>();
         // Lấy thêm tên người bán 
-        String sql = "SELECT a.*, i.name, i.item_type, i.start_price, i.cur_highest, i.image, u.full_name as seller_name " +
+        String sql = "SELECT a.*, i.name, i.description, i.item_type, i.start_price, i.cur_highest, i.image, u.full_name as seller_name " +
             "FROM auctions a " +
             "JOIN items i ON a.item_id = i.id " +
             "JOIN users u ON i.seller_id = u.id " +
             "WHERE a.end_time > ? AND a.status != 'CANCELLED' " +
             "ORDER BY a.end_time ASC";
 
-        try (Connection conn = DbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DbConnection.getConnection()) {
+            ensureDescriptionColumn(conn);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setTimestamp(1, java.sql.Timestamp.valueOf(LocalDateTime.now()));
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -279,6 +284,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                             rs.getInt("item_id"),
                             rs.getString("name"),
                             rs.getDouble("start_price"));
+                    applyDescription(item, rs);
                     item.setCurHighest(rs.getDouble("cur_highest"));
                     item.setSellerName(rs.getString("seller_name"));
                     int id = rs.getInt("id");
@@ -296,6 +302,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                     list.add(auction);
                 }
             }
+            }
         } catch (Exception e) {
             System.err.println("Lỗi khi tải danh sách Chợ Đấu Giá: ");
             e.printStackTrace();
@@ -306,13 +313,14 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public List<Auction> getAllAuctions() {
         List<Auction> list = new ArrayList<>();
-        String sql = "SELECT a.*, i.name, i.item_type, i.start_price, i.cur_highest " +
+        String sql = "SELECT a.*, i.name, i.description, i.item_type, i.start_price, i.cur_highest " +
                 "FROM auctions a " +
                 "JOIN items i ON a.item_id = i.id " +
                 "ORDER BY a.id DESC";
 
-        try (Connection conn = DbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DbConnection.getConnection()) {
+            ensureDescriptionColumn(conn);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     com.nhom3.shared.model.item.ItemType type =
@@ -321,6 +329,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                             rs.getInt("item_id"),
                             rs.getString("name"),
                             rs.getDouble("start_price"));
+                    applyDescription(item, rs);
                     item.setCurHighest(rs.getDouble("cur_highest"));
                     int id = rs.getInt("id");
                     java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
@@ -341,6 +350,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                     }
                     list.add(auction);
                 }
+            }
             }
         } catch (Exception e) {
             System.err.println("Lỗi khi tải toàn bộ danh sách Đấu Giá: ");
@@ -392,7 +402,7 @@ public class AuctionDAOImpl implements AuctionDAO {
         // Ta tạo một bảng ảo "my_bids" chỉ chứa mức giá CAO NHẤT (MAX) của user này cho
         // từng auction_id
         String sql = "SELECT a.id AS auction_id, a.highest_bidder_id, a.start_time, a.end_time, a.status, " +
-                "a.bid_step, i.id AS item_id, i.name AS item_name, i.item_type, i.start_price, i.cur_highest, i.image, " +
+                "a.bid_step, i.id AS item_id, i.name AS item_name, i.description, i.item_type, i.start_price, i.cur_highest, i.image, " +
                 "my_bids.max_amount AS amount, my_bids.last_bid_time AS bid_time " +
                 "FROM ( " +
                 "    SELECT auction_id, MAX(amount) AS max_amount, MAX(bid_time) AS last_bid_time " +
@@ -404,8 +414,9 @@ public class AuctionDAOImpl implements AuctionDAO {
                 "JOIN items i ON a.item_id = i.id " +
                 "ORDER BY my_bids.last_bid_time DESC";
 
-        try (Connection conn = DbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DbConnection.getConnection()) {
+            ensureDescriptionColumn(conn);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, bidderId);
             ResultSet rs = stmt.executeQuery();
 
@@ -419,6 +430,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                         rs.getInt("item_id"),
                         rs.getString("item_name"),
                         rs.getDouble("start_price"));
+                applyDescription(item, rs);
                 item.setCurHighest(rs.getDouble("cur_highest"));
                 item.setImageBase64(rs.getString("image"));
 
@@ -448,6 +460,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 auction.getBidHistory().add(myBid);
 
                 list.add(auction);
+            }
             }
         } catch (Exception e) {
             System.err.println("Lỗi khi tải lịch sử cá nhân: ");
@@ -644,15 +657,17 @@ public class AuctionDAOImpl implements AuctionDAO {
 
     @Override
     public Auction getAuctionById(int auctionId) {
-        String sql = "SELECT a.*, i.id AS item_id, i.name AS item_name, i.item_type, i.start_price, i.cur_highest, i.image " +
+        String sql = "SELECT a.*, i.id AS item_id, i.name AS item_name, i.description, i.item_type, i.start_price, i.cur_highest, i.image " +
                 "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = ?";
-        try (Connection conn = DbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DbConnection.getConnection()) {
+            ensureDescriptionColumn(conn);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, auctionId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 com.nhom3.shared.model.item.ItemType type = com.nhom3.shared.model.item.ItemType.valueOf(rs.getString("item_type"));
                 Item item = type.createItem(rs.getInt("item_id"), rs.getString("item_name"), rs.getDouble("start_price"));
+                applyDescription(item, rs);
                 item.setCurHighest(rs.getDouble("cur_highest"));
                 item.setImageBase64(rs.getString("image"));
 
@@ -667,10 +682,38 @@ public class AuctionDAOImpl implements AuctionDAO {
                 }
                 return auction;
             }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private void applyDescription(Item item, ResultSet rs) {
+        try {
+            item.setDescription(rs.getString("description"));
+        } catch (Exception e) {
+            item.setDescription("");
+        }
+    }
+
+    private void ensureDescriptionColumn(Connection conn) {
+        try {
+            if (hasColumn(conn, "items", "description") || hasColumn(conn, "ITEMS", "DESCRIPTION")) {
+                return;
+            }
+            try (Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("ALTER TABLE items ADD COLUMN description TEXT NULL");
+            }
+        } catch (Exception e) {
+            // Older local databases are migrated opportunistically; callers still handle SQL failures.
+        }
+    }
+
+    private boolean hasColumn(Connection conn, String tableName, String columnName) throws Exception {
+        try (ResultSet columns = conn.getMetaData().getColumns(null, null, tableName, columnName)) {
+            return columns.next();
+        }
     }
 
     private double readBidStep(ResultSet rs) {

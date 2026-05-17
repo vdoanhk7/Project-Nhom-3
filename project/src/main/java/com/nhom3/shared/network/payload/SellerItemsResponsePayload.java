@@ -7,6 +7,7 @@ public class SellerItemsResponsePayload {
     public static class SellerItemDTO {
         public int id;
         public String name;
+        public String description;
         public String type;
         public double startPrice;
         public double curHighest;
@@ -14,12 +15,18 @@ public class SellerItemsResponsePayload {
         public String imageBase64;
 
         public SellerItemDTO(int id, String name, String type, double startPrice, double curHighest, String status) {
-            this(id, name, type, startPrice, curHighest, status, null);
+            this(id, name, "", type, startPrice, curHighest, status, null);
         }
 
         public SellerItemDTO(int id, String name, String type, double startPrice, double curHighest, String status, String imageBase64) {
+            this(id, name, "", type, startPrice, curHighest, status, imageBase64);
+        }
+
+        public SellerItemDTO(int id, String name, String description, String type, double startPrice,
+                double curHighest, String status, String imageBase64) {
             this.id = id;
             this.name = name;
+            this.description = description;
             this.type = type;
             this.startPrice = startPrice;
             this.curHighest = curHighest;

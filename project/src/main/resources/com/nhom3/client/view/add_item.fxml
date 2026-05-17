@@ -4,13 +4,14 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="380.0" prefWidth="500.0" spacing="15.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.AddItemController">
+<VBox prefHeight="480.0" prefWidth="500.0" spacing="15.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.AddItemController">
    <padding>
       <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
    </padding>
@@ -28,10 +29,17 @@
          <Label text="Tên sản phẩm :" textFill="#7f8c8d">
             <font><Font name="System Bold" size="12.0" /></font>
          </Label>
-         <TextField fx:id="txtName" promptText="Nhập tên sản phẩm..." style="-fx-padding: 8; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
-      </VBox>
+          <TextField fx:id="txtName" promptText="Nhập tên sản phẩm..." style="-fx-padding: 8; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" />
+       </VBox>
 
-      <VBox spacing="5.0">
+       <VBox spacing="5.0">
+          <Label text="Mô tả sản phẩm :" textFill="#7f8c8d">
+             <font><Font name="System Bold" size="12.0" /></font>
+          </Label>
+          <TextArea fx:id="txtDescription" prefRowCount="3" promptText="Nhập mô tả chi tiết..." style="-fx-padding: 8; -fx-background-radius: 5; -fx-border-color: #bdc3c7;" wrapText="true" />
+       </VBox>
+
+       <VBox spacing="5.0">
          <Label text="Phân loại :" textFill="#7f8c8d">
             <font><Font name="System Bold" size="12.0" /></font>
          </Label>

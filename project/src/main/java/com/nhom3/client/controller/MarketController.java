@@ -178,6 +178,7 @@ public class MarketController {
     private Auction toAuction(AuctionListResponsePayload.AuctionDTO dto) {
         ItemType type = ItemType.valueOf(dto.itemType);
         Item item = type.createItem(dto.itemId, dto.itemName, dto.startPrice);
+        item.setDescription(dto.itemDescription);
         item.setCurHighest(dto.curHighest);
         item.setImageBase64(imageCache.getOrDefault(dto.itemId, dto.imageBase64));
         item.setSellerName(dto.sellerName); // Lấy tên người bán từ Server

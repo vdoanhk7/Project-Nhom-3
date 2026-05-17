@@ -170,8 +170,9 @@ public class PacketDispatcher {
         List<SellerItemsResponsePayload.SellerItemDTO> dtoList = new ArrayList<>();
         for (Item itm : itemsFromDb) {
             String stt = statusMap.getOrDefault(itm.getId(), "");
-            dtoList.add(new SellerItemsResponsePayload.SellerItemDTO(itm.getId(), itm.getName(), itm.getType().name(),
-                    itm.getStartPrice(), itm.getCurHighest(), stt));
+            dtoList.add(new SellerItemsResponsePayload.SellerItemDTO(itm.getId(), itm.getName(),
+                    itm.getDescription(), itm.getType().name(), itm.getStartPrice(), itm.getCurHighest(), stt,
+                    itm.getImageBase64()));
         }
         return new Packet(PacketType.LOAD_SELLER_ITEMS, new SellerItemsResponsePayload(dtoList));
     }
@@ -351,7 +352,8 @@ public class PacketDispatcher {
             String timeStr = a.getBidHistory().isEmpty() ? "" : a.getBidHistory().get(0).getBidTime().toString();
             int topBidderId = a.getHighestBidder() != null ? a.getHighestBidder().getId() : -1;
             purDtoList.add(new PurchaseHistoryResponsePayload.HistoryDTO(
-                    a.getId(), a.getItem().getId(), a.getItem().getName(), amount, timeStr, a.getStatus().name(),
+                    a.getId(), a.getItem().getId(), a.getItem().getName(), a.getItem().getDescription(),
+                    amount, timeStr, a.getStatus().name(),
                     topBidderId,
                     a.getItem().getType().name(), a.getItem().getStartPrice(), a.getItem().getCurHighest(),
                     a.getBidStep(),
@@ -436,6 +438,7 @@ public class PacketDispatcher {
     private Item buildItem(ItemPayload payload) {
         ItemType type = ItemType.valueOf(payload.getType());
         Item item = type.createItem(payload.getItemId(), payload.getName(), payload.getStartPrice());
+        item.setDescription(payload.getDescription());
         item.setCurHighest(payload.getStartPrice());
         item.setImageBase64(payload.getImageBase64());
         return item;
@@ -459,6 +462,7 @@ public class PacketDispatcher {
                 auction.getId(),
                 item != null ? item.getId() : -1,
                 item != null ? item.getName() : "",
+                item != null ? item.getDescription() : "",
                 item != null ? item.getType().name() : "",
                 item != null ? item.getStartPrice() : 0,
                 item != null ? item.getCurHighest() : 0,

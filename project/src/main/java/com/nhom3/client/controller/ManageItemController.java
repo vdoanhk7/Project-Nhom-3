@@ -130,6 +130,7 @@ public class ManageItemController {
         for (SellerItemsResponsePayload.SellerItemDTO dto : dtoList) {
             ItemType type = ItemType.valueOf(dto.type);
             Item item = type.createItem(dto.id, dto.name, dto.startPrice);
+            item.setDescription(dto.description);
             item.setCurHighest(dto.curHighest);
             realItems.add(item);
             if (dto.status != null && !dto.status.isEmpty()) {
@@ -546,6 +547,7 @@ public class ManageItemController {
     private Auction toAuction(AuctionListResponsePayload.AuctionDTO dto) {
         ItemType type = ItemType.valueOf(dto.itemType);
         Item item = type.createItem(dto.itemId, dto.itemName, dto.startPrice);
+        item.setDescription(dto.itemDescription);
         item.setCurHighest(dto.curHighest);
         item.setImageBase64(dto.imageBase64);
         Auction auction = new Auction(

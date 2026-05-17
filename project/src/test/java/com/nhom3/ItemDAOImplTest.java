@@ -162,7 +162,7 @@ public class ItemDAOImplTest {
             assertTrue(result);
             verify(stmt).setString(1, "Updated");
             verify(stmt).setString(5, "dummyBase64");
-            verify(stmt).setInt(6, 1);
+            verify(stmt).setInt(7, 1);
         }
     }
 }

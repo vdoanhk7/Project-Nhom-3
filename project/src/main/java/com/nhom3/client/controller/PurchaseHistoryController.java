@@ -201,7 +201,9 @@ public class PurchaseHistoryController {
             } catch (Exception e) {
                 item = ItemType.OTHER.createItem(dto.itemId, dto.itemName, dto.startPrice);
             }
+            item.setDescription(dto.itemDescription);
             item.setCurHighest(dto.curHighest);
+            item.setImageBase64(dto.imageBase64);
 
             // 2. TÁI TẠO THỜI GIAN ĐẦY ĐỦ
             LocalDateTime start = LocalDateTime.now();

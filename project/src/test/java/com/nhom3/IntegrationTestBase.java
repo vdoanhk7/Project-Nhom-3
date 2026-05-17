@@ -37,6 +37,7 @@ public abstract class IntegrationTestBase {
                     "id INT AUTO_INCREMENT PRIMARY KEY," +
                     "seller_id INT NOT NULL," +
                     "name VARCHAR(255) NOT NULL," +
+                    "description TEXT," +
                     "start_price DOUBLE NOT NULL," +
                     "cur_highest DOUBLE DEFAULT 0," +
                     "item_type VARCHAR(50) NOT NULL," +

@@ -17,6 +17,7 @@ public class AuctionListResponsePayload {
         public final int auctionId;
         public final int itemId;
         public final String itemName;
+        public final String itemDescription;
         public final String itemType;
         public final double startPrice;
         public final double curHighest;
@@ -47,9 +48,17 @@ public class AuctionListResponsePayload {
         public AuctionDTO(int auctionId, int itemId, String itemName, String itemType,
                 double startPrice, double curHighest, double bidStep, String startTime, String endTime,
                 String status, int highestBidderId, String imageBase64, String sellerName) {
+            this(auctionId, itemId, itemName, "", itemType, startPrice, curHighest, bidStep,
+                    startTime, endTime, status, highestBidderId, imageBase64, sellerName);
+        }
+
+        public AuctionDTO(int auctionId, int itemId, String itemName, String itemDescription, String itemType,
+                double startPrice, double curHighest, double bidStep, String startTime, String endTime,
+                String status, int highestBidderId, String imageBase64, String sellerName) {
             this.auctionId = auctionId;
             this.itemId = itemId;
             this.itemName = itemName;
+            this.itemDescription = itemDescription;
             this.itemType = itemType;
             this.startPrice = startPrice;
             this.curHighest = curHighest;

@@ -19,6 +19,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -30,6 +31,7 @@ import java.util.Base64;
 public class AddItemController {
 
     @FXML private TextField txtName;
+    @FXML private TextArea txtDescription;
     @FXML private ComboBox<String> cbType;
     @FXML private TextField txtStartPrice;
     @FXML private ImageView imgPreview;
@@ -53,6 +55,7 @@ public class AddItemController {
     public void setEditingItem(Item item) {
         editingItem = item;
         txtName.setText(item.getName());
+        txtDescription.setText(item.getDescription() != null ? item.getDescription() : "");
         txtStartPrice.setText(MoneyInputFormatter.formatAmount(item.getStartPrice()));
         cbType.setValue(item.getType().name());
         cbType.setDisable(true);
@@ -91,6 +94,7 @@ public class AddItemController {
     @FXML
     void handleSave(ActionEvent event) {
         String name = txtName.getText().trim();
+        String description = txtDescription.getText().trim();
         String type = cbType.getValue();
         String priceText = txtStartPrice.getText().trim();
 
@@ -119,6 +123,7 @@ public class AddItemController {
                     editingItem == null ? 0 : editingItem.getId(),
                     seller.getId(),
                     name,
+                    description,
                     type,
                     startPriceVal,
                     selectedImageBase64

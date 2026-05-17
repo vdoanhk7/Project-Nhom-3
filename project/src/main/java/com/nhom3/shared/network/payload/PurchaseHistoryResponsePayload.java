@@ -7,6 +7,7 @@ public class PurchaseHistoryResponsePayload {
         public int auctionId;
         public int itemId;
         public String itemName;
+        public String itemDescription;
         public double myBidAmount;
         public String myBidTimeStr; 
         public String status;
@@ -22,17 +23,26 @@ public class PurchaseHistoryResponsePayload {
 
         public HistoryDTO(int auctionId, int itemId, String itemName, double myBidAmount, String myBidTimeStr, String status, int topBidderId,
                           String itemType, double startPrice, double curHighest, String startTimeStr, String endTimeStr) {
-            this(auctionId, itemId, itemName, myBidAmount, myBidTimeStr, status, topBidderId,
+            this(auctionId, itemId, itemName, "", myBidAmount, myBidTimeStr, status, topBidderId,
                     itemType, startPrice, curHighest,
                     com.nhom3.shared.model.auction.Auction.DEFAULT_BID_STEP,
                     startTimeStr, endTimeStr, null);
         }
 
         public HistoryDTO(int auctionId, int itemId, String itemName, double myBidAmount, String myBidTimeStr, String status, int topBidderId,
-                          String itemType, double startPrice, double curHighest, double bidStep, String startTimeStr, String endTimeStr, String imageBase64) {
+                           String itemType, double startPrice, double curHighest, double bidStep, String startTimeStr, String endTimeStr, String imageBase64) {
+            this(auctionId, itemId, itemName, "", myBidAmount, myBidTimeStr, status, topBidderId,
+                    itemType, startPrice, curHighest, bidStep, startTimeStr, endTimeStr, imageBase64);
+        }
+
+        public HistoryDTO(int auctionId, int itemId, String itemName, String itemDescription, double myBidAmount,
+                           String myBidTimeStr, String status, int topBidderId,
+                           String itemType, double startPrice, double curHighest, double bidStep,
+                           String startTimeStr, String endTimeStr, String imageBase64) {
             this.auctionId = auctionId;
             this.itemId = itemId;
             this.itemName = itemName;
+            this.itemDescription = itemDescription;
             this.myBidAmount = myBidAmount;
             this.myBidTimeStr = myBidTimeStr;
             this.status = status;

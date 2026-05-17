@@ -60,7 +60,21 @@
                </effect>
             </Label>
          </children>
-      </HBox>
+       </HBox>
+
+      <VBox spacing="6.0" style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 14;">
+         <effect>
+            <DropShadow color="#00000014" offsetY="3.0" radius="8.0" />
+         </effect>
+         <children>
+            <Label text="Mô tả sản phẩm" textFill="#374151">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Label>
+            <Label fx:id="lblItemDescription" text="Chưa có mô tả sản phẩm." textFill="#4B5563" wrapText="true" />
+         </children>
+      </VBox>
 
       <!-- INFO CARDS SECTION -->
       <HBox spacing="20.0">

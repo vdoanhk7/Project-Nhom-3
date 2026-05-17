@@ -63,6 +63,10 @@ public class AuthService {
         return success;
     }
 
+    public boolean userExists(int userId) {
+        return userId > 0 && userDAO.userExists(userId);
+    }
+
     private void validateRegistrationData(User user) {
         if (user == null || user.getUserInfo() == null || user.getUserContact() == null) {
             throw new IllegalArgumentException("Dữ liệu đăng ký không hợp lệ!");

@@ -31,6 +31,7 @@ import com.nhom3.shared.network.payload.*;
 
 public class PacketDispatcher {
     private static final Logger logger = LoggerFactory.getLogger(PacketDispatcher.class);
+    private static final String ACCOUNT_DELETED_MESSAGE = "Tài khoản của bạn đã bị xóa bởi quản trị viên.";
     private final Map<PacketType, PacketHandler> handlers = new HashMap<>();
     private final AuthService authService;
     private final AuctionService auctionService;
@@ -79,6 +80,11 @@ public class PacketDispatcher {
         PacketHandler handler = handlers.get(request.getType());
         if (handler != null) {
             try {
+                int userId = findAuthenticatedUserId(request, gson);
+                if (userId > 0 && !authService.userExists(userId)) {
+                    currentClient.setAuthenticatedUserId(-1);
+                    return accountDeletedPacket(userId);
+                }
                 return handler.handle(request, gson);
             } catch (Exception e) {
                 logger.error("Lỗi khi xử lý gói tin: " + request.getType(), e);
@@ -96,6 +102,7 @@ public class PacketDispatcher {
 
         ResultPayload resultPayload;
         if (user != null) {
+            currentClient.setAuthenticatedUserId(user.getId());
             String uEmail = user.getUserContact() != null ? user.getUserContact().getEmail() : "";
             String uPhone = user.getUserContact() != null ? user.getUserContact().getPhoneNumber() : "";
             String profileImage = user.getUserInfo() != null ? user.getUserInfo().getProfileImageBase64() : null;
@@ -103,6 +110,7 @@ public class PacketDispatcher {
                     user.getUserInfo().getUserName(), user.getUserInfo().getName(), user.getRole().name(), uEmail,
                     uPhone, profileImage);
         } else {
+            currentClient.setAuthenticatedUserId(-1);
             resultPayload = new ResultPayload(false, "Sai tài khoản hoặc mật khẩu", -1, "", "", "", "", "");
         }
         return new Packet(PacketType.LOGIN, resultPayload);
@@ -465,10 +473,43 @@ public class PacketDispatcher {
     private Packet handleDeleteUser(Packet request, Gson gson) {
         UserIdPayload payload = gson.fromJson(request.getPayload(), UserIdPayload.class);
         boolean success = authService.deleteUser(payload.getUserId());
+        if (success) {
+            ClientHandler.notifyUserDeleted(payload.getUserId());
+        }
         
         return new Packet(PacketType.DELETE_USER, new ResultPayload(success,
                 success ? "Đã xóa tài khoản thành công!" : "Lỗi: Không thể xóa tài khoản!",
                 -1, "", "", "", "", ""));
+    }
+
+    private Packet accountDeletedPacket(int userId) {
+        return new Packet(PacketType.ACCOUNT_DELETED,
+                new ResultPayload(false, ACCOUNT_DELETED_MESSAGE, userId, "", "", "", "", ""));
+    }
+
+    private int findAuthenticatedUserId(Packet request, Gson gson) {
+        if (request == null || request.getPayload() == null || request.getType() == null) {
+            return -1;
+        }
+
+        return switch (request.getType()) {
+            case PLACE_BID -> gson.fromJson(request.getPayload(), BidPayload.class).getUserId();
+            case PLACE_AUTO_BID, CHECK_AUTO_BID, CANCEL_AUTO_BID ->
+                    gson.fromJson(request.getPayload(), AutoBidPayload.class).getUserId();
+            case LOAD_PURCHASE_HISTORY ->
+                    gson.fromJson(request.getPayload(), BidderIdPayload.class).getBidderId();
+            case LOAD_SELLER_ITEMS ->
+                    gson.fromJson(request.getPayload(), SellerIdPayload.class).getSellerId();
+            case SAVE_ITEM, UPDATE_ITEM ->
+                    gson.fromJson(request.getPayload(), ItemPayload.class).getSellerId();
+            case DELETE_ITEM, CONFIRM_PAYMENT ->
+                    gson.fromJson(request.getPayload(), ItemActionPayload.class).getSellerId();
+            case UPDATE_PROFILE ->
+                    gson.fromJson(request.getPayload(), UserProfilePayload.class).getUserId();
+            case CHANGE_PASSWORD ->
+                    gson.fromJson(request.getPayload(), ChangePasswordPayload.class).getUserId();
+            default -> -1;
+        };
     }
 
     private Packet handleSubscribeSystemLogs(Packet request, Gson gson) {

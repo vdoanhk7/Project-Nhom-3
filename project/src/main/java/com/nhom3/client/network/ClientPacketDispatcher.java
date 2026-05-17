@@ -64,6 +64,7 @@ public class ClientPacketDispatcher {
         handlers.put(PacketType.SCREEN_NOTIFY, this::handleScreenNotify);
         handlers.put(PacketType.AUCTION_SUBSCRIBE, this::handleAuctionSubscribe);
         handlers.put(PacketType.DELETE_USER, this::handleDeleteUser);
+        handlers.put(PacketType.ACCOUNT_DELETED, this::handleAccountDeleted);
         handlers.put(PacketType.SYSTEM_LOGS_RESPONSE, this::handleSystemLogsResponse);
     }
 
@@ -223,6 +224,11 @@ public class ClientPacketDispatcher {
     private void handleDeleteUser(Packet response, Gson gson) {
         ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
         eventBus.publish(new ClientEvents.UserDeleted(result.getResult(), result.getMessage()));
+    }
+
+    private void handleAccountDeleted(Packet response, Gson gson) {
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        eventBus.publish(new ClientEvents.AccountDeleted(result.getMessage()));
     }
 
     private void handleSystemLogsResponse(Packet response, Gson gson) {

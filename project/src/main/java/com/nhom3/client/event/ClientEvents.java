@@ -107,6 +107,9 @@ public final class ClientEvents {
     public record UserDeleted(boolean success, String message) {
     }
 
+    public record AccountDeleted(String message) {
+    }
+
     public record SystemLogsLoaded(String logs, boolean isAppend) {
     }
 }

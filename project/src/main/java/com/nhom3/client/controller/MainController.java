@@ -47,6 +47,7 @@ public class MainController {
     @FXML private Button btnProfile;
 
     private long currentNavigationId = 0; 
+    private boolean accountDeletedHandled;
     
     private List<Button> allMenuButtons; 
 
@@ -57,6 +58,8 @@ public class MainController {
                 ClientEvents.NavigationRequested.class, this, MainController::handleNavigationRequested);
         ClientEventBus.getDefault().subscribe(
                 ClientEvents.UserProfileChanged.class, this, MainController::handleUserProfileChanged);
+        ClientEventBus.getDefault().subscribe(
+                ClientEvents.AccountDeleted.class, this, MainController::handleAccountDeleted);
         ControllerLifecycle.unsubscribeOnDetach(contentArea, this);
         
         allMenuButtons = Arrays.asList(btnDashboard, btnMarket, btnPurchaseHistory, btnManageItem, btnAdminPanel, btnProfile);
@@ -95,6 +98,22 @@ public class MainController {
 
     private void handleUserProfileChanged(ClientEvents.UserProfileChanged event) {
         refreshUserProfileHeader();
+    }
+
+    private void handleAccountDeleted(ClientEvents.AccountDeleted event) {
+        if (accountDeletedHandled) {
+            return;
+        }
+        accountDeletedHandled = true;
+        UserSession.getInstance().logout();
+
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Tài khoản đã bị xóa");
+        alert.setHeaderText(null);
+        alert.setContentText(event.message());
+        alert.showAndWait();
+
+        showLoginScene();
     }
 
     public void refreshUserProfileHeader() {
@@ -239,16 +258,26 @@ public class MainController {
         alert.setContentText("Bạn thực sự muốn đăng xuất?");
 
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-            try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/login.fxml"));
-                Parent root = loader.load();
-                
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                stage.setScene(new Scene(root));
-                stage.centerOnScreen(); 
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            UserSession.getInstance().logout();
+            showLoginScene((Stage) ((Node) event.getSource()).getScene().getWindow());
+        }
+    }
+
+    private void showLoginScene() {
+        if (contentArea == null || contentArea.getScene() == null) {
+            return;
+        }
+        showLoginScene((Stage) contentArea.getScene().getWindow());
+    }
+
+    private void showLoginScene(Stage stage) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/login.fxml"));
+            Parent root = loader.load();
+            stage.setScene(new Scene(root));
+            stage.centerOnScreen();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

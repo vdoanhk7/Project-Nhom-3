@@ -269,6 +269,10 @@ public class PacketDispatcher {
         AuctionIdPayload payload = gson.fromJson(request.getPayload(), AuctionIdPayload.class);
         try {
             boolean success = auctionService.cancelAuction(payload.getAuctionId());
+            if (success) {
+                announcer.notifyAuctionCancelled(
+                        payload.getAuctionId(), "Phiên đấu giá đã bị quản trị viên hủy.");
+            }
             return new Packet(PacketType.CANCEL_AUCTION, new ResultPayload(success,
                     success ? "Đã hủy phiên đấu giá!" : "Không thể hủy phiên đấu giá!",
                     -1, "", "", "", "", ""));
@@ -364,6 +368,13 @@ public class PacketDispatcher {
         if (auction == null) {
             return new Packet(PacketType.PLACE_AUTO_BID,
                     new ResultPayload(false, "Không tìm thấy phiên đấu giá này!", -1, "", "", "", "", ""));
+        }
+        if (auction.getStatus() != StatusOfAuction.RUNNING) {
+            String message = auction.getStatus() == StatusOfAuction.CANCELLED
+                    ? "Phiên đấu giá đã bị hủy bởi quản trị viên!"
+                    : "Phiên đấu giá hiện không mở để đặt Auto-Bid!";
+            return new Packet(PacketType.PLACE_AUTO_BID,
+                    new ResultPayload(false, message, -1, "", "", "", "", ""));
         }
         if (autoData.getIncrement() < auction.getBidStep()) {
             return new Packet(PacketType.PLACE_AUTO_BID,

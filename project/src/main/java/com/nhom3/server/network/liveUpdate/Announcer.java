@@ -53,4 +53,20 @@ public class Announcer {
             }
         }
     }
+
+    public void notifyAuctionCancelled(int auctionId, String message) {
+        Set<AuctionObserver> observers = clientInAuctions.get(auctionId);
+        if (observers == null || observers.isEmpty()) {
+            return;
+        }
+        for (AuctionObserver observer : observers) {
+            try {
+                if (observer instanceof ScreenObserver screenObserver) {
+                    screenObserver.notifyCancelled(auctionId, message);
+                }
+            } catch (IOException e) {
+                removeObserver(auctionId, observer.client);
+            }
+        }
+    }
 }

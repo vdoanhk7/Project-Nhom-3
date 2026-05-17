@@ -11,6 +11,7 @@ import com.nhom3.client.utils.MoneyInputFormatter;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;
+import com.nhom3.shared.model.auction.StatusOfAuction;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
 import com.nhom3.shared.network.payload.ItemActionPayload;
@@ -92,6 +93,7 @@ public class ViewItemDetailController {
     private boolean waitingForAutoBidResult;
     private boolean waitingForAutoBidCheck;
     private boolean waitingForAutoBidCancelResult;
+    private boolean auctionCancelledHandled;
     private javafx.scene.layout.VBox autoBidInfoBox;
 
     private void refreshState() {
@@ -100,7 +102,13 @@ public class ViewItemDetailController {
 
         LocalDateTime now = LocalDateTime.now();
 
-        if (now.isBefore(currentAuction.getStartTime())) {
+        if (currentAuction.getStatus() == StatusOfAuction.CANCELLED) {
+            setupCancelledState(currentAuction);
+        } else if (currentAuction.getStatus() == StatusOfAuction.PAID) {
+            setupPaidState(currentAuction);
+        } else if (currentAuction.getStatus() == StatusOfAuction.FINISHED) {
+            setupFinishedState(currentAuction);
+        } else if (now.isBefore(currentAuction.getStartTime())) {
             setupOpenState(currentAuction);
         } else if (now.isBefore(currentAuction.getEndTime())) {
             setupRunningState(currentAuction);
@@ -423,6 +431,11 @@ public class ViewItemDetailController {
 
     private void openAutoBidDialog() {
         User currentUser = UserSession.getInstance().getLoggedInUser();
+        if (currentAuction == null || currentAuction.getStatus() == StatusOfAuction.CANCELLED) {
+            showAlert(Alert.AlertType.WARNING, "Phiên đấu giá đã bị hủy",
+                    "Phiên đấu giá này đã bị quản trị viên hủy, bạn không thể bật Auto-Bid.");
+            return;
+        }
 
         Dialog<com.nhom3.shared.network.payload.AutoBidPayload> dialog = new Dialog<>();
         dialog.setTitle("Cài đặt Đấu giá tự động (Auto-Bid)");
@@ -515,6 +528,12 @@ public class ViewItemDetailController {
         if (!(currentUser instanceof Bidder)) {
             showAlert(Alert.AlertType.ERROR, "Lỗi phân quyền",
                     "Chỉ có Người mua (Bidder) mới được phép tham gia trả giá!");
+            return;
+        }
+
+        if (currentAuction == null || currentAuction.getStatus() == StatusOfAuction.CANCELLED) {
+            showAlert(Alert.AlertType.WARNING, "Phiên đấu giá đã bị hủy",
+                    "Phiên đấu giá này đã bị quản trị viên hủy, bạn không thể đặt giá nữa.");
             return;
         }
 
@@ -729,7 +748,28 @@ public class ViewItemDetailController {
         if (event.auctionId() > 0 && event.auctionId() != currentAuction.getId()) {
             return;
         }
+        if ("AUCTION_CANCELLED".equals(event.eventType()) || "CANCELLED".equals(event.status())) {
+            handleAuctionCancelled(event.message());
+            return;
+        }
         handleScreenNotify(event.highestPrice());
+    }
+
+    private void handleAuctionCancelled(String message) {
+        currentAuction.setStatus(StatusOfAuction.CANCELLED);
+        waitingForAutoBidCheck = false;
+        waitingForAutoBidResult = false;
+        waitingForAutoBidCancelResult = false;
+        setupCancelledState(currentAuction);
+        setupDynamicUI();
+
+        String alertMessage = message != null && !message.isBlank()
+                ? message
+                : "Phiên đấu giá đã bị quản trị viên hủy.";
+        if (!auctionCancelledHandled) {
+            auctionCancelledHandled = true;
+            showAlert(Alert.AlertType.WARNING, "Phiên đấu giá đã bị hủy", alertMessage);
+        }
     }
 
     private void updateBidInputHint() {

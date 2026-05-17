@@ -92,7 +92,9 @@ public class AuctionHandler {
                 Auction currentAuction = dao.getAuctionById(auctionId);
                 if (currentAuction == null)
                     throw new IllegalStateException("Không tìm thấy phiên đấu giá này!");
-                
+                if (currentAuction.getStatus() != com.nhom3.shared.model.auction.StatusOfAuction.RUNNING)
+                    return;
+
                 List<AutoBidPayload> autoBids = dao.getActiveAutoBids(auctionId);
                 if (autoBids.isEmpty())
                     return;

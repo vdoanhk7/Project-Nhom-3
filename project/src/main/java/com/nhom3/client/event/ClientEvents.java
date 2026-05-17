@@ -101,7 +101,7 @@ public final class ClientEvents {
     public record DashboardLoaded(DashboardResponsePayload data) {
     }
 
-    public record ScreenNotified(int auctionId, double highestPrice) {
+    public record ScreenNotified(int auctionId, double highestPrice, String eventType, String message, String status) {
     }
 
     public record UserDeleted(boolean success, String message) {

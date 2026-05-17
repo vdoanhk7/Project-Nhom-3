@@ -17,4 +17,11 @@ public class ScreenObserver extends AuctionObserver {
         Packet ScreenNotifyPacket = new Packet(PacketType.SCREEN_NOTIFY, UpdatePrice);
         client.send(ScreenNotifyPacket);
     }
+
+    public void notifyCancelled(int auctionId, String message) throws IOException {
+        ScreenNotifyPayload payload = new ScreenNotifyPayload(
+                auctionId, 0, "AUCTION_CANCELLED", message, "CANCELLED");
+        Packet packet = new Packet(PacketType.SCREEN_NOTIFY, payload);
+        client.send(packet);
+    }
 }

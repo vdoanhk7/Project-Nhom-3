@@ -214,7 +214,12 @@ public class ClientPacketDispatcher {
 
     private void handleScreenNotify(Packet response, Gson gson) {
         ScreenNotifyPayload payload = gson.fromJson(response.getPayload(), ScreenNotifyPayload.class);
-        eventBus.publish(new ClientEvents.ScreenNotified(payload.getAuctionId(), payload.getHighestPrice()));
+        eventBus.publish(new ClientEvents.ScreenNotified(
+                payload.getAuctionId(),
+                payload.getHighestPrice(),
+                payload.getEventType(),
+                payload.getMessage(),
+                payload.getStatus()));
     }
 
     private void handleAuctionSubscribe(Packet response, Gson gson) {

@@ -7,6 +7,7 @@ import com.nhom3.server.exception.InvalidUserDataException;
 import com.nhom3.server.dao.UserDAO;
 import com.nhom3.server.dao.UserDAOImpl;
 import com.nhom3.shared.model.user.User;
+import com.nhom3.shared.validation.PasswordValidator;
 
 public class AuthService {
     private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
@@ -76,6 +77,12 @@ public class AuthService {
     private void validateRegistrationData(User user) {
         if (user == null || user.getUserInfo() == null || user.getUserContact() == null) {
             throw new InvalidUserDataException("USER_REGISTER_DATA_INVALID", "Dữ liệu đăng ký không hợp lệ!");
+        }
+
+        if (!PasswordValidator.isStrong(user.getUserInfo().getPassword())) {
+            throw new InvalidUserDataException(
+                    "USER_PASSWORD_WEAK",
+                    PasswordValidator.STRONG_PASSWORD_MESSAGE);
         }
 
         validateUserContact(user);

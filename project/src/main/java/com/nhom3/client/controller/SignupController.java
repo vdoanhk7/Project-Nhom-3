@@ -8,6 +8,7 @@ import com.nhom3.client.network.ServerConnection;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
 import com.nhom3.shared.network.payload.RegisterPayload;
+import com.nhom3.shared.validation.PasswordValidator;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -86,6 +87,12 @@ public class SignupController {
 
         if (!password.equals(confirmPass)) {
             showMessage("Mật khẩu xác nhận không khớp!", false);
+            return;
+        }
+
+        if (!PasswordValidator.isStrong(password)) {
+            showMessage(PasswordValidator.STRONG_PASSWORD_MESSAGE, false);
+            focusField(txtPassword);
             return;
         }
 

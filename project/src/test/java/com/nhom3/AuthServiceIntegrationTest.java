@@ -26,7 +26,7 @@ public class AuthServiceIntegrationTest extends IntegrationTestBase {
     @Test
     public void testRegisterAndLoginIntegration() {
         // 1. Prepare user data
-        UserInfo userInfo = new UserInfo("testuser", "securePassword123", "Test User Name");
+        UserInfo userInfo = new UserInfo("testuser", "securePassword123!", "Test User Name");
         UserContact userContact = new UserContact("test@example.com", "0123456789");
         Bidder newBidder = new Bidder(0, userInfo, userContact); // 0 because ID is auto-incremented
         
@@ -35,7 +35,7 @@ public class AuthServiceIntegrationTest extends IntegrationTestBase {
         assertTrue(isRegistered, "User should be registered successfully");
         
         // 3. Attempt to login with correct credentials
-        User loggedInUser = authService.login("testuser", "securePassword123");
+        User loggedInUser = authService.login("testuser", "securePassword123!");
         assertNotNull(loggedInUser, "Login should be successful and return a valid User object");
         
         // 4. Verify the retrieved user data
@@ -49,7 +49,7 @@ public class AuthServiceIntegrationTest extends IntegrationTestBase {
         assertNull(wrongPasswordUser, "Login should fail with wrong password");
         
         // 6. Attempt to login with non-existent user
-        User notFoundUser = authService.login("nonexistent", "securePassword123");
+        User notFoundUser = authService.login("nonexistent", "securePassword123!");
         assertNull(notFoundUser, "Login should fail for non-existent user");
     }
 }

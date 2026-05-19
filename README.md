@@ -182,26 +182,53 @@ Mở terminal khác và chạy client
 
 ## 7. Danh Sách Chức Năng Đã Hoàn Thành
 
-- Đăng ký, đăng nhập và phân quyền người dùng theo vai trò Bidder, Seller, Admin(không cho tạo trực tiếp qua UI).
-- Đổi mật khẩu và cập nhật thông tin hồ sơ người dùng.
-- Mã hóa mật khẩu bằng BCrypt.
-- Seller thêm, sửa, xóa và quản lý sản phẩm.
-- Seller tạo và hủy phiên đấu giá.
-- Bidder xem danh sách phiên đấu giá, xem chi tiết sản phẩm và lịch sử đặt giá.
+- Đăng ký tài khoản với vai trò Bidder hoặc Seller.
+- Đăng ký có validate email, số điện thoại, mật khẩu và xác nhận mật khẩu. 
+- Đăng nhập, đăng xuất và phân quyền giao diện theo vai trò Bidder, Seller, Admin.
+- Đổi mật khẩu và bảo mật mật khẩu người dùng.
+- Xem, chỉnh sửa hồ sơ cá nhân và cập nhật ảnh đại diện.
+- Tự thông báo cho người dùng khi tài khoản đang đăng nhập bị xóa bởi Admin.
+
+- Hiển thị dashboard tổng quan với thống kê hệ thống, top bidder và top sản phẩm.
+- Điều hướng nhanh từ dashboard tới các màn hình chính theo vai trò người dùng.
+
+- Bidder xem chợ đấu giá và danh sách các phiên đang/sắp diễn ra.
+- Bidder tìm kiếm, lọc phiên đấu giá theo tên sản phẩm, người bán, danh mục và thời gian còn lại.
+- Bidder xem chi tiết sản phẩm, thông tin phiên đấu giá và trạng thái phiên.
 - Bidder đặt giá trực tiếp trong phiên đấu giá.
-- Hỗ trợ auto bid.
-- Tự động cập nhật trạng thái phiên đấu giá theo thời gian.
-- Tự động đóng phiên đấu giá khi hết hạn.
-- Hỗ trợ anti-sniping bằng cách gia hạn phiên khi có lượt đặt giá sát thời điểm kết thúc.
-- Cập nhật realtime cho các client đang theo dõi phiên đấu giá.
-- Quản lý lịch sử mua hàng và xác nhận thanh toán.
-- Admin xem danh sách người dùng, xóa người dùng và theo dõi log hệ thống.
-- Server xử lý nhiều client đồng thời bằng virtual threads và giới hạn số kết nối.
-- Giao tiếp Client/Server bằng packet JSON qua Socket TCP.
-- Ghi log bằng SLF4J/Logback.
-- Quản lý connection pool tới MySQL bằng HikariCP.
+- Bidder xem lịch sử đặt giá của từng phiên đấu giá.
+- Bidder xem biểu đồ biến động giá trong phiên đấu giá.
+- Bidder thiết lập, thay đổi, kiểm tra trạng thái và hủy auto bid.
+- Bidder xem lịch sử đấu giá cá nhân.
+- Bidder tìm kiếm và lọc lịch sử đấu giá theo kết quả tham gia.
+
+- Seller thêm, sửa, xóa và quản lý sản phẩm.
+- Seller upload, xem trước và hiển thị ảnh sản phẩm.
+- Seller quản lý sản phẩm theo mã sản phẩm, tên sản phẩm và danh mục.
+- Seller đăng bán sản phẩm ngay hoặc hẹn giờ mở phiên đấu giá.
+- Seller cấu hình thời gian bắt đầu, thời gian kết thúc và bước giá cho phiên đấu giá.
+- Seller xem chi tiết phiên đấu giá gắn với sản phẩm.
+- Seller xác nhận thanh toán sau khi phiên đấu giá kết thúc.
+
+- Admin xem thống kê tổng quan hệ thống.
+- Admin xem danh sách người dùng và thông tin chi tiết người dùng.
+- Admin xóa tài khoản người dùng.
+- Admin xem danh sách tất cả phiên đấu giá.
+- Admin lọc phiên đấu giá theo trạng thái.
+- Admin hủy phiên đấu giá khi cần.
+- Admin theo dõi log hệ thống trên màn hình quản trị.
+
+- Tự động chuyển trạng thái phiên đấu giá theo thời gian đã cấu hình.
+- Tự động mở phiên khi đến giờ bắt đầu và đóng phiên khi hết hạn.
+- Hỗ trợ chống đặt giá vào phút cuối (anti-sniping).
+- Cập nhật realtime giá hiện tại cho các client đang theo dõi phiên đấu giá.
+- Cập nhật realtime khi phiên đấu giá bị hủy.
+- Cập nhật realtime log hệ thống cho Admin.
+- Server hỗ trợ nhiều client kết nối đồng thời.
+- Lưu trữ dữ liệu người dùng, sản phẩm, phiên đấu giá, lịch sử đặt giá và auto bid.
+- Ghi log hoạt động của server, client và hệ thống.
 - Có unit test/integration test cho các lớp service, DAO và model chính.
-- Có GitHub Actions để build/test và build fat JAR artifact.
+- Hỗ trợ tự động kiểm tra build/test và tạo artifact chạy ứng dụng.
 
 ## 8. Báo Cáo PDF Và Video Demo
 

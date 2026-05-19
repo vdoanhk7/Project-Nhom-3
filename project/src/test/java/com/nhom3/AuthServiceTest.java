@@ -92,7 +92,7 @@ public class AuthServiceTest {
     void register_WithInvalidEmail_ShouldThrowIllegalArgumentExceptionAndNotCallDao() {
         User user = new Bidder(
                 1,
-                new UserInfo("testuser", "password", "Test User"),
+                new UserInfo("testuser", "Password123!", "Test User"),
                 new UserContact("bad-email", "0123456789"));
 
         assertThrows(IllegalArgumentException.class, () -> authService.register(user));
@@ -103,8 +103,19 @@ public class AuthServiceTest {
     void register_WithInvalidPhone_ShouldThrowIllegalArgumentExceptionAndNotCallDao() {
         User user = new Bidder(
                 1,
-                new UserInfo("testuser", "password", "Test User"),
+                new UserInfo("testuser", "Password123!", "Test User"),
                 new UserContact("test@example.com", "123"));
+
+        assertThrows(IllegalArgumentException.class, () -> authService.register(user));
+        verify(userDAO, never()).register(user);
+    }
+
+    @Test
+    void register_WithWeakPassword_ShouldThrowIllegalArgumentExceptionAndNotCallDao() {
+        User user = new Bidder(
+                1,
+                new UserInfo("testuser", "password123", "Test User"),
+                new UserContact("test@example.com", "0123456789"));
 
         assertThrows(IllegalArgumentException.class, () -> authService.register(user));
         verify(userDAO, never()).register(user);
@@ -171,6 +182,7 @@ public class AuthServiceTest {
         UserContact mockUserContact = mock(UserContact.class);
 
         when(mockUserInfo.getName()).thenReturn("Test User");
+        when(mockUserInfo.getPassword()).thenReturn("Password123!");
         when(mockUserContact.getEmail()).thenReturn("test@example.com");
         when(mockUserContact.getPhoneNumber()).thenReturn("0123456789");
         when(mockUser.getUserInfo()).thenReturn(mockUserInfo);

@@ -11,6 +11,7 @@ import javafx.stage.Stage;
 public class App extends Application {
     // Nhận và xử lý phản hồi từ server trong thread riêng
     public static final ServerHandler serverHandler = new ServerHandler();
+    private static final long SERVER_RETRY_DELAY_MILLIS = 2_000L;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -40,8 +41,10 @@ public class App extends Application {
             } catch (Exception e) {
                 System.out.println("Không thể kết nối đến server. Đang thử lại...");
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(SERVER_RETRY_DELAY_MILLIS);
                 } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    return;
                 }
             }
         }

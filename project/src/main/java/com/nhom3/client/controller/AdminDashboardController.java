@@ -22,6 +22,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.text.Text;
 
 public class AdminDashboardController {
+    private static final double USER_ACTION_BUTTON_SPACING = 5;
 
     @FXML private Text txtTotalUsers;
     @FXML private Text txtActiveAuctions;
@@ -204,7 +205,8 @@ public class AdminDashboardController {
         colUserAction.setCellFactory(column -> new TableCell<UserListResponsePayload.UserDTO, UserListResponsePayload.UserDTO>() {
             private final Button btnInfo = new Button("Xem Thông Tin");
             private final Button btnDelete = new Button("Xóa Người Dùng");
-            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(5, btnInfo, btnDelete);
+            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(
+                    USER_ACTION_BUTTON_SPACING, btnInfo, btnDelete);
 
             {
                 btnInfo.setOnAction(event -> {

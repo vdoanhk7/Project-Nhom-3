@@ -66,7 +66,11 @@ public class ManageItemController {
     @FXML private TableColumn<Item, Double> colCurHighest;
     @FXML private TableColumn<Item, Void> colAction;
 
-    private static final ExecutorService IMAGE_LOADER = Executors.newFixedThreadPool(4, runnable -> {
+    private static final int IMAGE_LOADER_THREADS = 4;
+    private static final double ITEM_IMAGE_SIZE = 60;
+    private static final double ACTION_BUTTON_SPACING = 8;
+
+    private static final ExecutorService IMAGE_LOADER = Executors.newFixedThreadPool(IMAGE_LOADER_THREADS, runnable -> {
         Thread thread = new Thread(runnable, "ManageItem-ImageLoader");
         thread.setDaemon(true);
         return thread;
@@ -244,8 +248,8 @@ public class ManageItemController {
                         byte[] imageBytes = java.util.Base64.getDecoder().decode(currentItem.getImageBase64());
                         javafx.scene.image.Image img = new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imageBytes));
                         javafx.scene.image.ImageView imageView = new javafx.scene.image.ImageView(img);
-                        imageView.setFitWidth(60);
-                        imageView.setFitHeight(60);
+                        imageView.setFitWidth(ITEM_IMAGE_SIZE);
+                        imageView.setFitHeight(ITEM_IMAGE_SIZE);
                         imageView.setPreserveRatio(true);
                         setGraphic(imageView);
                         setAlignment(javafx.geometry.Pos.CENTER);
@@ -281,8 +285,8 @@ public class ManageItemController {
 
     private StackPane createImagePlaceholder(String text) {
         StackPane placeholder = new StackPane();
-        placeholder.setPrefSize(60, 60);
-        placeholder.setMaxSize(60, 60);
+        placeholder.setPrefSize(ITEM_IMAGE_SIZE, ITEM_IMAGE_SIZE);
+        placeholder.setMaxSize(ITEM_IMAGE_SIZE, ITEM_IMAGE_SIZE);
         placeholder.setStyle("-fx-background-color: #e5e7eb; -fx-background-radius: 6;");
         Label label = new Label(text);
         label.setStyle("-fx-text-fill: #6b7280; -fx-font-weight: bold; -fx-font-size: 10px;");
@@ -341,7 +345,7 @@ public class ManageItemController {
             private final Button btnConfirmPaid = createStyledButton(" Xác Nhận ", "#10b981", "#059669");
             private final Label lblPaidStatus = new Label("💰 Đã Thanh Toán");
             
-            private final HBox pane = new HBox(8, btnPublish, btnEdit, btnDelete,
+            private final HBox pane = new HBox(ACTION_BUTTON_SPACING, btnPublish, btnEdit, btnDelete,
                     btnView, btnConfirmPaid, lblPaidStatus);
 
             {

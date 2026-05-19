@@ -23,6 +23,8 @@ import com.nhom3.server.dao.ItemDAO;
 import com.nhom3.server.dao.ItemDAOImpl;
 import com.nhom3.server.dao.UserDAO;
 import com.nhom3.server.dao.UserDAOImpl;
+import com.nhom3.server.exception.BusinessRuleException;
+import com.nhom3.server.exception.BusinessValidationException;
 
 import com.nhom3.shared.model.user.*;
 import com.nhom3.shared.model.item.*;
@@ -86,6 +88,9 @@ public class PacketDispatcher {
                     return accountDeletedPacket(userId);
                 }
                 return handler.handle(request, gson);
+            } catch (BusinessRuleException | BusinessValidationException e) {
+                logger.warn("Từ chối nghiệp vụ khi xử lý gói tin {}: {}", request.getType(), e.getErrorCode());
+                return new Packet(request.getType(), new ResultPayload(false, e.getMessage(), -1, "", "", "", "", ""));
             } catch (Exception e) {
                 logger.error("Lỗi khi xử lý gói tin: " + request.getType(), e);
                 return new Packet(request.getType(), new ResultPayload(false, "Lỗi máy chủ", -1, "", "", "", "", ""));
@@ -128,7 +133,7 @@ public class PacketDispatcher {
         try {
             isRegSuccess = authService.register(newUser);
             message = isRegSuccess ? "Đăng ký thành công" : "Tên đăng nhập đã tồn tại hoặc lỗi hệ thống";
-        } catch (IllegalArgumentException e) {
+        } catch (BusinessValidationException e) {
             isRegSuccess = false;
             message = e.getMessage();
         }
@@ -291,7 +296,7 @@ public class PacketDispatcher {
         try {
             success = authService.updateUser(user);
             message = success ? "Cập nhật thông tin cá nhân thành công!" : "Không thể cập nhật thông tin!";
-        } catch (IllegalArgumentException e) {
+        } catch (BusinessValidationException e) {
             success = false;
             message = e.getMessage();
         }
@@ -333,7 +338,7 @@ public class PacketDispatcher {
 
             isPubSuccess = auctionService.createAuction(newAuction);
             pubMsg = isPubSuccess ? "Đăng bán thành công!" : "Lỗi lưu Database!";
-        } catch (IllegalStateException | IllegalArgumentException e) {
+        } catch (BusinessRuleException | BusinessValidationException e) {
             pubMsg = e.getMessage();
         } catch (Exception e) {
             e.printStackTrace();
@@ -493,7 +498,7 @@ public class PacketDispatcher {
         try {
             success = authService.deleteUser(payload.getUserId());
             message = "Đã xóa tài khoản thành công!";
-        } catch (IllegalStateException e) {
+        } catch (BusinessRuleException e) {
             success = false;
             message = e.getMessage();
         }

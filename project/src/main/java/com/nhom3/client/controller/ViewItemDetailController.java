@@ -41,6 +41,24 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 public class ViewItemDetailController {
+    private static final long SECONDS_PER_MINUTE = 60L;
+    private static final long MINUTES_PER_HOUR = 60L;
+    private static final long SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR;
+    private static final int COUNTDOWN_REFRESH_SECONDS = 1;
+    private static final double AUTO_BID_BUTTON_HEIGHT = 45.0;
+    private static final double AUTO_BID_BUTTON_WIDTH = 120.0;
+    private static final double AUTO_BID_DIALOG_HGAP = 15;
+    private static final double AUTO_BID_DIALOG_VGAP = 15;
+    private static final double AUTO_BID_DIALOG_PADDING_TOP = 20;
+    private static final double AUTO_BID_DIALOG_PADDING_RIGHT = 50;
+    private static final double AUTO_BID_DIALOG_PADDING_BOTTOM = 10;
+    private static final double AUTO_BID_DIALOG_PADDING_LEFT = 10;
+    private static final int CHART_MAX_POINTS = 15;
+    private static final double AUTO_BID_INFO_SPACING = 10;
+    private static final double AUTO_BID_INFO_SHADOW_RADIUS = 5;
+    private static final double AUTO_BID_INFO_SHADOW_OFFSET_Y = 3;
+    private static final double AUTO_BID_BUTTON_BOX_SPACING = 15;
+    private static final double AUTO_BID_BUTTON_BOX_TOP_PADDING = 10;
 
     @FXML
     private Label lblItemName, lblItemType, lblStatusBadge, lblNoImage;
@@ -363,7 +381,7 @@ public class ViewItemDetailController {
         if (!updateCountdownLabel(targetTime))
             return;
         countdownTimeline = new Timeline(
-                new KeyFrame(Duration.seconds(1), event -> updateCountdownLabel(targetTime)));
+                new KeyFrame(Duration.seconds(COUNTDOWN_REFRESH_SECONDS), event -> updateCountdownLabel(targetTime)));
         countdownTimeline.setCycleCount(Animation.INDEFINITE);
         countdownTimeline.play();
     }
@@ -377,9 +395,9 @@ public class ViewItemDetailController {
             return false;
         }
 
-        long hours = secondsDiff / 3600;
-        long minutes = (secondsDiff % 3600) / 60;
-        long seconds = secondsDiff % 60;
+        long hours = secondsDiff / SECONDS_PER_HOUR;
+        long minutes = (secondsDiff % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE;
+        long seconds = secondsDiff % SECONDS_PER_MINUTE;
         lblCountdown.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
         return true;
     }
@@ -421,8 +439,8 @@ public class ViewItemDetailController {
                 String styleHover = "-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px; -fx-cursor: hand; -fx-background-radius: 5;";
 
                 btnAutoBid.setStyle(styleNormal);
-                btnAutoBid.setPrefHeight(45.0);
-                btnAutoBid.setPrefWidth(120.0);
+                btnAutoBid.setPrefHeight(AUTO_BID_BUTTON_HEIGHT);
+                btnAutoBid.setPrefWidth(AUTO_BID_BUTTON_WIDTH);
 
                 btnAutoBid.setOnMouseEntered(e -> btnAutoBid.setStyle(styleHover));
                 btnAutoBid.setOnMouseExited(e -> btnAutoBid.setStyle(styleNormal));
@@ -453,9 +471,13 @@ public class ViewItemDetailController {
         dialog.getDialogPane().getButtonTypes().addAll(btnSetup, ButtonType.CANCEL);
 
         javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
-        grid.setHgap(15);
-        grid.setVgap(15);
-        grid.setPadding(new javafx.geometry.Insets(20, 50, 10, 10));
+        grid.setHgap(AUTO_BID_DIALOG_HGAP);
+        grid.setVgap(AUTO_BID_DIALOG_VGAP);
+        grid.setPadding(new javafx.geometry.Insets(
+                AUTO_BID_DIALOG_PADDING_TOP,
+                AUTO_BID_DIALOG_PADDING_RIGHT,
+                AUTO_BID_DIALOG_PADDING_BOTTOM,
+                AUTO_BID_DIALOG_PADDING_LEFT));
 
         TextField txtMaxAmount = new TextField();
         txtMaxAmount.setPromptText("VD: 20000000");
@@ -713,8 +735,7 @@ public class ViewItemDetailController {
         if (history == null)
             return;
 
-        int maxPoints = 15;
-        int startIndex = Math.min(history.size() - 1, maxPoints - 1);
+        int startIndex = Math.min(history.size() - 1, CHART_MAX_POINTS - 1);
 
         for (int i = startIndex; i >= 0; i--) {
             BidTransaction bid = history.get(i);
@@ -835,15 +856,15 @@ public class ViewItemDetailController {
             boxBidderActions.setManaged(false);
 
             if (autoBidInfoBox == null) {
-                autoBidInfoBox = new javafx.scene.layout.VBox(10);
+                autoBidInfoBox = new javafx.scene.layout.VBox(AUTO_BID_INFO_SPACING);
 
                 // HIỆU ỨNG THẨM MỸ: Bảng nền Tím
                 autoBidInfoBox.setStyle(
                         "-fx-background-color: #f5eef8; -fx-padding: 20; -fx-background-radius: 8; -fx-border-color: #9b59b6; -fx-border-width: 2; -fx-border-radius: 8;");
                 DropShadow shadow = new DropShadow();
                 shadow.setColor(Color.web("#00000020"));
-                shadow.setRadius(5);
-                shadow.setOffsetY(3);
+                shadow.setRadius(AUTO_BID_INFO_SHADOW_RADIUS);
+                shadow.setOffsetY(AUTO_BID_INFO_SHADOW_OFFSET_Y);
                 autoBidInfoBox.setEffect(shadow);
 
                 Label lblTitle = new Label("🤖 ĐANG BẬT ĐẤU GIÁ TỰ ĐỘNG");
@@ -857,8 +878,8 @@ public class ViewItemDetailController {
                 lblInc.setId("lblInc");
                 lblInc.setStyle("-fx-text-fill: #2c3e50; -fx-font-size: 14px; -fx-font-weight: bold;");
 
-                javafx.scene.layout.HBox btnBox = new javafx.scene.layout.HBox(15);
-                btnBox.setPadding(new javafx.geometry.Insets(10, 0, 0, 0));
+                javafx.scene.layout.HBox btnBox = new javafx.scene.layout.HBox(AUTO_BID_BUTTON_BOX_SPACING);
+                btnBox.setPadding(new javafx.geometry.Insets(AUTO_BID_BUTTON_BOX_TOP_PADDING, 0, 0, 0));
 
                 Button btnEdit = new Button("Thay đổi thiết lập");
                 String editStyle = "-fx-background-color: white; -fx-text-fill: #2c3e50; -fx-border-color: #bdc3c7; -fx-border-radius: 5; -fx-cursor: hand; -fx-background-radius: 5; -fx-padding: 8 20; -fx-font-weight: bold;";

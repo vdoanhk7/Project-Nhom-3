@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 
 public class AuctionDAOImpl implements AuctionDAO {
     private static final Logger log = LoggerFactory.getLogger(AuctionDAOImpl.class);
+    private static final int DASHBOARD_TOP_LIMIT = 5;
 
     @Override
     public boolean updateHighestBid(int auctionId, int bidderId, double newAmount) {
@@ -632,20 +633,27 @@ public class AuctionDAOImpl implements AuctionDAO {
                     totalRevenue = rs.getDouble(1);
             }
             // 4. Lấy Top 5 Đại gia (Bidder mua nhiều tiền nhất)
-            String sqlTopBidder = "SELECT u.full_name, SUM(i.cur_highest) AS total_spent FROM auctions a JOIN items i ON a.item_id = i.id JOIN users u ON a.highest_bidder_id = u.id WHERE a.status = 'PAID' GROUP BY u.id, u.full_name ORDER BY total_spent DESC LIMIT 5";
-            try (PreparedStatement stmt = conn.prepareStatement(sqlTopBidder); ResultSet rs = stmt.executeQuery()) {
-                int rank = 1;
-                while (rs.next())
-                    topBidders.add(new com.nhom3.shared.network.payload.DashboardResponsePayload.TopBidderDTO(rank++,
-                            rs.getString("full_name"), rs.getDouble("total_spent")));
+            String sqlTopBidder = "SELECT u.full_name, SUM(i.cur_highest) AS total_spent FROM auctions a JOIN items i ON a.item_id = i.id JOIN users u ON a.highest_bidder_id = u.id WHERE a.status = 'PAID' GROUP BY u.id, u.full_name ORDER BY total_spent DESC LIMIT ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sqlTopBidder)) {
+                stmt.setInt(1, DASHBOARD_TOP_LIMIT);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    int rank = 1;
+                    while (rs.next())
+                        topBidders.add(
+                                new com.nhom3.shared.network.payload.DashboardResponsePayload.TopBidderDTO(rank++,
+                                        rs.getString("full_name"), rs.getDouble("total_spent")));
+                }
             }
             // 5. Lấy Top 5 Sản phẩm đắt nhất (FINISHED hoặc PAID)
-            String sqlTopItem = "SELECT i.name, i.cur_highest FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status IN ('PAID', 'FINISHED') ORDER BY i.cur_highest DESC LIMIT 5";
-            try (PreparedStatement stmt = conn.prepareStatement(sqlTopItem); ResultSet rs = stmt.executeQuery()) {
-                int rank = 1;
-                while (rs.next())
-                    topItems.add(new com.nhom3.shared.network.payload.DashboardResponsePayload.TopItemDTO(rank++,
-                            rs.getString("name"), rs.getDouble("cur_highest")));
+            String sqlTopItem = "SELECT i.name, i.cur_highest FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status IN ('PAID', 'FINISHED') ORDER BY i.cur_highest DESC LIMIT ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sqlTopItem)) {
+                stmt.setInt(1, DASHBOARD_TOP_LIMIT);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    int rank = 1;
+                    while (rs.next())
+                        topItems.add(new com.nhom3.shared.network.payload.DashboardResponsePayload.TopItemDTO(rank++,
+                                rs.getString("name"), rs.getDouble("cur_highest")));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

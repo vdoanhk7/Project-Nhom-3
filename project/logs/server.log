@@ -1686,3 +1686,468 @@ java.lang.IllegalStateException: Không tìm thấy phiên đấu giá này!
 2026-05-17 18:41:28 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
 2026-05-17 18:41:28 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
 2026-05-17 18:41:28 [main] ERROR c.nhom3.server.service.ItemService - Lỗi Database khi cập nhật sản phẩm ID: 10
+2026-05-18 10:33:45 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-18 10:33:45 [main] WARN  c.n.s.service.AuctionMonitorService - [Monitor] Service giám sát đã đang chạy.
+2026-05-18 10:33:45 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-18 10:33:45 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-18 10:33:45 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-18 10:33:45 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Đã dừng service giám sát.
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - [Server] Hủy thất bại phiên đấu giá ID: 1
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá đang chạy.
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-18 10:33:45 [main] WARN  c.n.server.service.AuctionService - Từ chối tạo: Sản phẩm ID 1 đang có phiên đấu giá chưa kết thúc.
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá đã kết thúc thành công.
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - Tạo thành công phiên đấu giá ID: 1 cho sản phẩm ID: 1
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Created auction detail: Auction[id=1, item=null, startTime=2026-05-18T11:33:45.399322900, endTime=2026-05-18T12:33:45.399322900, bidStep=50000, status=OPEN, highestBidderId=-1]
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=200, time=2026-05-18T10:33:45.409675300, note=Test]
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=Auction item, startTime=2026-05-18T09:33:45.409675300, endTime=2026-05-18T11:33:45.409675300, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - [Server] Đã hủy thành công phiên đấu giá ID: 1
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=200, time=2026-05-18T10:33:45.425709300, note=Test]
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=Auction item, startTime=2026-05-18T09:33:45.425709300, endTime=2026-05-18T11:33:45.425709300, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=150, time=2026-05-18T10:33:45.437987200, note=Test]
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=null, startTime=2026-05-18T09:33:45.437987200, endTime=2026-05-18T11:33:45.437987200, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-18 10:33:45 [main] WARN  c.n.server.service.AuctionService - Từ chối tạo: Thời gian kết thúc (2026-05-18T10:33:45.456491300) trước thời gian bắt đầu (2026-05-18T11:33:45.456491300).
+2026-05-18 10:33:45 [pool-3-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-18 10:33:45 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá bắt đầu.
+2026-05-18 10:33:46 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User Name đã đăng ký thành công với vai trò BIDDER!
+2026-05-18 10:33:46 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Registered user detail: Bidder[id=0, username=testuser, fullName=Test User Name, email=test@example.com, phone=0123456789]
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User Name đã đăng nhập thành công!
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Bidder[id=1, username=testuser, fullName=Test User Name, email=test@example.com, phone=0123456789]
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User đã đăng nhập thành công!
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: null
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User đã đăng ký thành công với vai trò BIDDER!
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Registered user detail: null
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng ký thất bại. Tài khoản có thể đã tồn tại.
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'Mona Lisa Replica' cho Seller ID: 1
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Created item detail: Art[id=1, name=Mona Lisa Replica, description=Chua co mo ta, startPrice=1000, currentHighest=1000, seller=Chua co thong tin]
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 1 từ Seller ID: 1
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Đã xóa vĩnh viễn sản phẩm ID: 1
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'Valid Name' cho Seller ID: 1
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Created item detail: null
+2026-05-18 10:33:47 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Tên sản phẩm trống.
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-18 10:33:47 [main] WARN  c.nhom3.server.service.ItemService - Xóa thất bại: Sản phẩm ID 100 không tồn tại hoặc Seller ID 1 không có quyền sở hữu.
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Đã cập nhật thành công sản phẩm ID: 10
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Updated item detail: null
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-18 10:33:47 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-18 10:33:47 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Giá khởi điểm âm (-1.0).
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 0
+2026-05-18 10:33:47 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Thông tin Seller không hợp lệ.
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Đã xóa vĩnh viễn sản phẩm ID: 100
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: null
+2026-05-18 10:33:47 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Thông tin Seller không hợp lệ.
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-18 10:33:47 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-18 10:33:47 [main] WARN  c.nhom3.server.service.ItemService - Từ chối xóa: Sản phẩm ID 100 đã được liên kết với phiên đấu giá ID 0.
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-18 10:33:47 [main] ERROR c.nhom3.server.service.ItemService - Lỗi Database khi lưu sản phẩm 'Valid Name'
+2026-05-18 10:33:47 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Tên sản phẩm trống.
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-18 10:33:47 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Giá khởi điểm âm (-1.0).
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-18 10:33:47 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-18 10:33:47 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-18 10:33:47 [main] ERROR c.nhom3.server.service.ItemService - Lỗi Database khi cập nhật sản phẩm ID: 10
+2026-05-18 10:33:48 [pool-3-thread-1] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2bc0b86d
+2026-05-18 10:33:48 [pool-3-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-18 10:33:48 [pool-3-thread-1] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-18 10:34:39 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-18 10:34:39 [main] WARN  c.n.s.service.AuctionMonitorService - [Monitor] Service giám sát đã đang chạy.
+2026-05-18 10:34:39 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-18 10:34:39 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-18 10:34:39 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-18 10:34:39 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Đã dừng service giám sát.
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - [Server] Hủy thất bại phiên đấu giá ID: 1
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá đang chạy.
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-18 10:34:39 [main] WARN  c.n.server.service.AuctionService - Từ chối tạo: Sản phẩm ID 1 đang có phiên đấu giá chưa kết thúc.
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá đã kết thúc thành công.
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - Tạo thành công phiên đấu giá ID: 1 cho sản phẩm ID: 1
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Created auction detail: Auction[id=1, item=null, startTime=2026-05-18T11:34:39.385265600, endTime=2026-05-18T12:34:39.385265600, bidStep=50000, status=OPEN, highestBidderId=-1]
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=200, time=2026-05-18T10:34:39.393772800, note=Test]
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=Auction item, startTime=2026-05-18T09:34:39.393772800, endTime=2026-05-18T11:34:39.393772800, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - [Server] Đã hủy thành công phiên đấu giá ID: 1
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=200, time=2026-05-18T10:34:39.417711600, note=Test]
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=Auction item, startTime=2026-05-18T09:34:39.417711600, endTime=2026-05-18T11:34:39.417711600, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=150, time=2026-05-18T10:34:39.426017800, note=Test]
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=null, startTime=2026-05-18T09:34:39.426017800, endTime=2026-05-18T11:34:39.426017800, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-18 10:34:39 [pool-3-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-18 10:34:39 [main] WARN  c.n.server.service.AuctionService - Từ chối tạo: Thời gian kết thúc (2026-05-18T10:34:39.452866600) trước thời gian bắt đầu (2026-05-18T11:34:39.452866600).
+2026-05-18 10:34:39 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá bắt đầu.
+2026-05-18 10:34:40 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User Name đã đăng ký thành công với vai trò BIDDER!
+2026-05-18 10:34:40 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Registered user detail: Bidder[id=0, username=testuser, fullName=Test User Name, email=test@example.com, phone=0123456789]
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User Name đã đăng nhập thành công!
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Bidder[id=1, username=testuser, fullName=Test User Name, email=test@example.com, phone=0123456789]
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User đã đăng nhập thành công!
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: null
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User đã đăng ký thành công với vai trò BIDDER!
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Registered user detail: null
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng ký thất bại. Tài khoản có thể đã tồn tại.
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'Mona Lisa Replica' cho Seller ID: 1
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Created item detail: Art[id=1, name=Mona Lisa Replica, description=Chua co mo ta, startPrice=1000, currentHighest=1000, seller=Chua co thong tin]
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 1 từ Seller ID: 1
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Đã xóa vĩnh viễn sản phẩm ID: 1
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'Valid Name' cho Seller ID: 1
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Created item detail: null
+2026-05-18 10:34:41 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Tên sản phẩm trống.
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-18 10:34:41 [main] WARN  c.nhom3.server.service.ItemService - Xóa thất bại: Sản phẩm ID 100 không tồn tại hoặc Seller ID 1 không có quyền sở hữu.
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Đã cập nhật thành công sản phẩm ID: 10
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Updated item detail: null
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-18 10:34:41 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-18 10:34:41 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Giá khởi điểm âm (-1.0).
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 0
+2026-05-18 10:34:41 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Thông tin Seller không hợp lệ.
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Đã xóa vĩnh viễn sản phẩm ID: 100
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: null
+2026-05-18 10:34:41 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Thông tin Seller không hợp lệ.
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-18 10:34:41 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-18 10:34:41 [main] WARN  c.nhom3.server.service.ItemService - Từ chối xóa: Sản phẩm ID 100 đã được liên kết với phiên đấu giá ID 0.
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-18 10:34:41 [main] ERROR c.nhom3.server.service.ItemService - Lỗi Database khi lưu sản phẩm 'Valid Name'
+2026-05-18 10:34:41 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Tên sản phẩm trống.
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-18 10:34:41 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Giá khởi điểm âm (-1.0).
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-18 10:34:41 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-18 10:34:41 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-18 10:34:41 [main] ERROR c.nhom3.server.service.ItemService - Lỗi Database khi cập nhật sản phẩm ID: 10
+2026-05-19 14:26:20 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:26:20 [main] WARN  c.n.s.service.AuctionMonitorService - [Monitor] Service giám sát đã đang chạy.
+2026-05-19 14:26:20 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:26:20 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:26:20 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:26:20 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Đã dừng service giám sát.
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - [Server] Hủy thất bại phiên đấu giá ID: 1
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá đang chạy.
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:26:20 [main] WARN  c.n.server.service.AuctionService - Từ chối tạo: Sản phẩm ID 1 đang có phiên đấu giá chưa kết thúc.
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá đã kết thúc thành công.
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - Tạo thành công phiên đấu giá ID: 1 cho sản phẩm ID: 1
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Created auction detail: Auction[id=1, item=null, startTime=2026-05-19T15:26:20.758849100, endTime=2026-05-19T16:26:20.758849100, bidStep=50000, status=OPEN, highestBidderId=-1]
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=200, time=2026-05-19T14:26:20.768862300, note=Test]
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=Auction item, startTime=2026-05-19T13:26:20.768862300, endTime=2026-05-19T15:26:20.768862300, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - [Server] Đã hủy thành công phiên đấu giá ID: 1
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=200, time=2026-05-19T14:26:20.782738800, note=Test]
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=Auction item, startTime=2026-05-19T13:26:20.782738800, endTime=2026-05-19T15:26:20.782738800, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=150, time=2026-05-19T14:26:20.794976700, note=Test]
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=null, startTime=2026-05-19T13:26:20.794976700, endTime=2026-05-19T15:26:20.794976700, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:26:20 [main] WARN  c.n.server.service.AuctionService - Từ chối tạo: Thời gian kết thúc (2026-05-19T14:26:20.819143200) trước thời gian bắt đầu (2026-05-19T15:26:20.819143200).
+2026-05-19 14:26:20 [pool-3-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-19 14:26:20 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá bắt đầu.
+2026-05-19 14:26:22 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User Name đã đăng ký thành công với vai trò BIDDER!
+2026-05-19 14:26:22 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Registered user detail: Bidder[id=0, username=testuser, fullName=Test User Name, email=test@example.com, phone=0123456789]
+2026-05-19 14:26:22 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User Name đã đăng nhập thành công!
+2026-05-19 14:26:22 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Bidder[id=1, username=testuser, fullName=Test User Name, email=test@example.com, phone=0123456789]
+2026-05-19 14:26:22 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-19 14:26:22 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-19 14:26:22 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-19 14:26:22 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User đã đăng nhập thành công!
+2026-05-19 14:26:22 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: null
+2026-05-19 14:26:22 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User đã đăng ký thành công với vai trò BIDDER!
+2026-05-19 14:26:22 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Registered user detail: null
+2026-05-19 14:26:22 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng ký thất bại. Tài khoản có thể đã tồn tại.
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'Mona Lisa Replica' cho Seller ID: 1
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Created item detail: Art[id=1, name=Mona Lisa Replica, description=Chua co mo ta, startPrice=1000, currentHighest=1000, seller=Chua co thong tin]
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 1 từ Seller ID: 1
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Đã xóa vĩnh viễn sản phẩm ID: 1
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'Valid Name' cho Seller ID: 1
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Created item detail: null
+2026-05-19 14:26:23 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Tên sản phẩm trống.
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-19 14:26:23 [main] WARN  c.nhom3.server.service.ItemService - Xóa thất bại: Sản phẩm ID 100 không tồn tại hoặc Seller ID 1 không có quyền sở hữu.
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Đã cập nhật thành công sản phẩm ID: 10
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Updated item detail: null
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:26:23 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:26:23 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Giá khởi điểm âm (-1.0).
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 0
+2026-05-19 14:26:23 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Thông tin Seller không hợp lệ.
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Đã xóa vĩnh viễn sản phẩm ID: 100
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: null
+2026-05-19 14:26:23 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Thông tin Seller không hợp lệ.
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:26:23 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-19 14:26:23 [main] WARN  c.nhom3.server.service.ItemService - Từ chối xóa: Sản phẩm ID 100 đã được liên kết với phiên đấu giá ID 0.
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:26:23 [main] ERROR c.nhom3.server.service.ItemService - Lỗi Database khi lưu sản phẩm 'Valid Name'
+2026-05-19 14:26:23 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Tên sản phẩm trống.
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-19 14:26:23 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Giá khởi điểm âm (-1.0).
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:26:23 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-19 14:26:23 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-19 14:26:23 [main] ERROR c.nhom3.server.service.ItemService - Lỗi Database khi cập nhật sản phẩm ID: 10
+2026-05-19 14:26:24 [pool-3-thread-1] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3440379b
+2026-05-19 14:26:24 [pool-3-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-19 14:26:24 [pool-3-thread-1] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-19 14:30:18 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:30:18 [main] WARN  c.n.s.service.AuctionMonitorService - [Monitor] Service giám sát đã đang chạy.
+2026-05-19 14:30:18 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:30:18 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:30:18 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:30:18 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Đã dừng service giám sát.
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - [Server] Hủy thất bại phiên đấu giá ID: 1
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá đang chạy.
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:30:18 [main] WARN  c.n.server.service.AuctionService - Từ chối tạo: Sản phẩm ID 1 đang có phiên đấu giá chưa kết thúc.
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá đã kết thúc thành công.
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - Tạo thành công phiên đấu giá ID: 1 cho sản phẩm ID: 1
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Created auction detail: Auction[id=1, item=null, startTime=2026-05-19T15:30:18.405531600, endTime=2026-05-19T16:30:18.405531600, bidStep=50000, status=OPEN, highestBidderId=-1]
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=200, time=2026-05-19T14:30:18.415162700, note=Test]
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=Auction item, startTime=2026-05-19T13:30:18.415162700, endTime=2026-05-19T15:30:18.415162700, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - [Server] Đã hủy thành công phiên đấu giá ID: 1
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=200, time=2026-05-19T14:30:18.431995400, note=Test]
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=Auction item, startTime=2026-05-19T13:30:18.431995400, endTime=2026-05-19T15:30:18.431995400, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=150, time=2026-05-19T14:30:18.445079400, note=Test]
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=null, startTime=2026-05-19T13:30:18.445079400, endTime=2026-05-19T15:30:18.445079400, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-19 14:30:18 [pool-3-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:30:18 [main] WARN  c.n.server.service.AuctionService - Từ chối tạo: Thời gian kết thúc (2026-05-19T14:30:18.467332200) trước thời gian bắt đầu (2026-05-19T15:30:18.467332200).
+2026-05-19 14:30:18 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá bắt đầu.
+2026-05-19 14:30:19 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User Name đã đăng ký thành công với vai trò BIDDER!
+2026-05-19 14:30:19 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Registered user detail: Bidder[id=0, username=testuser, fullName=Test User Name, email=test@example.com, phone=0123456789]
+2026-05-19 14:30:19 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User Name đã đăng nhập thành công!
+2026-05-19 14:30:19 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Bidder[id=1, username=testuser, fullName=Test User Name, email=test@example.com, phone=0123456789]
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User đã đăng nhập thành công!
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: null
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User đã đăng ký thành công với vai trò BIDDER!
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Registered user detail: null
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng ký thất bại. Tài khoản có thể đã tồn tại.
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'Mona Lisa Replica' cho Seller ID: 1
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Created item detail: Art[id=1, name=Mona Lisa Replica, description=Chua co mo ta, startPrice=1000, currentHighest=1000, seller=Chua co thong tin]
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 1 từ Seller ID: 1
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Đã xóa vĩnh viễn sản phẩm ID: 1
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'Valid Name' cho Seller ID: 1
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Created item detail: null
+2026-05-19 14:30:20 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Tên sản phẩm trống.
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-19 14:30:20 [main] WARN  c.nhom3.server.service.ItemService - Xóa thất bại: Sản phẩm ID 100 không tồn tại hoặc Seller ID 1 không có quyền sở hữu.
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Đã cập nhật thành công sản phẩm ID: 10
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Updated item detail: null
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:30:20 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:30:20 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Giá khởi điểm âm (-1.0).
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 0
+2026-05-19 14:30:20 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Thông tin Seller không hợp lệ.
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Đã xóa vĩnh viễn sản phẩm ID: 100
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: null
+2026-05-19 14:30:20 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Thông tin Seller không hợp lệ.
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:30:20 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-19 14:30:20 [main] WARN  c.nhom3.server.service.ItemService - Từ chối xóa: Sản phẩm ID 100 đã được liên kết với phiên đấu giá ID 0.
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:30:20 [main] ERROR c.nhom3.server.service.ItemService - Lỗi Database khi lưu sản phẩm 'Valid Name'
+2026-05-19 14:30:20 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Tên sản phẩm trống.
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-19 14:30:20 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Giá khởi điểm âm (-1.0).
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:30:20 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-19 14:30:20 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-19 14:30:20 [main] ERROR c.nhom3.server.service.ItemService - Lỗi Database khi cập nhật sản phẩm ID: 10
+2026-05-19 14:30:21 [pool-3-thread-1] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4235d2ef
+2026-05-19 14:30:21 [pool-3-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-19 14:30:21 [pool-3-thread-1] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-19 14:36:53 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:36:53 [main] WARN  c.n.s.service.AuctionMonitorService - [Monitor] Service giám sát đã đang chạy.
+2026-05-19 14:36:53 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:36:53 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:36:53 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:36:53 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Đã dừng service giám sát.
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - [Server] Hủy thất bại phiên đấu giá ID: 1
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá đang chạy.
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:36:53 [main] WARN  c.n.server.service.AuctionService - Từ chối tạo: Sản phẩm ID 1 đang có phiên đấu giá chưa kết thúc.
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá đã kết thúc thành công.
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - Tạo thành công phiên đấu giá ID: 1 cho sản phẩm ID: 1
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Created auction detail: Auction[id=1, item=null, startTime=2026-05-19T15:36:53.399917800, endTime=2026-05-19T16:36:53.399917800, bidStep=50000, status=OPEN, highestBidderId=-1]
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=200, time=2026-05-19T14:36:53.405024, note=Test]
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=Auction item, startTime=2026-05-19T13:36:53.405024, endTime=2026-05-19T15:36:53.405024, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - [Server] Đã hủy thành công phiên đấu giá ID: 1
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=200, time=2026-05-19T14:36:53.419400200, note=Test]
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=Auction item, startTime=2026-05-19T13:36:53.419400200, endTime=2026-05-19T15:36:53.419400200, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=150, time=2026-05-19T14:36:53.435973400, note=Test]
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=null, startTime=2026-05-19T13:36:53.435973400, endTime=2026-05-19T15:36:53.435973400, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-19 14:36:53 [pool-3-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:36:53 [main] WARN  c.n.server.service.AuctionService - Từ chối tạo: Thời gian kết thúc (2026-05-19T14:36:53.460601800) trước thời gian bắt đầu (2026-05-19T15:36:53.460601800).
+2026-05-19 14:36:53 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá bắt đầu.
+2026-05-19 14:36:54 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User Name đã đăng ký thành công với vai trò BIDDER!
+2026-05-19 14:36:54 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Registered user detail: Bidder[id=0, username=testuser, fullName=Test User Name, email=test@example.com, phone=0123456789]
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User Name đã đăng nhập thành công!
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Bidder[id=1, username=testuser, fullName=Test User Name, email=test@example.com, phone=0123456789]
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User đã đăng nhập thành công!
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: null
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User đã đăng ký thành công với vai trò BIDDER!
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Registered user detail: null
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng ký thất bại. Tài khoản có thể đã tồn tại.
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'Mona Lisa Replica' cho Seller ID: 1
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Created item detail: Art[id=1, name=Mona Lisa Replica, description=Chua co mo ta, startPrice=1000, currentHighest=1000, seller=Chua co thong tin]
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 1 từ Seller ID: 1
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Đã xóa vĩnh viễn sản phẩm ID: 1
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'Valid Name' cho Seller ID: 1
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Created item detail: null
+2026-05-19 14:36:55 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Tên sản phẩm trống.
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-19 14:36:55 [main] WARN  c.nhom3.server.service.ItemService - Xóa thất bại: Sản phẩm ID 100 không tồn tại hoặc Seller ID 1 không có quyền sở hữu.
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Đã cập nhật thành công sản phẩm ID: 10
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Updated item detail: null
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:36:55 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:36:55 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Giá khởi điểm âm (-1.0).
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 0
+2026-05-19 14:36:55 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Thông tin Seller không hợp lệ.
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Đã xóa vĩnh viễn sản phẩm ID: 100
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: null
+2026-05-19 14:36:55 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Thông tin Seller không hợp lệ.
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:36:55 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-19 14:36:55 [main] WARN  c.nhom3.server.service.ItemService - Từ chối xóa: Sản phẩm ID 100 đã được liên kết với phiên đấu giá ID 0.
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:36:55 [main] ERROR c.nhom3.server.service.ItemService - Lỗi Database khi lưu sản phẩm 'Valid Name'
+2026-05-19 14:36:55 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Tên sản phẩm trống.
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-19 14:36:55 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Giá khởi điểm âm (-1.0).
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:36:55 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-19 14:36:55 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-19 14:36:55 [main] ERROR c.nhom3.server.service.ItemService - Lỗi Database khi cập nhật sản phẩm ID: 10
+2026-05-19 14:36:56 [pool-3-thread-1] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7dd91b1f
+2026-05-19 14:36:56 [pool-3-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-19 14:36:56 [pool-3-thread-1] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-19 14:37:47 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:37:47 [main] WARN  c.n.s.service.AuctionMonitorService - [Monitor] Service giám sát đã đang chạy.
+2026-05-19 14:37:47 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:37:47 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:37:47 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-19 14:37:47 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Đã dừng service giám sát.
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - [Server] Hủy thất bại phiên đấu giá ID: 1
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá đang chạy.
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:37:48 [main] WARN  c.n.server.service.AuctionService - Từ chối tạo: Sản phẩm ID 1 đang có phiên đấu giá chưa kết thúc.
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá đã kết thúc thành công.
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - Tạo thành công phiên đấu giá ID: 1 cho sản phẩm ID: 1
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Created auction detail: Auction[id=1, item=null, startTime=2026-05-19T15:37:48.070818500, endTime=2026-05-19T16:37:48.070818500, bidStep=50000, status=OPEN, highestBidderId=-1]
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=200, time=2026-05-19T14:37:48.078160900, note=Test]
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=Auction item, startTime=2026-05-19T13:37:48.078160900, endTime=2026-05-19T15:37:48.078160900, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - [Server] Đã hủy thành công phiên đấu giá ID: 1
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=200, time=2026-05-19T14:37:48.094957200, note=Test]
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=Auction item, startTime=2026-05-19T13:37:48.094957200, endTime=2026-05-19T15:37:48.094957200, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=1, bidderId=2, amount=150, time=2026-05-19T14:37:48.107706600, note=Test]
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=1, item=null, startTime=2026-05-19T13:37:48.107706600, endTime=2026-05-19T15:37:48.107706600, bidStep=50, status=RUNNING, highestBidderId=2]
+2026-05-19 14:37:48 [pool-3-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 1
+2026-05-19 14:37:48 [main] WARN  c.n.server.service.AuctionService - Từ chối tạo: Thời gian kết thúc (2026-05-19T14:37:48.128002900) trước thời gian bắt đầu (2026-05-19T15:37:48.128002900).
+2026-05-19 14:37:48 [main] INFO  c.n.server.service.AuctionService - Phiên đấu giá bắt đầu.
+2026-05-19 14:37:49 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User Name đã đăng ký thành công với vai trò BIDDER!
+2026-05-19 14:37:49 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Registered user detail: Bidder[id=0, username=testuser, fullName=Test User Name, email=test@example.com, phone=0123456789]
+2026-05-19 14:37:49 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User Name đã đăng nhập thành công!
+2026-05-19 14:37:49 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Bidder[id=1, username=testuser, fullName=Test User Name, email=test@example.com, phone=0123456789]
+2026-05-19 14:37:49 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-19 14:37:49 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-19 14:37:49 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-19 14:37:49 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User đã đăng nhập thành công!
+2026-05-19 14:37:49 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: null
+2026-05-19 14:37:49 [main] INFO  c.nhom3.server.service.AuthService - Server: Test User đã đăng ký thành công với vai trò BIDDER!
+2026-05-19 14:37:49 [main] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Registered user detail: null
+2026-05-19 14:37:49 [main] INFO  c.nhom3.server.service.AuthService - Server: Đăng ký thất bại. Tài khoản có thể đã tồn tại.
+2026-05-19 14:37:49 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'Mona Lisa Replica' cho Seller ID: 1
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Created item detail: Art[id=1, name=Mona Lisa Replica, description=Chua co mo ta, startPrice=1000, currentHighest=1000, seller=Chua co thong tin]
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 1 từ Seller ID: 1
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Đã xóa vĩnh viễn sản phẩm ID: 1
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'Valid Name' cho Seller ID: 1
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Created item detail: null
+2026-05-19 14:37:50 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Tên sản phẩm trống.
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-19 14:37:50 [main] WARN  c.nhom3.server.service.ItemService - Xóa thất bại: Sản phẩm ID 100 không tồn tại hoặc Seller ID 1 không có quyền sở hữu.
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Đã cập nhật thành công sản phẩm ID: 10
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Updated item detail: null
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:37:50 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:37:50 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Giá khởi điểm âm (-1.0).
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 0
+2026-05-19 14:37:50 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Thông tin Seller không hợp lệ.
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Đã xóa vĩnh viễn sản phẩm ID: 100
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: null
+2026-05-19 14:37:50 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Thông tin Seller không hợp lệ.
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:37:50 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu xóa sản phẩm ID: 100 từ Seller ID: 1
+2026-05-19 14:37:50 [main] WARN  c.nhom3.server.service.ItemService - Từ chối xóa: Sản phẩm ID 100 đã được liên kết với phiên đấu giá ID 0.
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:37:50 [main] ERROR c.nhom3.server.service.ItemService - Lỗi Database khi lưu sản phẩm 'Valid Name'
+2026-05-19 14:37:50 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Tên sản phẩm trống.
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-19 14:37:50 [main] WARN  c.nhom3.server.service.ItemService - Cập nhật thất bại: Giá khởi điểm âm (-1.0).
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 1
+2026-05-19 14:37:50 [main] WARN  c.nhom3.server.service.ItemService - Thêm sản phẩm thất bại: Tên sản phẩm trống.
+2026-05-19 14:37:50 [main] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 10
+2026-05-19 14:37:50 [main] ERROR c.nhom3.server.service.ItemService - Lỗi Database khi cập nhật sản phẩm ID: 10
+2026-05-19 14:37:50 [pool-3-thread-1] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2fbe3182
+2026-05-19 14:37:50 [pool-3-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-19 14:37:50 [pool-3-thread-1] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.

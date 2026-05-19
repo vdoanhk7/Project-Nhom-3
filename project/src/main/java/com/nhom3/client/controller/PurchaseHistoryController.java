@@ -36,6 +36,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PurchaseHistoryController {
+    private static final double RESULT_ACTION_BUTTON_WIDTH = 130;
+    private static final double RESULT_ACTION_BUTTON_HEIGHT = 32;
 
     @FXML private TableView<Auction> tableHistory;
     @FXML private TableColumn<Auction, String> colItemName;
@@ -95,8 +97,8 @@ public class PurchaseHistoryController {
                 private final Button btnAction = new Button();
 
                 {
-                    btnAction.setPrefWidth(130);
-                    btnAction.setPrefHeight(32);
+                    btnAction.setPrefWidth(RESULT_ACTION_BUTTON_WIDTH);
+                    btnAction.setPrefHeight(RESULT_ACTION_BUTTON_HEIGHT);
                     btnAction.setCursor(javafx.scene.Cursor.HAND);
 
                     btnAction.setOnAction(event -> {

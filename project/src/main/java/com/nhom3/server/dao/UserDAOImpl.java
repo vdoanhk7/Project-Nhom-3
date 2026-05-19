@@ -13,6 +13,7 @@ import java.util.List;
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.nhom3.server.db.DbConnection;
+import com.nhom3.server.exception.UserOperationException;
 import com.nhom3.shared.model.user.Admin;
 import com.nhom3.shared.model.user.Bidder;
 import com.nhom3.shared.model.user.Seller;
@@ -22,6 +23,7 @@ import com.nhom3.shared.model.user.UserInfo;
 
 public class UserDAOImpl implements UserDAO {
     private static final String PROFILE_IMAGE_COLUMN = "profile_image";
+    private static final int MYSQL_DUPLICATE_COLUMN_ERROR = 1060;
 
     private User mapUser(ResultSet rs) throws SQLException {
         int id = rs.getInt("id");
@@ -188,7 +190,8 @@ public class UserDAOImpl implements UserDAO {
             conn = DbConnection.getConnection();
             conn.setAutoCommit(false);
             if (hasLockedWinningAuctions(conn, userId)) {
-                throw new IllegalStateException(
+                throw new UserOperationException(
+                        "USER_DELETE_LOCKED_WINNER",
                         "Không thể xóa tài khoản này vì đang là người thắng của phiên đã kết thúc hoặc đã thanh toán.");
             }
             deleteAutoBidsForSellerAuctions(conn, userId);
@@ -271,7 +274,7 @@ public class UserDAOImpl implements UserDAO {
             conn.commit();
             return rowsAffected > 0;
             
-        } catch (IllegalStateException e) {
+        } catch (UserOperationException e) {
             if (conn != null) {
                 try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
             }
@@ -387,7 +390,7 @@ public class UserDAOImpl implements UserDAO {
         try (Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("ALTER TABLE users ADD COLUMN profile_image MEDIUMTEXT NULL");
         } catch (SQLException e) {
-            if (e.getErrorCode() != 1060) {
+            if (e.getErrorCode() != MYSQL_DUPLICATE_COLUMN_ERROR) {
                 throw e;
             }
         }

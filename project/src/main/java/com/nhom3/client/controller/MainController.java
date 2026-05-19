@@ -33,6 +33,7 @@ import java.util.Base64;
 import java.util.List;
 
 public class MainController {
+    private static final double LOADING_SPINNER_SIZE = 50;
 
     @FXML private StackPane contentArea;
     @FXML private Label lblUserName;
@@ -174,7 +175,7 @@ public class MainController {
         final long thisLoadId = currentNavigationId;
         
         ProgressIndicator spinner = new ProgressIndicator();
-        spinner.setMaxSize(50, 50);
+        spinner.setMaxSize(LOADING_SPINNER_SIZE, LOADING_SPINNER_SIZE);
         contentArea.getChildren().clear();
         contentArea.getChildren().add(spinner);
         

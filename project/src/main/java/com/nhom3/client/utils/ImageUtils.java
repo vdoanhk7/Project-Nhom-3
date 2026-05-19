@@ -8,14 +8,14 @@ import java.io.File;
 import java.util.Base64;
 
 public class ImageUtils {
+    private static final int MAX_IMAGE_WIDTH = 500;
+    private static final int MAX_IMAGE_HEIGHT = 500;
 
     // Hàm đọc file, ép kích thước tối đa 500x500, nén thành JPG và trả về chuỗi Base64 siêu nhẹ
     public static String compressAndEncodeImage(File file) throws Exception {
         BufferedImage originalImage = ImageIO.read(file);
         if (originalImage == null) return null;
 
-        int maxWidth = 500;
-        int maxHeight = 500;
         int originalWidth = originalImage.getWidth();
         int originalHeight = originalImage.getHeight();
         
@@ -23,9 +23,9 @@ public class ImageUtils {
         int newHeight = originalHeight;
 
         // Tính toán tỷ lệ thu nhỏ nếu ảnh lớn hơn 500px
-        if (originalWidth > maxWidth || originalHeight > maxHeight) {
-            double widthRatio = (double) maxWidth / originalWidth;
-            double heightRatio = (double) maxHeight / originalHeight;
+        if (originalWidth > MAX_IMAGE_WIDTH || originalHeight > MAX_IMAGE_HEIGHT) {
+            double widthRatio = (double) MAX_IMAGE_WIDTH / originalWidth;
+            double heightRatio = (double) MAX_IMAGE_HEIGHT / originalHeight;
             double ratio = Math.min(widthRatio, heightRatio);
 
             newWidth = (int) (originalWidth * ratio);

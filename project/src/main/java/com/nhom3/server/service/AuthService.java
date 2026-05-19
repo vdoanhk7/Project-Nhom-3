@@ -3,6 +3,7 @@ package com.nhom3.server.service;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import java.util.List;
+import com.nhom3.server.exception.InvalidUserDataException;
 import com.nhom3.server.dao.UserDAO;
 import com.nhom3.server.dao.UserDAOImpl;
 import com.nhom3.shared.model.user.User;
@@ -74,7 +75,7 @@ public class AuthService {
 
     private void validateRegistrationData(User user) {
         if (user == null || user.getUserInfo() == null || user.getUserContact() == null) {
-            throw new IllegalArgumentException("Dữ liệu đăng ký không hợp lệ!");
+            throw new InvalidUserDataException("USER_REGISTER_DATA_INVALID", "Dữ liệu đăng ký không hợp lệ!");
         }
 
         validateUserContact(user);
@@ -82,18 +83,20 @@ public class AuthService {
 
     private void validateUserContact(User user) {
         if (user == null || user.getUserContact() == null) {
-            throw new IllegalArgumentException("Thông tin liên hệ không hợp lệ!");
+            throw new InvalidUserDataException("USER_CONTACT_INVALID", "Thông tin liên hệ không hợp lệ!");
         }
 
         String email = user.getUserContact().getEmail();
         String phone = user.getUserContact().getPhoneNumber();
 
         if (email == null || !email.matches(EMAIL_REGEX)) {
-            throw new IllegalArgumentException("Email phải đúng định dạng hợp lệ.");
+            throw new InvalidUserDataException("USER_EMAIL_INVALID", "Email phải đúng định dạng hợp lệ.");
         }
 
         if (phone == null || !phone.matches(PHONE_REGEX)) {
-            throw new IllegalArgumentException("Số điện thoại phải gồm đúng 10 số và bắt đầu bằng số 0");
+            throw new InvalidUserDataException(
+                    "USER_PHONE_INVALID",
+                    "Số điện thoại phải gồm đúng 10 số và bắt đầu bằng số 0");
         }
     }
 }

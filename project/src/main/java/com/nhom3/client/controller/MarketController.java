@@ -59,7 +59,21 @@ public class MarketController {
     @FXML private ComboBox<String> cbCategory;
     @FXML private Button btnReload;
 
-    private static final ExecutorService IMAGE_LOADER = Executors.newFixedThreadPool(4, runnable -> {
+    private static final int IMAGE_LOADER_THREADS = 4;
+    private static final int ONE_HOUR = 1;
+    private static final int ONE_DAY_HOURS = 24;
+    private static final double EMPTY_STATE_WIDTH = 800;
+    private static final double EMPTY_STATE_TOP_PADDING = 50;
+    private static final double PRODUCT_CARD_SPACING = 12;
+    private static final double PRODUCT_CARD_PADDING = 15;
+    private static final double PRODUCT_CARD_WIDTH = 240;
+    private static final double PRODUCT_CARD_HEIGHT = 360;
+    private static final double PRODUCT_CARD_HOVER_OFFSET = -4;
+    private static final double PRODUCT_IMAGE_WIDTH = 210;
+    private static final double PRODUCT_IMAGE_HEIGHT = 160;
+    private static final double PRODUCT_IMAGE_CLIP_ARC = 16;
+
+    private static final ExecutorService IMAGE_LOADER = Executors.newFixedThreadPool(IMAGE_LOADER_THREADS, runnable -> {
         Thread thread = new Thread(runnable, "Market-ImageLoader");
         thread.setDaemon(true);
         return thread;
@@ -235,11 +249,11 @@ public class MarketController {
             if (!"Tất Cả".equals(selectedTime) && auction.getEndTime() != null) {
                 long hoursLeft = ChronoUnit.HOURS.between(LocalDateTime.now(), auction.getEndTime());
                 if ("Dưới 1 giờ".equals(selectedTime)) {
-                    matchTime = hoursLeft < 1 && hoursLeft >= 0;
+                    matchTime = hoursLeft < ONE_HOUR && hoursLeft >= 0;
                 } else if ("Dưới 24 giờ".equals(selectedTime)) {
-                    matchTime = hoursLeft < 24 && hoursLeft >= 0;
+                    matchTime = hoursLeft < ONE_DAY_HOURS && hoursLeft >= 0;
                 } else if ("Trên 24 giờ".equals(selectedTime)) {
-                    matchTime = hoursLeft >= 24;
+                    matchTime = hoursLeft >= ONE_DAY_HOURS;
                 }
             }
 
@@ -260,8 +274,8 @@ public class MarketController {
         
         VBox emptyBox = new VBox(lblEmpty);
         emptyBox.setAlignment(Pos.CENTER);
-        emptyBox.setPrefWidth(800);
-        emptyBox.setPadding(new Insets(50, 0, 0, 0));
+        emptyBox.setPrefWidth(EMPTY_STATE_WIDTH);
+        emptyBox.setPadding(new Insets(EMPTY_STATE_TOP_PADDING, 0, 0, 0));
         
         flowMarket.getChildren().add(emptyBox);
     }
@@ -269,20 +283,20 @@ public class MarketController {
     private VBox createProductCard(Auction auction) {
         Item item = auction.getItem();
 
-        VBox card = new VBox(12);
+        VBox card = new VBox(PRODUCT_CARD_SPACING);
         String defaultStyle = "-fx-background-color: white; -fx-background-radius: 12; "
                 + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 10, 0, 0, 4);";
         String hoverStyle = "-fx-background-color: white; -fx-background-radius: 12; "
                 + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 15, 0, 0, 6);";
         
         card.setStyle(defaultStyle);
-        card.setPadding(new Insets(15));
-        card.setPrefWidth(240);
-        card.setPrefHeight(360);
+        card.setPadding(new Insets(PRODUCT_CARD_PADDING));
+        card.setPrefWidth(PRODUCT_CARD_WIDTH);
+        card.setPrefHeight(PRODUCT_CARD_HEIGHT);
 
         card.setOnMouseEntered(e -> {
             card.setStyle(hoverStyle);
-            card.setTranslateY(-4); 
+            card.setTranslateY(PRODUCT_CARD_HOVER_OFFSET); 
         });
         card.setOnMouseExited(e -> {
             card.setStyle(defaultStyle);
@@ -290,7 +304,7 @@ public class MarketController {
         });
 
         StackPane imageWrapper = new StackPane();
-        imageWrapper.setPrefSize(210, 160);
+        imageWrapper.setPrefSize(PRODUCT_IMAGE_WIDTH, PRODUCT_IMAGE_HEIGHT);
         imageWrapper.setStyle("-fx-background-color: linear-gradient(to bottom right, #f1f2f6, #dfe4ea); -fx-background-radius: 8;");
 
         if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
@@ -370,13 +384,13 @@ public class MarketController {
             byte[] imageBytes = Base64.getDecoder().decode(imageBase64);
             Image img = new Image(new ByteArrayInputStream(imageBytes));
             ImageView imageView = new ImageView(img);
-            imageView.setFitWidth(210);
-            imageView.setFitHeight(160);
+            imageView.setFitWidth(PRODUCT_IMAGE_WIDTH);
+            imageView.setFitHeight(PRODUCT_IMAGE_HEIGHT);
             imageView.setPreserveRatio(false);
 
-            Rectangle clip = new Rectangle(210, 160);
-            clip.setArcWidth(16);
-            clip.setArcHeight(16);
+            Rectangle clip = new Rectangle(PRODUCT_IMAGE_WIDTH, PRODUCT_IMAGE_HEIGHT);
+            clip.setArcWidth(PRODUCT_IMAGE_CLIP_ARC);
+            clip.setArcHeight(PRODUCT_IMAGE_CLIP_ARC);
             imageView.setClip(clip);
             imageWrapper.getChildren().add(imageView);
         } catch (Exception e) {

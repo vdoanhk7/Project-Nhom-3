@@ -6,6 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.nhom3.server.dao.AuctionDAO;
 import com.nhom3.server.dao.AuctionDAOImpl;
+import com.nhom3.server.exception.AuctionConflictException;
+import com.nhom3.server.exception.BidRejectedException;
+import com.nhom3.server.exception.InvalidAuctionException;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.model.auction.StatusOfAuction;
@@ -27,26 +30,26 @@ public class AuctionService {
         this.auctionDAO = auctionDAO;
     }
     
-    public boolean createAuction(Auction auction) throws IllegalArgumentException, IllegalStateException {
+    public boolean createAuction(Auction auction) throws InvalidAuctionException, AuctionConflictException {
 
         if (auction == null) {
-            throw new IllegalArgumentException("Dữ liệu không hợp lệ!");
+            throw new InvalidAuctionException("AUCTION_INVALID_DATA", "Dữ liệu không hợp lệ!");
         }
         if (auction.getItem() == null) {
-            throw new IllegalArgumentException("Sản phẩm không hợp lệ!");
+            throw new InvalidAuctionException("AUCTION_INVALID_ITEM", "Sản phẩm không hợp lệ!");
         }
         if (auction.getItem().getId() <= 0) {
-            throw new IllegalArgumentException("ID sản phẩm không hợp lệ!");
+            throw new InvalidAuctionException("AUCTION_INVALID_ITEM_ID", "ID sản phẩm không hợp lệ!");
         }
         log.info("Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: {}", auction.getItem().getId());
 
 
         if (auction.getEndTime().isBefore(auction.getStartTime())) {
             log.warn("Từ chối tạo: Thời gian kết thúc ({}) trước thời gian bắt đầu ({}).", auction.getEndTime(), auction.getStartTime());
-            throw new IllegalArgumentException("Thời gian kết thúc phải sau thời gian bắt đầu!");
+            throw new InvalidAuctionException("AUCTION_INVALID_TIME", "Thời gian kết thúc phải sau thời gian bắt đầu!");
         }
         if (auction.getBidStep() <= 0) {
-            throw new IllegalArgumentException("Bước giá phải lớn hơn 0!");
+            throw new InvalidAuctionException("AUCTION_INVALID_BID_STEP", "Bước giá phải lớn hơn 0!");
         }
 
         // Một sản phẩm không thể có 2 phiên đấu giá chạy cùng lúc
@@ -55,7 +58,9 @@ public class AuctionService {
             StatusOfAuction currentStatus = existingAuction.getStatus();
             if (currentStatus == StatusOfAuction.OPEN || currentStatus == StatusOfAuction.RUNNING) {
                 log.warn("Từ chối tạo: Sản phẩm ID {} đang có phiên đấu giá chưa kết thúc.", auction.getItem().getId());
-                throw new IllegalStateException("Sản phẩm này đang có một phiên đấu giá chưa kết thúc!");
+                throw new AuctionConflictException(
+                        "AUCTION_ALREADY_ACTIVE",
+                        "Sản phẩm này đang có một phiên đấu giá chưa kết thúc!");
             }
         }
 
@@ -129,7 +134,7 @@ public class AuctionService {
         }
     }
 
-    public boolean cancelAuction(int auctionId) throws IllegalStateException {
+    public boolean cancelAuction(int auctionId) throws AuctionConflictException {
         
         boolean isSuccess = auctionDAO.cancelAuction(auctionId);
 
@@ -138,7 +143,9 @@ public class AuctionService {
             return true;
         } else {
             log.info("[Server] Hủy thất bại phiên đấu giá ID: " + auctionId);
-            throw new IllegalStateException("Không thể hủy! Phiên đấu giá đã kết thúc hoặc đã bị hủy trước đó.");
+            throw new AuctionConflictException(
+                    "AUCTION_CANCEL_NOT_ALLOWED",
+                    "Không thể hủy! Phiên đấu giá đã kết thúc hoặc đã bị hủy trước đó.");
         }
     }
 
@@ -152,29 +159,33 @@ public class AuctionService {
     }
 
     // Logic cốt lõi ghi vào DB
-    private boolean placeBidInternal(Auction auction, BidTransaction bid) throws IllegalStateException {
+    private boolean placeBidInternal(Auction auction, BidTransaction bid) throws BidRejectedException {
         LocalDateTime now = LocalDateTime.now();
         if (auction.getStatus() == StatusOfAuction.CANCELLED) {
-            throw new IllegalStateException("Phiên đấu giá đã bị hủy!");
+            throw new BidRejectedException("BID_AUCTION_CANCELLED", "Phiên đấu giá đã bị hủy!");
         }
         if (now.isBefore(auction.getStartTime())) {
-            throw new IllegalStateException("Phiên đấu giá chưa bắt đầu!");
+            throw new BidRejectedException("BID_AUCTION_NOT_STARTED", "Phiên đấu giá chưa bắt đầu!");
         }
         if (now.isAfter(auction.getEndTime())) {
-            throw new IllegalStateException("Phiên đấu giá đã kết thúc!");
+            throw new BidRejectedException("BID_AUCTION_ENDED", "Phiên đấu giá đã kết thúc!");
         }
         
         if (bid.getBidder().getId() == auction.getHighestBidderId()) {
-            throw new IllegalStateException("Bạn đang là người dẫn đầu, không cần đặt thêm nhé!");
+            throw new BidRejectedException(
+                    "BIDDER_ALREADY_HIGHEST",
+                    "Bạn đang là người dẫn đầu, không cần đặt thêm nhé!");
         }
 
         double currentHighest = auction.getItem().getCurHighest();
         double requiredMinBid = currentHighest + auction.getBidStep();
         if (bid.getAmount() < requiredMinBid) {
-            throw new IllegalStateException("Số tiền trả giá phải lớn hơn hoặc bằng "
-                    + String.format("%,.0f VNĐ", requiredMinBid)
-                    + " (giá hiện tại + bước giá "
-                    + String.format("%,.0f VNĐ", auction.getBidStep()) + ").");
+            throw new BidRejectedException(
+                    "BID_AMOUNT_TOO_LOW",
+                    "Số tiền trả giá phải lớn hơn hoặc bằng "
+                            + String.format("%,.0f VNĐ", requiredMinBid)
+                            + " (giá hiện tại + bước giá "
+                            + String.format("%,.0f VNĐ", auction.getBidStep()) + ").");
         }
 
         boolean isSuccess = auctionDAO.updateHighestBid(auction.getId(), bid.getBidder().getId(), bid.getAmount());

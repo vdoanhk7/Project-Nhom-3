@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.nhom3.server.dao.AuctionDAOImpl;
+import com.nhom3.server.exception.AuctionNotFoundException;
+import com.nhom3.server.exception.BusinessRuleException;
 import com.nhom3.server.network.liveUpdate.Announcer;
 import com.nhom3.server.service.AuctionService;
 import com.nhom3.shared.model.auction.Auction;
@@ -53,7 +55,9 @@ public class AuctionHandler {
             try {
                 Auction currentAuction = dao.getAuctionById(bidData.getAuctionId());
                 if (currentAuction == null)
-                    throw new IllegalStateException("Không tìm thấy phiên đấu giá này!");
+                    throw new AuctionNotFoundException(
+                            "AUCTION_NOT_FOUND",
+                            "Không tìm thấy phiên đấu giá này!");
 
                 Bidder bidder = new Bidder(bidData.getUserId(), null, null);
                 BidTransaction newBid = new BidTransaction(0, bidder, bidData.getAmount(), LocalDateTime.now(),
@@ -67,7 +71,7 @@ public class AuctionHandler {
                     announcer.notify(bidData.getAuctionId(), bidData.getAmount());
                 }
                 return bidResultPayload;
-            } catch (IllegalStateException e) {
+            } catch (BusinessRuleException e) {
                 ResultPayload bidResultPayload = new ResultPayload(false, e.getMessage(), -1, "", "", "", "", "");
                 return bidResultPayload;
             } catch (Exception e) {
@@ -91,7 +95,9 @@ public class AuctionHandler {
             try {
                 Auction currentAuction = dao.getAuctionById(auctionId);
                 if (currentAuction == null)
-                    throw new IllegalStateException("Không tìm thấy phiên đấu giá này!");
+                    throw new AuctionNotFoundException(
+                            "AUCTION_NOT_FOUND",
+                            "Không tìm thấy phiên đấu giá này!");
                 if (currentAuction.getStatus() != com.nhom3.shared.model.auction.StatusOfAuction.RUNNING)
                     return;
 
@@ -178,7 +184,7 @@ public class AuctionHandler {
                         announcer.notify(auctionId, intendedAmount);
                     }
                 }
-            } catch (IllegalStateException e) {
+            } catch (BusinessRuleException e) {
                 logger.error("Lỗi đặt autobid", e);
             }
         };

@@ -23,6 +23,8 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 public class LoginController {
+    private static final double MAIN_LAYOUT_WIDTH = 1300;
+    private static final double MAIN_LAYOUT_HEIGHT = 800;
 
     @FXML private TextField txtUsername;
     @FXML private PasswordField txtPassword;
@@ -87,7 +89,7 @@ public class LoginController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/layout_main.fxml"));
             Parent root = loader.load();
-            currentStage.setScene(new Scene(root, 1300, 800));
+            currentStage.setScene(new Scene(root, MAIN_LAYOUT_WIDTH, MAIN_LAYOUT_HEIGHT));
             currentStage.centerOnScreen();
         } catch (Exception e) {
             e.printStackTrace();

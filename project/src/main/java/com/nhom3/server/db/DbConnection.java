@@ -9,6 +9,11 @@ import org.slf4j.LoggerFactory;
 
 public class DbConnection {
     private static final Logger log = LoggerFactory.getLogger(DbConnection.class);
+    private static final int DEFAULT_MAX_POOL_SIZE = 20;
+    private static final int DEFAULT_MIN_IDLE_CONNECTIONS = 5;
+    private static final long CONNECTION_TIMEOUT_MILLIS = 30_000L;
+    private static final long IDLE_TIMEOUT_MILLIS = 600_000L;
+    private static final long MAX_LIFETIME_MILLIS = 1_800_000L;
     private static volatile HikariDataSource dataSource;
 
     private DbConnection() {
@@ -55,11 +60,13 @@ public class DbConnection {
         config.setDriverClassName(readConfig(
                 "AUCTION_DB_DRIVER", "auction.db.driver", "com.mysql.cj.jdbc.Driver"));
 
-        config.setMaximumPoolSize(readIntConfig("AUCTION_DB_POOL_MAX", "auction.db.pool.max", 20));
-        config.setMinimumIdle(readIntConfig("AUCTION_DB_POOL_MIN", "auction.db.pool.min", 5));
-        config.setConnectionTimeout(30000);
-        config.setIdleTimeout(600000);
-        config.setMaxLifetime(1800000);
+        config.setMaximumPoolSize(readIntConfig(
+                "AUCTION_DB_POOL_MAX", "auction.db.pool.max", DEFAULT_MAX_POOL_SIZE));
+        config.setMinimumIdle(readIntConfig(
+                "AUCTION_DB_POOL_MIN", "auction.db.pool.min", DEFAULT_MIN_IDLE_CONNECTIONS));
+        config.setConnectionTimeout(CONNECTION_TIMEOUT_MILLIS);
+        config.setIdleTimeout(IDLE_TIMEOUT_MILLIS);
+        config.setMaxLifetime(MAX_LIFETIME_MILLIS);
 
         HikariDataSource hikariDataSource = new HikariDataSource(config);
         log.info("[Server] Khoi tao connection pool thanh cong.");

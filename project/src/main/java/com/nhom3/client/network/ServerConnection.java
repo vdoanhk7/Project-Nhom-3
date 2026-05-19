@@ -2,7 +2,6 @@ package com.nhom3.client.network;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 // Tự động văng lỗi IOException nếu cố nhận gửi mà ngắt kết nối 
@@ -10,9 +9,6 @@ import java.io.OutputStreamWriter;
 
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
@@ -108,10 +104,6 @@ public class ServerConnection {
         if (propValue != null && !propValue.isBlank()) {
             return propValue;
         }
-        String fileValue = readFileConfig(envName.toLowerCase().replace('_', '.'));
-        if (fileValue != null && !fileValue.isBlank()) {
-            return fileValue;
-        }
         return defaultValue;
     }
 
@@ -124,17 +116,4 @@ public class ServerConnection {
         }
     }
 
-    private static String readFileConfig(String propertyName) {
-        Path configPath = Path.of(System.getProperty("user.dir"), "client.properties");
-        if (!Files.isRegularFile(configPath)) {
-            return null;
-        }
-        Properties properties = new Properties();
-        try (FileInputStream input = new FileInputStream(configPath.toFile())) {
-            properties.load(input);
-            return properties.getProperty(propertyName);
-        } catch (IOException e) {
-            return null;
-        }
-    }
 }

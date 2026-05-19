@@ -12,71 +12,49 @@ Phạm vi thực hiện:
 - Quản lý sản phẩm, phiên đấu giá, đặt giá, auto bid, lịch sử đấu giá và lịch sử mua hàng.
 - Cập nhật realtime cho các phiên đấu giá đang diễn ra.
 - Ghi log hệ thống và hỗ trợ màn hình quản trị.
+- Sử dụng MySQL để lưu trữ người dùng, sản phẩm, phiên đấu giá, lịch sử đặt giá và lịch sử mua hàng.
+
 
 ## 2. Công Nghệ Sử Dụng, Môi Trường Chạy Và Yêu Cầu Cài Đặt
 
 Công nghệ chính:
 
-- Java 21
-- Maven
-- JavaFX 21
-- MySQL
-- Socket TCP
-- Gson
-- HikariCP
-- SLF4J và Logback
-- jBCrypt
-- JUnit 5, Mockito
-- GitHub Actions
+- Java 21: ngôn ngữ lập trình chính, sử dụng virtual threads để xử lý nhiều client đồng thời ở phía server.
+- Maven: quản lý dependencies, build project và tạo fat JAR bằng `maven-shade-plugin`.
+- JavaFX 21: xây dựng giao diện desktop cho client.
+- MySQL: lưu trữ dữ liệu người dùng, sản phẩm, phiên đấu giá, lịch sử đặt giá và lịch sử mua hàng.
+- Socket TCP: giao tiếp mạng giữa client và server.
+- Gson: chuyển đổi dữ liệu giữa object Java và JSON khi gửi/nhận packet qua socket.
+- HikariCP: quản lý connection pool tới MySQL.
+- SLF4J và Logback: ghi log hoạt động của server, client và hệ thống.
+- jBCrypt: mã hóa và kiểm tra mật khẩu người dùng.
+- JUnit 5, Mockito: viết unit test và kiểm thử các service, DAO, model.
+- H2 Database: database in-memory dùng cho test.
+- JaCoCo: đo test coverage.
+- Checkstyle: kiểm tra style code.
+- SpotBugs: phân tích lỗi tiềm ẩn trong code.
+- GitHub Actions: tự động kiểm tra build/test và build artifact fat JAR.
+
 
 Môi trường yêu cầu:
 
 - JDK 21
 - Maven 3.8+ hoặc bản mới hơn
-- MySQL Server hoặc một MySQL instance mà server có thể kết nối tới
+- Có database MySQL để server kết nối tới, có thể là MySQL cài trên máy hoặc MySQL cloud
 - Hệ điều hành Windows, Linux hoặc macOS
 
-Khởi tạo cơ sở dữ liệu:
+Nếu không dùng database cloud mặc định trong code, cần chuẩn bị database MySQL riêng:
+
+1. Tạo database MySQL.
+2. Import cấu trúc bảng từ file `project/database/schema.sql`.
+3. Nếu cần dữ liệu mẫu để demo, import thêm `project/database/mock_data.sql`.
+
+Ví dụ khởi tạo database:
 
 ```bash
-mysql -u <user> -p < project/database/schema.sql
-mysql -u <user> -p < project/database/mock_data.sql
-```
-
-Server có thể nhận cấu hình database qua environment variables:
-
-```text
-AUCTION_DB_URL
-AUCTION_DB_USER
-AUCTION_DB_PASSWORD
-AUCTION_DB_DRIVER
-AUCTION_DB_POOL_MAX
-AUCTION_DB_POOL_MIN
-```
-
-Hoặc qua Java system properties:
-
-```text
-auction.db.url
-auction.db.user
-auction.db.password
-auction.db.driver
-auction.db.pool.max
-auction.db.pool.min
-```
-
-Client mặc định kết nối tới `localhost:8080`. Có thể đổi host/port bằng environment variables:
-
-```text
-AUCTION_SERVER_HOST
-AUCTION_SERVER_PORT
-```
-
-Hoặc Java system properties:
-
-```text
-auction.server.host
-auction.server.port
+mysql -u <user> -p -e "CREATE DATABASE auction_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u <user> -p auction_db < project/database/schema.sql
+mysql -u <user> -p auction_db < project/database/mock_data.sql
 ```
 
 ## 3. Cấu Trúc Thư Mục Và Các Module Chính
@@ -86,13 +64,11 @@ Project-Nhom-3/
 |-- .github/workflows/
 |   |-- ci.yml                 # Kiểm tra build/test với Maven
 |   `-- package.yml            # Build và upload server/client fat JAR
-|-- images/                    # Hình ảnh, sơ đồ kiến trúc/UML
 |-- project/
 |   |-- database/
 |   |   |-- schema.sql         # Cấu trúc database
 |   |   `-- mock_data.sql      # Dữ liệu mẫu
 |   |-- dist/                  # Nơi sinh ra file JAR sau khi build
-|   |-- packaging/             # Script đóng gói native package nếu cần
 |   |-- src/main/java/com/nhom3/
 |   |   |-- client/            # Ứng dụng JavaFX client
 |   |   |-- server/            # Server, DAO, service, network handler
@@ -123,23 +99,25 @@ client-app.jar
 
 ## 5. Hướng Dẫn Build
 
-Từ thư mục gốc repository:
+Từ thư mục gốc repository, build nhanh và bỏ qua test:
 
 ```bash
 cd project
 mvn --batch-mode -DskipTests clean package
 ```
 
-Nếu muốn chạy kèm test:
+Nếu muốn build kèm test:
 
 ```bash
 cd project
-mvn --batch-mode test
+mvn --batch-mode clean package
 ```
 
 ## 6. Hướng Dẫn Chạy Server/Client
 
-Cần chạy database trước, sau đó chạy server, rồi mới chạy client.
+Cần chuẩn bị database MySQL trước, sau đó chạy server, rồi mới chạy client.
+
+Chạy nhanh với cấu hình mặc định:
 
 Bước 1: chạy server
 
@@ -148,41 +126,63 @@ cd project
 java -jar dist/server-app.jar
 ```
 
-Server mặc định lắng nghe cổng `8080`.
-
-Nếu cần chỉ định port:
-
-```bash
-java -Dauction.server.port=8080 -jar dist/server-app.jar
-```
-
 Bước 2: chạy client
 
-Mở terminal khác:
-
 ```bash
 cd project
 java -jar dist/client-app.jar
 ```
 
-Nếu client cần kết nối tới server khác `localhost`:
+Để chạy với cấu hình khác, tham khảo mục 6.1.
+
+### 6.1. Cấu Hình Có Thể Truyền Khi Chạy
+
+`server-app.jar`:
+
+| Mục cấu hình | Java system property | Environment variable | Mặc định |
+|---|---|---|---|
+| Port server lắng nghe | `auction.server.port` | `AUCTION_SERVER_PORT` | `8080` |
+| URL database | `auction.db.url` | `AUCTION_DB_URL` | Database cloud trong code |
+| Username database | `auction.db.user` | `AUCTION_DB_USER` | Username cloud trong code |
+| Password database | `auction.db.password` | `AUCTION_DB_PASSWORD` | Password cloud trong code |
+| Driver database | `auction.db.driver` | `AUCTION_DB_DRIVER` | `com.mysql.cj.jdbc.Driver` |
+| Số connection tối đa | `auction.db.pool.max` | `AUCTION_DB_POOL_MAX` | `20` |
+| Số connection idle tối thiểu | `auction.db.pool.min` | `AUCTION_DB_POOL_MIN` | `5` |
+
+`client-app.jar`:
+
+| Mục cấu hình | Java system property | Environment variable | Mặc định |
+|---|---|---|---|
+| Địa chỉ server | `auction.server.host` | `AUCTION_SERVER_HOST` | `localhost` |
+| Port server | `auction.server.port` | `AUCTION_SERVER_PORT` | `8080` |
+
+### 6.2. Chạy Server
+
+Muốn thay đổi thông tin cấu hình, dùng Java system properties hoặc cấu hình sẵn Environment variable:
+
+Ví dụ muốn đổi port nhưng vẫn dùng database cloud và các cấu hình còn lại mặc định(Java system properties):
 
 ```bash
-java -Dauction.server.host=<server-host> -Dauction.server.port=8080 -jar dist/client-app.jar
+java -Dauction.server.port=<server-port> -jar dist/server-app.jar
 ```
 
-Bước 3: chạy nhiều client
+### 6.3. Chạy Client
 
-Mở thêm các terminal khác và chạy lại:
+Nếu server chạy trên máy khác hoặc port khác, truyền cấu hình server cho client bằng Java system properties/Environment variable:
+
+Ví dụ bằng Java system properties:  
 
 ```bash
-cd project
-java -jar dist/client-app.jar
+java -Dauction.server.host=<server-host> -Dauction.server.port=<server-port> -jar dist/client-app.jar
 ```
+
+### 6.4. Chạy Nhiều Client
+
+Mở terminal khác và chạy client
 
 ## 7. Danh Sách Chức Năng Đã Hoàn Thành
 
-- Đăng ký, đăng nhập và phân quyền người dùng theo vai trò Bidder, Seller, Admin.
+- Đăng ký, đăng nhập và phân quyền người dùng theo vai trò Bidder, Seller, Admin(không cho tạo trực tiếp qua UI).
 - Đổi mật khẩu và cập nhật thông tin hồ sơ người dùng.
 - Mã hóa mật khẩu bằng BCrypt.
 - Seller thêm, sửa, xóa và quản lý sản phẩm.
@@ -207,4 +207,3 @@ java -jar dist/client-app.jar
 
 - Báo cáo PDF: TODO - cập nhật link báo cáo PDF
 - Video demo: TODO - cập nhật link video demo
-

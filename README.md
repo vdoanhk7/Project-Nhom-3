@@ -1,56 +1,210 @@
-# Project Nhom 3
+# Hệ Thống Đấu Giá Trực Tuyến - Nhóm 3
 
-# 📑 TIẾN ĐỘ THỰC HIỆN BÀI TẬP LỚN: HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN
+## 1. Mô Tả Bài Toán Và Phạm Vi Hệ Thống
 
-### 1. Phúc Anh
-- [ ] **Kiến trúc hệ thống:** Thiết lập mô hình Client-Server
-- [ ] **Giao tiếp dữ liệu:** Thiết kế cấu trúc gói tin JSON để trao đổi giữa Client và Server.
-- [ ] **Logic Đấu giá:** Viết hàm xử lý đặt giá.
-- [ ] **Realtime Update:** Triển khai mô hình Observer để Server đẩy thông báo giá mới cho tất cả Client ngay lập tức.
-- [ ] **Auto-Bidding:** Lập trình thuật toán tự động đặt giá.
+Hệ thống đấu giá trực tuyến cho phép người bán đăng sản phẩm, tạo phiên đấu giá và người mua tham gia đặt giá theo thời gian thực. Hệ thống được xây dựng theo mô hình Client/Server, trong đó server xử lý nghiệp vụ, quản lý dữ liệu và đồng bộ trạng thái đấu giá; client là ứng dụng JavaFX để người dùng thao tác trực tiếp.
 
-### 2. Doanh 
-- [x] **Tầng Dữ liệu (DAO):** Viết các lớp DAO để truy xuất và cập nhật cơ sở dữ liệu.
-- [x] **Xử lý đồng thời:**
-- [x] **Quản lý sản phẩm:** Viết Logic nghiệp vụ cho các chức năng Thêm/Xóa sản phẩm.
-- [x] **Quản lý phiên đấu giá:** Xử lý logic tự động đóng phiên khi hết thời gian và chuyển trạng thái.
-- [x] **Thiết kế hướng đối tượng:** Xây dựng cây kế thừa + design pattern(factory)
-- [x] **Anti-sniping:** Viết thuật toán tự động gia hạn thêm 120 giây khi có người đặt giá ở 30 giây cuối.
-- [x] **Network:** Refactor lại network bằng Command & Dispatcher Pattern.
-- [x] **Bảo mật:** Mã hóa mật khẩu người dùng bằng BCrypt.
-### 3. Dũng 
-- [ ] **Quản lý người dùng:** Viết logic Đăng ký/Đăng nhập và phân quyền.
-- [ ] **CI/CD:** Thiết lập GitHub Actions để tự động chạy test khi có commit mới.
-- [ ] **Unit Test:** Viết các bộ kiểm thử JUnit cho các hàm logic đặt giá và tính toán tiền.
-- [ ] **Price Curve:** Viết logic xử lý dữ liệu để vẽ biểu đồ đường diễn biến giá theo thời gian thực.
-- [ ] **Màn hình Admin:** 
-- [ ] **Màn hình biểu đồ**
-### 4. Quang Anh 
-- [x] **Thiết kế Layout chính:** Sử dụng FXML để dựng khung cho toàn bộ ứng dụng.
-- [x] **Màn hình đăng nhập/đăng ký:** UI cho User mng.
-- [x] **Màn hình Dashboard:** Hiển thị danh sách các phiên đấu giá đang diễn ra
-- [x] **Màn hình đấu giá trực tiếp:** UI hiển thị chi tiết sản phẩm, đồng hồ đếm ngược và khu vực đặt giá.
-- [x] **Màn hình Seller:** Giao diện quản lý dành riêng cho người bán.
-- [x] **Màn hình Bidder:** Giao diện quản lý dành riêng cho người mua.
-- [x] **Tích hợp Client:** Gọi các hàm từ phía Client-side để gửi dữ liệu lên Server và nhận phản hồi từ Phúc Anh.
-- [ ] **Chức năng phụ:** Viết thêm chức năng nâng cao phụ
-### 5. Nhiệm vụ chung (Cả nhóm)
-- [x] **Thiết kế CSDL:** Tạo cấu trúc lưu trữ cho Người dùng, Sản phẩm, Phiên đấu giá, Lịch sử đặt giá.
-- [ ] **Xử lý lỗi & Ngoại lệ:** Bắt các lỗi kết nối, dữ liệu sai, đặt giá thấp hơn giá hiện tại...
-- [ ] **Code Review:** Kiểm tra mã nguồn của nhau để đảm bảo tất cả thành viên đều hiểu code
-- [ ] **Hoàn thiện Báo cáo:** Viết tài liệu hướng dẫn cài đặt và mô tả kiến trúc hệ thống.
-- [ ] **Kiểm thử cuối cùng:** Chạy demo giả lập nhiều người dùng đặt giá cùng lúc để kiểm tra độ ổn định.
-### 6. Các công nghệ sử dụng thêm
-- **HikariCP:** Connection pool giúp duy trì và chịu tải nhiều kết nối tới Database cùng lúc.
-- **SLF4J & Logback:** Ghi log chi tiết hệ thống.
-- **jBCrypt:** Mã hóa bảo mật mật khẩu người dùng chống dò ngược.
+Phạm vi thực hiện:
 
+- Server TCP xử lý nhiều client đồng thời.
+- Client JavaFX cho các vai trò Bidder, Seller và Admin.
+- Quản lý tài khoản, đăng ký, đăng nhập, đổi mật khẩu và cập nhật hồ sơ.
+- Quản lý sản phẩm, phiên đấu giá, đặt giá, auto bid, lịch sử đấu giá và lịch sử mua hàng.
+- Cập nhật realtime cho các phiên đấu giá đang diễn ra.
+- Ghi log hệ thống và hỗ trợ màn hình quản trị.
 
-##  Shared
-![Class UML Diagram package Shared](images/diagram_shared.png)
+## 2. Công Nghệ Sử Dụng, Môi Trường Chạy Và Yêu Cầu Cài Đặt
 
-##  Server
-![Class UML Diagram package Server](images/diagram_server.png)
+Công nghệ chính:
 
-##  Tổng quan hệ thống đấu giá
-![Class UML Diagram](images/diagram.png)
+- Java 21
+- Maven
+- JavaFX 21
+- MySQL
+- Socket TCP
+- Gson
+- HikariCP
+- SLF4J và Logback
+- jBCrypt
+- JUnit 5, Mockito
+- GitHub Actions
+
+Môi trường yêu cầu:
+
+- JDK 21
+- Maven 3.8+ hoặc bản mới hơn
+- MySQL Server hoặc một MySQL instance mà server có thể kết nối tới
+- Hệ điều hành Windows, Linux hoặc macOS
+
+Khởi tạo cơ sở dữ liệu:
+
+```bash
+mysql -u <user> -p < project/database/schema.sql
+mysql -u <user> -p < project/database/mock_data.sql
+```
+
+Server có thể nhận cấu hình database qua environment variables:
+
+```text
+AUCTION_DB_URL
+AUCTION_DB_USER
+AUCTION_DB_PASSWORD
+AUCTION_DB_DRIVER
+AUCTION_DB_POOL_MAX
+AUCTION_DB_POOL_MIN
+```
+
+Hoặc qua Java system properties:
+
+```text
+auction.db.url
+auction.db.user
+auction.db.password
+auction.db.driver
+auction.db.pool.max
+auction.db.pool.min
+```
+
+Client mặc định kết nối tới `localhost:8080`. Có thể đổi host/port bằng environment variables:
+
+```text
+AUCTION_SERVER_HOST
+AUCTION_SERVER_PORT
+```
+
+Hoặc Java system properties:
+
+```text
+auction.server.host
+auction.server.port
+```
+
+## 3. Cấu Trúc Thư Mục Và Các Module Chính
+
+```text
+Project-Nhom-3/
+|-- .github/workflows/
+|   |-- ci.yml                 # Kiểm tra build/test với Maven
+|   `-- package.yml            # Build và upload server/client fat JAR
+|-- images/                    # Hình ảnh, sơ đồ kiến trúc/UML
+|-- project/
+|   |-- database/
+|   |   |-- schema.sql         # Cấu trúc database
+|   |   `-- mock_data.sql      # Dữ liệu mẫu
+|   |-- dist/                  # Nơi sinh ra file JAR sau khi build
+|   |-- packaging/             # Script đóng gói native package nếu cần
+|   |-- src/main/java/com/nhom3/
+|   |   |-- client/            # Ứng dụng JavaFX client
+|   |   |-- server/            # Server, DAO, service, network handler
+|   |   `-- shared/            # Model, packet, payload dùng chung
+|   |-- src/main/resources/    # FXML, ảnh, cấu hình logback
+|   |-- src/test/java/         # Unit test và integration test
+|   `-- pom.xml                # Cấu hình Maven và fat JAR
+`-- README.md
+```
+
+## 4. Vị Trí Các File JAR
+
+Sau khi build, Maven tạo 2 fat JAR tại:
+
+```text
+project/dist/server-app.jar
+project/dist/client-app.jar
+```
+
+Hai file này là fat JAR/uber JAR, đã đóng gói các dependencies cần thiết để chạy bằng lệnh `java -jar`.
+
+GitHub Actions workflow `Build Fat JARs` cũng tự động build và upload artifact tên `auction-fat-jars`, gồm:
+
+```text
+server-app.jar
+client-app.jar
+```
+
+## 5. Hướng Dẫn Build
+
+Từ thư mục gốc repository:
+
+```bash
+cd project
+mvn --batch-mode -DskipTests clean package
+```
+
+Nếu muốn chạy kèm test:
+
+```bash
+cd project
+mvn --batch-mode test
+```
+
+## 6. Hướng Dẫn Chạy Server/Client
+
+Cần chạy database trước, sau đó chạy server, rồi mới chạy client.
+
+Bước 1: chạy server
+
+```bash
+cd project
+java -jar dist/server-app.jar
+```
+
+Server mặc định lắng nghe cổng `8080`.
+
+Nếu cần chỉ định port:
+
+```bash
+java -Dauction.server.port=8080 -jar dist/server-app.jar
+```
+
+Bước 2: chạy client
+
+Mở terminal khác:
+
+```bash
+cd project
+java -jar dist/client-app.jar
+```
+
+Nếu client cần kết nối tới server khác `localhost`:
+
+```bash
+java -Dauction.server.host=<server-host> -Dauction.server.port=8080 -jar dist/client-app.jar
+```
+
+Bước 3: chạy nhiều client
+
+Mở thêm các terminal khác và chạy lại:
+
+```bash
+cd project
+java -jar dist/client-app.jar
+```
+
+## 7. Danh Sách Chức Năng Đã Hoàn Thành
+
+- Đăng ký, đăng nhập và phân quyền người dùng theo vai trò Bidder, Seller, Admin.
+- Đổi mật khẩu và cập nhật thông tin hồ sơ người dùng.
+- Mã hóa mật khẩu bằng BCrypt.
+- Seller thêm, sửa, xóa và quản lý sản phẩm.
+- Seller tạo và hủy phiên đấu giá.
+- Bidder xem danh sách phiên đấu giá, xem chi tiết sản phẩm và lịch sử đặt giá.
+- Bidder đặt giá trực tiếp trong phiên đấu giá.
+- Hỗ trợ auto bid.
+- Tự động cập nhật trạng thái phiên đấu giá theo thời gian.
+- Tự động đóng phiên đấu giá khi hết hạn.
+- Hỗ trợ anti-sniping bằng cách gia hạn phiên khi có lượt đặt giá sát thời điểm kết thúc.
+- Cập nhật realtime cho các client đang theo dõi phiên đấu giá.
+- Quản lý lịch sử mua hàng và xác nhận thanh toán.
+- Admin xem danh sách người dùng, xóa người dùng và theo dõi log hệ thống.
+- Server xử lý nhiều client đồng thời bằng virtual threads và giới hạn số kết nối.
+- Giao tiếp Client/Server bằng packet JSON qua Socket TCP.
+- Ghi log bằng SLF4J/Logback.
+- Quản lý connection pool tới MySQL bằng HikariCP.
+- Có unit test/integration test cho các lớp service, DAO và model chính.
+- Có GitHub Actions để build/test và build fat JAR artifact.
+
+## 8. Báo Cáo PDF Và Video Demo
+
+- Báo cáo PDF: TODO - cập nhật link báo cáo PDF
+- Video demo: TODO - cập nhật link video demo
+

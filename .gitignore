@@ -28,6 +28,9 @@ Thumbs.db
 hs_err_pid
 replay_pid
 *.jar
+!project/dist/
+!project/dist/server-app.jar
+!project/dist/client-app.jar
 *.war
 *.ear
 *.zip

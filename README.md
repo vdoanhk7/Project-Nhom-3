@@ -81,7 +81,7 @@ Project-Nhom-3/
 
 ## 4. Vị Trí Các File JAR
 
-Sau khi build, Maven tạo 2 fat JAR tại:
+Sau khi build, Maven tạo 2 fat JAR tại(Khi clone code thì đã có file JAR sẵn để chạy):
 
 ```text
 project/dist/server-app.jar

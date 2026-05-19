@@ -9,6 +9,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 RELEASE_DIR="$PROJECT_DIR/release/linux"
 BUILD_DIR="$PROJECT_DIR/target"
+DIST_DIR="$PROJECT_DIR/dist"
 CLIENT_INPUT_DIR="$BUILD_DIR/package-input/client"
 SERVER_INPUT_DIR="$BUILD_DIR/package-input/server"
 
@@ -35,8 +36,8 @@ rm -rf "$RELEASE_DIR/client" "$RELEASE_DIR/server"
 mkdir -p "$RELEASE_DIR/client" "$RELEASE_DIR/server"
 rm -rf "$BUILD_DIR/package-input"
 mkdir -p "$CLIENT_INPUT_DIR" "$SERVER_INPUT_DIR"
-cp "$BUILD_DIR/client-app.jar" "$CLIENT_INPUT_DIR/"
-cp "$BUILD_DIR/server-app.jar" "$SERVER_INPUT_DIR/"
+cp "$DIST_DIR/client-app.jar" "$CLIENT_INPUT_DIR/"
+cp "$DIST_DIR/server-app.jar" "$SERVER_INPUT_DIR/"
 
 LINUX_PACKAGE_OPTIONS=()
 if [[ "$TYPE" != "app-image" ]]; then

@@ -12,6 +12,7 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectDir = Resolve-Path (Join-Path $ScriptDir "..")
 $ReleaseDir = Join-Path $ProjectDir "release\windows"
 $BuildDir = Join-Path $ProjectDir "target"
+$DistDir = Join-Path $ProjectDir "dist"
 $PackageInputDir = Join-Path $BuildDir "package-input"
 $ClientInputDir = Join-Path $PackageInputDir "client"
 $ServerInputDir = Join-Path $PackageInputDir "server"
@@ -106,8 +107,8 @@ New-Item -ItemType Directory -Path $ClientDir, $ServerDir | Out-Null
 
 Remove-Item $PackageInputDir -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Path $ClientInputDir, $ServerInputDir | Out-Null
-Copy-Item (Join-Path $BuildDir "client-app.jar") $ClientInputDir
-Copy-Item (Join-Path $BuildDir "server-app.jar") $ServerInputDir
+Copy-Item (Join-Path $DistDir "client-app.jar") $ClientInputDir
+Copy-Item (Join-Path $DistDir "server-app.jar") $ServerInputDir
 
 Invoke-JPackage `
     -Name "AuctionClientNhom3" `

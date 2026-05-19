@@ -1,25 +1,16 @@
-name: Package Apps
+name: Build Fat JARs
 
 on:
+  push:
+    branches: ["main", "QuangAnh"]
+  pull_request:
+    branches: ["main", "QuangAnh"]
   workflow_dispatch:
-    inputs:
-      server_host:
-        description: Server IP or domain used by the client package
-        default: 34.126.166.158
-        required: true
-      server_port:
-        description: Server port
-        default: "8080"
-        required: true
 
 jobs:
-  package:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-
-    runs-on: ${{ matrix.os }}
+  build-fat-jars:
+    name: Build server and client fat JARs
+    runs-on: windows-latest
 
     defaults:
       run:
@@ -36,48 +27,51 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - name: Package Windows
-        if: runner.os == 'Windows'
+      - name: Build fat JARs
+        run: mvn --batch-mode -DskipTests clean package
+
+      - name: Verify fat JAR manifests
         shell: pwsh
-        run: ./packaging/package-windows.ps1 -ServerHost "${{ inputs.server_host }}" -ServerPort "${{ inputs.server_port }}"
-
-      - name: Package macOS
-        if: runner.os == 'macOS'
-        shell: bash
         run: |
-          chmod +x ./packaging/package-macos.sh
-          ./packaging/package-macos.sh "${{ inputs.server_host }}" "${{ inputs.server_port }}"
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-      - name: Package Linux
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          chmod +x ./packaging/package-linux.sh
-          ./packaging/package-linux.sh "${{ inputs.server_host }}" "${{ inputs.server_port }}" app-image
+          $expectedMainClasses = @{
+            "dist/server-app.jar" = "com.nhom3.server.ServerMain"
+            "dist/client-app.jar" = "com.nhom3.client.Main"
+          }
 
-      - name: Upload Windows artifacts
-        if: runner.os == 'Windows'
+          foreach ($jarPath in $expectedMainClasses.Keys) {
+            if (-not (Test-Path $jarPath)) {
+              throw "Missing fat JAR: $jarPath"
+            }
+
+            $zip = [System.IO.Compression.ZipFile]::OpenRead($jarPath)
+            try {
+              $manifestEntry = $zip.GetEntry("META-INF/MANIFEST.MF")
+              if ($null -eq $manifestEntry) {
+                throw "Missing manifest in $jarPath"
+              }
+
+              $reader = [System.IO.StreamReader]::new($manifestEntry.Open())
+              try {
+                $manifest = $reader.ReadToEnd()
+              } finally {
+                $reader.Dispose()
+              }
+
+              $expectedMainClass = $expectedMainClasses[$jarPath]
+              if ($manifest -notmatch "Main-Class:\s+$([regex]::Escape($expectedMainClass))") {
+                throw "Invalid Main-Class in $jarPath. Expected $expectedMainClass."
+              }
+            } finally {
+              $zip.Dispose()
+            }
+          }
+
+      - name: Upload fat JAR artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: auction-windows
+          name: auction-fat-jars
           path: |
-            project/release/windows/AuctionClientNhom3-windows.zip
-            project/release/windows/AuctionServerNhom3-windows.zip
-
-      - name: Upload macOS artifacts
-        if: runner.os == 'macOS'
-        uses: actions/upload-artifact@v4
-        with:
-          name: auction-macos
-          path: |
-            project/release/macos/AuctionClientNhom3-macos.zip
-            project/release/macos/AuctionServerNhom3-macos.zip
-
-      - name: Upload Linux artifacts
-        if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
-        with:
-          name: auction-linux
-          path: |
-            project/release/linux/AuctionClientNhom3-linux.tar.gz
-            project/release/linux/AuctionServerNhom3-linux.tar.gz
+            project/dist/server-app.jar
+            project/dist/client-app.jar

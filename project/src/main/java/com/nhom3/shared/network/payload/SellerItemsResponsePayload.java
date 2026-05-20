@@ -13,17 +13,23 @@ public class SellerItemsResponsePayload {
         public double curHighest;
         public String status; 
         public String imageBase64;
+        public int highestBidderId;
 
         public SellerItemDTO(int id, String name, String type, double startPrice, double curHighest, String status) {
-            this(id, name, "", type, startPrice, curHighest, status, null);
+            this(id, name, "", type, startPrice, curHighest, status, null, -1);
         }
 
         public SellerItemDTO(int id, String name, String type, double startPrice, double curHighest, String status, String imageBase64) {
-            this(id, name, "", type, startPrice, curHighest, status, imageBase64);
+            this(id, name, "", type, startPrice, curHighest, status, imageBase64, -1);
         }
 
         public SellerItemDTO(int id, String name, String description, String type, double startPrice,
                 double curHighest, String status, String imageBase64) {
+            this(id, name, description, type, startPrice, curHighest, status, imageBase64, -1);
+        }
+
+        public SellerItemDTO(int id, String name, String description, String type, double startPrice,
+                double curHighest, String status, String imageBase64, int highestBidderId) {
             this.id = id;
             this.name = name;
             this.description = description;
@@ -32,6 +38,7 @@ public class SellerItemsResponsePayload {
             this.curHighest = curHighest;
             this.status = status;
             this.imageBase64 = imageBase64;
+            this.highestBidderId = highestBidderId;
         }
     }
 

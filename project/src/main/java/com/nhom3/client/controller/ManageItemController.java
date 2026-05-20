@@ -79,6 +79,7 @@ public class ManageItemController {
 
     private final ObservableList<Item> itemList = FXCollections.observableArrayList();
     private final Map<Integer, String> itemStatusMap = new HashMap<>();
+    private final Map<Integer, Integer> itemHighestBidderMap = new HashMap<>();
     private final Map<Integer, String> imageCache = new ConcurrentHashMap<>();
     private final Set<Integer> requestedImageIds = ConcurrentHashMap.newKeySet();
     private final Set<Integer> noImageIds = ConcurrentHashMap.newKeySet();
@@ -129,6 +130,7 @@ public class ManageItemController {
 
         List<Item> realItems = new java.util.ArrayList<>();
         itemStatusMap.clear();
+        itemHighestBidderMap.clear();
         requestedImageIds.clear();
         imageCache.clear();
         noImageIds.clear();
@@ -141,6 +143,7 @@ public class ManageItemController {
             if (dto.status != null && !dto.status.isEmpty()) {
                 itemStatusMap.put(dto.id, dto.status);
             }
+            itemHighestBidderMap.put(dto.id, dto.highestBidderId);
         }
         itemList.setAll(realItems);
         tableItems.refresh();
@@ -344,10 +347,11 @@ public class ManageItemController {
             private final Button btnDelete = createStyledButton(" Xoá ", "#ef4444", "#dc2626");
             private final Button btnView = createStyledButton(" Xem Chi Tiết ", "#3b82f6", "#2563eb");
             private final Button btnConfirmPaid = createStyledButton(" Xác Nhận ", "#10b981", "#059669");
+            private final Button btnRelist = createStyledButton(" Đăng bán lại ", "#0ea5e9", "#0284c7");
             private final Label lblPaidStatus = new Label("💰 Đã Thanh Toán");
             
             private final HBox pane = new HBox(ACTION_BUTTON_SPACING, btnPublish, btnEdit, btnDelete,
-                    btnView, btnConfirmPaid, lblPaidStatus);
+                    btnView, btnConfirmPaid, btnRelist, lblPaidStatus);
 
             {
                 // Làm đẹp cho Label trạng thái
@@ -359,6 +363,7 @@ public class ManageItemController {
                 btnDelete.setOnAction(e -> handleDelete(getCurrentRowItem()));
                 btnView.setOnAction(e -> handleViewDetail(getCurrentRowItem()));
                 btnConfirmPaid.setOnAction(e -> handleConfirmPaid(getCurrentRowItem()));
+                btnRelist.setOnAction(e -> handleRelist(getCurrentRowItem()));
             }
 
             // Hàm tiện ích tạo nút bấm chuyên nghiệp (có Hover)
@@ -390,7 +395,11 @@ public class ManageItemController {
                     lblPaidStatus.setManaged(true);
                     showButtons(btnView);
                 } else if ("FINISHED".equals(status)) {
-                    showButtons(btnView, btnConfirmPaid);
+                    if (hasHighestBidder(currentItem)) {
+                        showButtons(btnView, btnConfirmPaid);
+                    } else {
+                        showButtons(btnView, btnRelist);
+                    }
                 } else if (!hasAuction(currentItem) || "CANCELLED".equals(status)) {
                     showButtons(btnPublish, btnEdit, btnDelete);
                 } else {
@@ -454,6 +463,10 @@ public class ManageItemController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void handleRelist(Item item) {
+        handlePublish(item);
     }
 
     private void handleEdit(Item item) {
@@ -574,6 +587,10 @@ public class ManageItemController {
 
     private String getAuctionStatus(Item item) {
         return itemStatusMap.getOrDefault(item.getId(), "");
+    }
+
+    private boolean hasHighestBidder(Item item) {
+        return itemHighestBidderMap.getOrDefault(item.getId(), -1) > 0;
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {

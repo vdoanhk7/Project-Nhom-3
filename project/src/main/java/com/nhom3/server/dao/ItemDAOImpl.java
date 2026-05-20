@@ -3,12 +3,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 
 import com.nhom3.server.db.DbConnection;
 import com.nhom3.shared.model.item.Item;
+import com.nhom3.shared.network.payload.SellerItemsResponsePayload;
 
 public class ItemDAOImpl implements ItemDAO {
     @Override
@@ -76,6 +79,60 @@ public class ItemDAOImpl implements ItemDAO {
             }
         } catch (Exception e) { 
             e.printStackTrace(); 
+        }
+        return list;
+    }
+
+    @Override
+    public List<SellerItemsResponsePayload.SellerItemDTO> getSellerItemsForManagement(int sellerId) {
+        List<SellerItemsResponsePayload.SellerItemDTO> list = new ArrayList<>();
+        String sql = "SELECT i.id, i.name, i.description, i.start_price, i.cur_highest, i.item_type, "
+                + "a.highest_bidder_id, "
+                + "CASE "
+                + "  WHEN a.id IS NULL THEN '' "
+                + "  WHEN a.status IN ('PAID', 'CANCELLED', 'FINISHED') THEN a.status "
+                + "  WHEN ? < a.start_time THEN 'OPEN' "
+                + "  WHEN ? >= a.end_time THEN 'FINISHED' "
+                + "  ELSE 'RUNNING' "
+                + "END AS real_status "
+                + "FROM items i "
+                + "LEFT JOIN auctions a ON a.id = ( "
+                + "  SELECT MAX(a2.id) "
+                + "  FROM auctions a2 "
+                + "  WHERE a2.item_id = i.id "
+                + ") "
+                + "WHERE i.seller_id = ? "
+                + "ORDER BY i.id DESC";
+
+        try (Connection conn = DbConnection.getConnection()) {
+            ensureDescriptionColumn(conn);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                Timestamp currentTime = Timestamp.valueOf(LocalDateTime.now());
+                stmt.setTimestamp(1, currentTime);
+                stmt.setTimestamp(2, currentTime);
+                stmt.setInt(3, sellerId);
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        int highestBidderId = rs.getInt("highest_bidder_id");
+                        if (rs.wasNull()) {
+                            highestBidderId = -1;
+                        }
+                        list.add(new SellerItemsResponsePayload.SellerItemDTO(
+                                rs.getInt("id"),
+                                rs.getString("name"),
+                                rs.getString("description"),
+                                rs.getString("item_type"),
+                                rs.getDouble("start_price"),
+                                rs.getDouble("cur_highest"),
+                                rs.getString("real_status"),
+                                null,
+                                highestBidderId));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return list;
     }

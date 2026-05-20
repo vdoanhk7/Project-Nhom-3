@@ -167,19 +167,8 @@ public class PacketDispatcher {
     private Packet handleLoadSellerItems(Packet request, Gson gson) {
         SellerIdPayload sellerReq = gson.fromJson(request.getPayload(), SellerIdPayload.class);
         ItemDAO itemDAO = new ItemDAOImpl();
-        AuctionDAO auctionDAOForSeller = new AuctionDAOImpl();
-
-        List<Item> itemsFromDb = itemDAO.getItemsBySellerId(sellerReq.getSellerId());
-
-        List<SellerItemsResponsePayload.SellerItemDTO> dtoList = new ArrayList<>();
-        for (Item itm : itemsFromDb) {
-            Auction latestAuction = auctionDAOForSeller.getAuctionByItemId(itm.getId());
-            String stt = latestAuction != null ? getRealAuctionStatus(latestAuction).name() : "";
-            int highestBidderId = latestAuction != null ? latestAuction.getHighestBidderId() : -1;
-            dtoList.add(new SellerItemsResponsePayload.SellerItemDTO(itm.getId(), itm.getName(),
-                    itm.getDescription(), itm.getType().name(), itm.getStartPrice(), itm.getCurHighest(), stt,
-                    itm.getImageBase64(), highestBidderId));
-        }
+        List<SellerItemsResponsePayload.SellerItemDTO> dtoList =
+                itemDAO.getSellerItemsForManagement(sellerReq.getSellerId());
         return new Packet(PacketType.LOAD_SELLER_ITEMS, new SellerItemsResponsePayload(dtoList));
     }
 

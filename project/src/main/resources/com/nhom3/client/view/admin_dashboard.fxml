@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.chart.LineChart?>
-<?import javafx.scene.chart.CategoryAxis?>
-<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
 
-<VBox prefHeight="700.0" prefWidth="1000.0" spacing="20" style="-fx-background-color: #f0f3f6;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.AdminDashboardController">
+<VBox prefHeight="700.0" prefWidth="1000.0" spacing="20" style="-fx-background-color: #f0f3f6;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nhom3.client.controller.AdminDashboardController">
     <children>
 
         <HBox spacing="20">
@@ -39,42 +42,45 @@
         </HBox>
 
         <TabPane prefHeight="450.0" style="-fx-background-color: white; -fx-background-radius: 15;" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
-            <VBox.margin><Insets left="20" right="20" bottom="20"/></VBox.margin>
+            <VBox.margin><Insets bottom="20" left="20" right="20" /></VBox.margin>
             <tabs>
                 <Tab text="Quản lý Người dùng">
                     <VBox spacing="10" style="-fx-padding: 15;">
                         <TableView fx:id="tableUsers" VBox.vgrow="ALWAYS">
                             <columns>
-                                <TableColumn fx:id="colUserId" text="ID" prefWidth="50" />
-                                <TableColumn fx:id="colUserName" text="Tên Đăng Nhập" prefWidth="150" />
-                                <TableColumn fx:id="colUserRole" text="Vai Trò" prefWidth="100" />
-                                <TableColumn fx:id="colUserAction" text="Thao Tác" prefWidth="150" />
+                                <TableColumn fx:id="colUserId" prefWidth="50" text="ID" />
+                                <TableColumn fx:id="colUserName" prefWidth="150" text="Tên Đăng Nhập" />
+                                <TableColumn fx:id="colUserRole" prefWidth="100" text="Vai Trò" />
+                                <TableColumn fx:id="colUserAction" prefWidth="248.00006103515625" text="Thao Tác" sortable="false" />
                             </columns>
                         </TableView>
                     </VBox>
                 </Tab>
+
                 <Tab text="Quản lý Đấu giá">
                     <VBox spacing="10" style="-fx-padding: 15;">
-                        <HBox spacing="10" alignment="CENTER_LEFT">
-                            <Button fx:id="btnAllAuctions" text="Tất cả Phiên Đấu Giá" style="-fx-background-color: #3498db; -fx-text-fill: white;" />
-                            <Button fx:id="btnOpenAuctions" text="Chờ Mở" style="-fx-background-color: #f39c12; -fx-text-fill: white;" />
-                            <Button fx:id="btnRunningAuctions" text="Đang Đấu Giá" style="-fx-background-color: #9b59b6; -fx-text-fill: white;" />
-                            <Button fx:id="btnSuccessfulSales" text="Đã Bán" style="-fx-background-color: #27ae60; -fx-text-fill: white;" />
-                            <Button fx:id="btnCancelledAuctions" text="Đã Hủy" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" />
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Button fx:id="btnAllAuctions" style="-fx-background-color: #3498db; -fx-text-fill: white;" text="Tất cả Phiên Đấu Giá" />
+                            <Button fx:id="btnOpenAuctions" style="-fx-background-color: #f39c12; -fx-text-fill: white;" text="Chờ Mở" />
+                            <Button fx:id="btnRunningAuctions" style="-fx-background-color: #9b59b6; -fx-text-fill: white;" text="Đang Đấu Giá" />
+                            <Button fx:id="btnSuccessfulSales" style="-fx-background-color: #27ae60; -fx-text-fill: white;" text="Đã Bán" />
+                            <Button fx:id="btnCancelledAuctions" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Đã Hủy" />
                         </HBox>
                         <TableView fx:id="tableAuctions" VBox.vgrow="ALWAYS">
                             <columns>
-                                <TableColumn fx:id="colAuctionId" text="ID" prefWidth="50" />
-                                <TableColumn fx:id="colItemName" text="Sản Phẩm" prefWidth="250" />
-                                <TableColumn fx:id="colStatus" text="Trạng Thái" prefWidth="100" />
-                                <TableColumn fx:id="colAuctionAction" text="Thao Tác ADMIN" prefWidth="200" />
+                                <TableColumn fx:id="colAuctionId" prefWidth="50" text="ID" />
+                                <TableColumn fx:id="colItemName" prefWidth="200" text="Sản Phẩm" />
+                                <TableColumn fx:id="colSellerName" prefWidth="150" text="Người Bán" />
+                                <TableColumn fx:id="colStatus" prefWidth="100" text="Trạng Thái" />
+                                <TableColumn fx:id="colAuctionAction" prefWidth="200" text="Thao Tác ADMIN" sortable="false" />
                             </columns>
                         </TableView>
                     </VBox>
                 </Tab>
+
                 <Tab text="System Log">
                     <VBox spacing="10" style="-fx-padding: 15;">
-                        <TextArea fx:id="txtSystemLogs" editable="false" wrapText="true" VBox.vgrow="ALWAYS" style="-fx-font-family: 'Consolas', monospace;" />
+                        <TextArea fx:id="txtSystemLogs" editable="false" style="-fx-font-family: 'Consolas', monospace;" wrapText="true" VBox.vgrow="ALWAYS" />
                     </VBox>
                 </Tab>
             </tabs>

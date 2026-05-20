@@ -59,6 +59,8 @@ public class AuctionDAOImplTest {
         try (MockedStatic<DbConnection> mockedDb = Mockito.mockStatic(DbConnection.class)) {
             mockedDb.when(DbConnection::getConnection).thenReturn(conn);
             when(conn.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(stmt1);
+            when(conn.prepareStatement(anyString())).thenReturn(stmt2);
+            when(stmt2.executeUpdate()).thenReturn(1);
             when(stmt1.executeUpdate()).thenReturn(1);
             when(stmt1.getGeneratedKeys()).thenReturn(rs);
             when(rs.next()).thenReturn(true);
@@ -71,6 +73,7 @@ public class AuctionDAOImplTest {
             verify(stmt1).setInt(1, 1);
             verify(stmt1).setDouble(4, auction.getBidStep());
             verify(stmt1).setString(5, "OPEN");
+            verify(conn).commit();
         }
     }
 
@@ -91,9 +94,10 @@ public class AuctionDAOImplTest {
             verify(conn).setAutoCommit(false);
             verify(conn).commit();
 
-            verify(stmt1).setDouble(1, 500.0);
-            verify(stmt1).setInt(2, 1);
-            verify(stmt1).setDouble(3, 500.0);
+            verify(stmt1).setInt(1, 10);
+            verify(stmt1).setDouble(2, 500.0);
+            verify(stmt1).setInt(3, 1);
+            verify(stmt1).setDouble(4, 500.0);
 
             verify(stmt2).setInt(1, 10);
             verify(stmt2).setInt(2, 1);

@@ -71,6 +71,21 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    public static void notifyUserReputationChanged(int userId, int reputationScore, String message) {
+        Packet packet = new Packet(PacketType.REPUTATION_UPDATED,
+                new ResultPayload(true, message, userId, "", "", "BIDDER", "", "", null, reputationScore));
+        for (ClientHandler client : ACTIVE_CLIENTS) {
+            if (client.authenticatedUserId == userId) {
+                try {
+                    client.send(packet);
+                } catch (IOException e) {
+                    LoggerFactory.getLogger(ClientHandler.class)
+                            .warn("Không thể gửi cập nhật uy tín đến user ID {}", userId);
+                }
+            }
+        }
+    }
+
     @Override
     public void run() {
         Logger logger = LoggerFactory.getLogger(ClientHandler.class);

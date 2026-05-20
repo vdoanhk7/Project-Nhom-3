@@ -9,7 +9,10 @@ public abstract class Item extends Entity{
     protected double curHighest;
     protected ItemType type;
     protected String imageBase64;
+    protected int sellerId;
     protected String sellerName;
+    protected double sellerRatingAverage;
+    protected int sellerRatingCount;
 
     public Item(int id, String name, double startPrice, ItemType type) {
         super(id);
@@ -54,11 +57,27 @@ public abstract class Item extends Entity{
     public String getImageBase64() {
         return imageBase64;
     }
+    public int getSellerId() {
+        return sellerId;
+    }
+    public void setSellerId(int sellerId) {
+        this.sellerId = sellerId;
+    }
     public String getSellerName() {
         return sellerName;
     }
     public void setSellerName(String sellerName) {
         this.sellerName = sellerName;
+    }
+    public double getSellerRatingAverage() {
+        return sellerRatingAverage;
+    }
+    public int getSellerRatingCount() {
+        return sellerRatingCount;
+    }
+    public void setSellerRatingSummary(double sellerRatingAverage, int sellerRatingCount) {
+        this.sellerRatingAverage = Math.max(0, Math.min(5, sellerRatingAverage));
+        this.sellerRatingCount = Math.max(0, sellerRatingCount);
     }
 
     protected String formatItemInfo(String categoryName) {

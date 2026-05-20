@@ -16,6 +16,10 @@ public interface AuctionDAO {
     Map<Integer, String> getAuctionStatusBySeller(int sellerId);
     Auction getAuctionByItemId(int itemId);
     boolean confirmPayment(int auctionId, int sellerId);
+    boolean rateSeller(int auctionId, int buyerId, int stars);
+    int getBidderReputation(int bidderId);
+    boolean cancelTransactionByBidder(int auctionId, int bidderId);
+    boolean cancelLatestUnpaidAuctionForRelist(int itemId, int sellerId);
     List<Auction> getActiveAuctions();
     List<Auction> getAllAuctions();
     List<BidTransaction> getBidHistory(int auctionId);
@@ -26,6 +30,7 @@ public interface AuctionDAO {
     boolean endAuction(int auctionId);
     boolean startAuction(int auctionId);
     void closeExpiredAuctions(Timestamp currentTime); 
+    Map<Integer, Integer> applyOverduePaymentPenalties(Timestamp currentTime);
     void startScheduledAuctions(Timestamp currentTime); 
     boolean saveAutoBidConfig(AutoBidPayload payload);
     DashboardResponsePayload getDashboardStats();

@@ -16,6 +16,7 @@ import com.nhom3.server.db.DbConnection;
 import com.nhom3.server.exception.UserOperationException;
 import com.nhom3.shared.model.user.Admin;
 import com.nhom3.shared.model.user.Bidder;
+import com.nhom3.shared.model.user.Role;
 import com.nhom3.shared.model.user.Seller;
 import com.nhom3.shared.model.user.User;
 import com.nhom3.shared.model.user.UserContact;
@@ -23,6 +24,7 @@ import com.nhom3.shared.model.user.UserInfo;
 
 public class UserDAOImpl implements UserDAO {
     private static final String PROFILE_IMAGE_COLUMN = "profile_image";
+    private static final String REPUTATION_COLUMN = "reputation_score";
     private static final int MYSQL_DUPLICATE_COLUMN_ERROR = 1060;
 
     private User mapUser(ResultSet rs) throws SQLException {
@@ -36,14 +38,19 @@ public class UserDAOImpl implements UserDAO {
         UserContact contact = new UserContact(
                 rs.getString("email"),
                 rs.getString("phone"));
+        User user;
         if (role.equals("BIDDER")) {
-            return new Bidder(id, info, contact);
+            user = new Bidder(id, info, contact);
         } else if (role.equals("SELLER")) {
-            return new Seller(id, info, contact);
+            user = new Seller(id, info, contact);
         } else if (role.equals("ADMIN")) {
-            return new Admin(id, info, contact);
+            user = new Admin(id, info, contact);
+        } else {
+            return null;
         }
-        return null;
+        user.setReputationScore(readOptionalInt(
+                rs, REPUTATION_COLUMN, User.DEFAULT_REPUTATION_SCORE));
+        return user;
     }
 
     @Override
@@ -59,7 +66,9 @@ public class UserDAOImpl implements UserDAO {
                 boolean passwordMatch = BCrypt.checkpw(password, hashedPassword);
 
                 if (passwordMatch) {
-                    return mapUser(rs);
+                    User user = mapUser(rs);
+                    attachSellerRatingSummary(conn, user);
+                    return user;
                 }
             }
         } catch (SQLException e) {
@@ -164,6 +173,25 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
+    public User getById(int userId) {
+        String sql = "SELECT * FROM users WHERE id = ?";
+        try (Connection conn = DbConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    User user = mapUser(rs);
+                    attachSellerRatingSummary(conn, user);
+                    return user;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
     public List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
         String sql = "SELECT * FROM users ORDER BY id ASC";
@@ -177,6 +205,7 @@ public class UserDAOImpl implements UserDAO {
                     users.add(user);
                 }
             }
+            attachSellerRatingSummaries(conn, users);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -369,6 +398,14 @@ public class UserDAOImpl implements UserDAO {
         return rs.getString(columnName);
     }
 
+    private int readOptionalInt(ResultSet rs, String columnName, int defaultValue) throws SQLException {
+        if (!hasColumn(rs, columnName)) {
+            return defaultValue;
+        }
+        int value = rs.getInt(columnName);
+        return rs.wasNull() ? defaultValue : value;
+    }
+
     private boolean hasColumn(ResultSet rs, String columnName) throws SQLException {
         ResultSetMetaData metaData = rs.getMetaData();
         if (metaData == null) {
@@ -401,6 +438,103 @@ public class UserDAOImpl implements UserDAO {
         try (ResultSet columns = metaData.getColumns(
                 conn.getCatalog(), null, "users", PROFILE_IMAGE_COLUMN)) {
             return columns.next();
+        }
+    }
+
+    public static void ensureReputationColumn(Connection conn) throws SQLException {
+        try {
+            if (hasUserColumn(conn, REPUTATION_COLUMN)) {
+                return;
+            }
+
+            try (Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("ALTER TABLE users ADD COLUMN reputation_score INT NOT NULL DEFAULT 100");
+            } catch (SQLException e) {
+                if (e.getErrorCode() != MYSQL_DUPLICATE_COLUMN_ERROR) {
+                    throw e;
+                }
+            }
+        } catch (NullPointerException e) {
+            // Unit tests may use minimal mocked connections without metadata.
+        }
+    }
+
+    private static boolean hasUserColumn(Connection conn, String columnName) throws SQLException {
+        DatabaseMetaData metaData = conn.getMetaData();
+        if (metaData == null) {
+            return true;
+        }
+        try (ResultSet columns = metaData.getColumns(conn.getCatalog(), null, "users", columnName)) {
+            if (columns.next()) {
+                return true;
+            }
+        }
+        try (ResultSet columns = metaData.getColumns(conn.getCatalog(), null, "USERS", columnName.toUpperCase())) {
+            return columns.next();
+        }
+    }
+
+    private void attachSellerRatingSummary(Connection conn, User user) {
+        if (user == null || user.getRole() != Role.SELLER) {
+            return;
+        }
+
+        String sql = "SELECT AVG(stars) AS avg_stars, COUNT(*) AS rating_count "
+                + "FROM seller_ratings WHERE seller_id = ?";
+        try {
+            AuctionDAOImpl.ensureSellerRatingsTable(conn);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, user.getId());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        double average = rs.getDouble("avg_stars");
+                        if (rs.wasNull()) {
+                            average = 0;
+                        }
+                        user.setSellerRatingSummary(average, rs.getInt("rating_count"));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            user.setSellerRatingSummary(0, 0);
+        }
+    }
+
+    private void attachSellerRatingSummaries(Connection conn, List<User> users) {
+        if (users == null || users.isEmpty()) {
+            return;
+        }
+
+        String sql = "SELECT seller_id, AVG(stars) AS avg_stars, COUNT(*) AS rating_count "
+                + "FROM seller_ratings GROUP BY seller_id";
+        try {
+            AuctionDAOImpl.ensureSellerRatingsTable(conn);
+            java.util.Map<Integer, double[]> ratingMap = new java.util.HashMap<>();
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                    ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ratingMap.put(rs.getInt("seller_id"),
+                            new double[] { rs.getDouble("avg_stars"), rs.getInt("rating_count") });
+                }
+            }
+
+            for (User user : users) {
+                if (user == null || user.getRole() != Role.SELLER) {
+                    continue;
+                }
+                double[] rating = ratingMap.get(user.getId());
+                if (rating == null) {
+                    user.setSellerRatingSummary(0, 0);
+                } else {
+                    user.setSellerRatingSummary(rating[0], (int) rating[1]);
+                }
+            }
+        } catch (Exception e) {
+            for (User user : users) {
+                if (user != null && user.getRole() == Role.SELLER) {
+                    user.setSellerRatingSummary(0, 0);
+                }
+            }
         }
     }
 }

@@ -29,6 +29,7 @@ public abstract class IntegrationTestBase {
                     "full_name VARCHAR(100) NOT NULL," +
                     "email VARCHAR(100)," +
                     "phone VARCHAR(20)," +
+                    "reputation_score INT NOT NULL DEFAULT 100," +
                     "role VARCHAR(20) NOT NULL," +
                     "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
                     ");");
@@ -54,6 +55,7 @@ public abstract class IntegrationTestBase {
                     "bid_step DOUBLE NOT NULL DEFAULT 50000," +
                     "status VARCHAR(20) NOT NULL DEFAULT 'OPEN'," +
                     "highest_bidder_id INT," +
+                    "reputation_penalty INT NOT NULL DEFAULT 0," +
                     "FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE," +
                     "FOREIGN KEY (highest_bidder_id) REFERENCES users(id) ON DELETE SET NULL" +
                     ");");
@@ -67,6 +69,19 @@ public abstract class IntegrationTestBase {
                     "note VARCHAR(255)," +
                     "FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE," +
                     "FOREIGN KEY (bidder_id) REFERENCES users(id) ON DELETE CASCADE" +
+                    ");");
+
+            stmt.execute("CREATE TABLE IF NOT EXISTS seller_ratings (" +
+                    "id INT AUTO_INCREMENT PRIMARY KEY," +
+                    "auction_id INT NOT NULL," +
+                    "buyer_id INT NOT NULL," +
+                    "seller_id INT NOT NULL," +
+                    "stars INT NOT NULL," +
+                    "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
+                    "UNIQUE (auction_id, buyer_id)," +
+                    "FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE," +
+                    "FOREIGN KEY (buyer_id) REFERENCES users(id) ON DELETE CASCADE," +
+                    "FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE" +
                     ");");
         }
 

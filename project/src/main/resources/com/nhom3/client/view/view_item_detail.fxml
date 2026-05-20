@@ -155,6 +155,36 @@
          </children>
       </VBox>
 
+      <VBox fx:id="boxWinnerActions" managed="false" spacing="10.0" style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 15;" visible="false">
+         <effect>
+            <DropShadow color="#00000014" offsetY="3.0" radius="8.0" />
+         </effect>
+         <children>
+            <Label text="Giao dịch sau đấu giá" textFill="#374151">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Label>
+            <Label text="Bạn đang là người thắng phiên này. Nếu không tiếp tục giao dịch, bạn có thể hủy và sẽ bị trừ 60 điểm uy tín." textFill="#6B7280" wrapText="true" />
+            <Button onAction="#handleCancelTransaction" prefHeight="40.0" style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;" text="HỦY GIAO DỊCH" />
+         </children>
+      </VBox>
+
+      <VBox fx:id="boxRatingActions" managed="false" spacing="10.0" style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 15;" visible="false">
+         <effect>
+            <DropShadow color="#00000014" offsetY="3.0" radius="8.0" />
+         </effect>
+         <children>
+            <Label text="Đánh giá giao dịch" textFill="#374151">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Label>
+            <Label fx:id="lblSellerRatingStatus" text="Giao dịch đã thanh toán." textFill="#6B7280" wrapText="true" />
+            <Button fx:id="btnRateSeller" onAction="#handleRateSeller" prefHeight="40.0" style="-fx-background-color: #0ea5e9; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;" text="ĐÁNH GIÁ NGƯỜI BÁN" />
+         </children>
+      </VBox>
+
       <!-- HISTORY & CHART SECTION (Bây giờ sẽ chiếm được nhiều diện tích hơn) -->
       <VBox spacing="10.0" style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 15;" VBox.vgrow="ALWAYS">
          <effect>

@@ -97,7 +97,7 @@ public class AdminDashboardController {
         btnCancelledAuctions.setOnAction(e -> {
             if (allAuctionsList != null) {
                 List<AuctionListResponsePayload.AuctionDTO> filtered = allAuctionsList.stream()
-                        .filter(a -> "CANCELLED".equals(a.status))
+                        .filter(a -> "CANCELLED".equals(a.status) || "DEAL_CANCELLED".equals(a.status))
                         .collect(java.util.stream.Collectors.toList());
                 tableAuctions.setItems(FXCollections.observableArrayList(filtered));
             }
@@ -213,7 +213,12 @@ public class AdminDashboardController {
                     UserListResponsePayload.UserDTO user = getItem();
                     if (user != null) {
                         showAlert(Alert.AlertType.INFORMATION, "Thông Tin Người Dùng",
-                                "Tên: " + user.fullName + "\nEmail: " + user.email + "\nPhone: " + user.phone);
+                                "Tên: " + user.fullName
+                                        + "\nEmail: " + user.email
+                                        + "\nPhone: " + user.phone
+                                        + "\nUy tín: " + ("BIDDER".equals(user.role)
+                                                ? user.reputationScore + " / 100"
+                                                : "Không áp dụng"));
                     }
                 });
 

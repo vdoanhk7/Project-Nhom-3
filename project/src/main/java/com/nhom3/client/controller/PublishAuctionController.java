@@ -4,7 +4,9 @@ import com.nhom3.client.event.ClientEventBus;
 import com.nhom3.client.event.ClientEvents;
 import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.utils.DialogUtils;
+import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.item.Item;
+import com.nhom3.shared.model.user.User;
 import com.nhom3.client.utils.MoneyInputFormatter;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -113,6 +115,12 @@ public class PublishAuctionController {
                 return;
             }
 
+            User currentUser = UserSession.getInstance().getLoggedInUser();
+            if (currentUser == null) {
+                showAlert("Lỗi", "Không tìm thấy phiên đăng nhập!");
+                return;
+            }
+
             double bidStep = MoneyInputFormatter.parseAmount(txtBidStep.getText());
             if (bidStep <= 0) {
                 showAlert("Lỗi", "Bước giá phải lớn hơn 0!");
@@ -121,7 +129,7 @@ public class PublishAuctionController {
 
             // --- BẮT ĐẦU GỬI MẠNG ---
             com.nhom3.shared.network.payload.PublishAuctionPayload payload = new com.nhom3.shared.network.payload.PublishAuctionPayload(
-                currentItem.getId(), start.toString(), end.toString(), bidStep
+                currentItem.getId(), start.toString(), end.toString(), bidStep, currentUser.getId()
             );
             com.nhom3.shared.network.packet.Packet packet = new com.nhom3.shared.network.packet.Packet(com.nhom3.shared.network.packet.PacketType.PUBLISH_AUCTION, payload);
             

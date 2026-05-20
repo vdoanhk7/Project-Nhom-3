@@ -38,7 +38,9 @@
                         <Label fx:id="lblUsername" text="\@admin" textFill="#2c3e50">
                            <font><Font name="System Bold" size="18.0" /></font>
                         </Label>
-                        <Label/>
+                        <Label fx:id="lblSellerRating" text="★ 0.0 / 5 (0 đánh giá)" textFill="#f59e0b">
+                           <font><Font name="System Bold" size="13.0" /></font>
+                        </Label>
                      </children>
                   </VBox>
 	                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleChooseProfileImage" style="-fx-background-color: #ecf0f1; -fx-text-fill: #34495e; -fx-cursor: hand;" text="Đổi Ảnh Đại Diện">
@@ -61,6 +63,13 @@
                         <font><Font name="System Bold" size="12.0" /></font>
                      </Label>
                      <TextField fx:id="txtRole" editable="false" style="-fx-padding: 8; -fx-background-color: #e2e8f0; -fx-border-color: #cbd5e1; -fx-border-radius: 5; -fx-text-fill: #64748b; -fx-font-weight: bold;" text="Admin" />
+                  </VBox>
+
+                  <VBox spacing="5.0">
+                     <Label text="Điểm uy tín:" textFill="#7f8c8d">
+                        <font><Font name="System Bold" size="12.0" /></font>
+                     </Label>
+                     <TextField fx:id="txtReputation" editable="false" style="-fx-padding: 8; -fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 5; -fx-text-fill: #0f766e; -fx-font-weight: bold;" text="100 / 100" />
                   </VBox>
 
                   <VBox spacing="5.0">

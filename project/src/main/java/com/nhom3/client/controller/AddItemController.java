@@ -4,6 +4,7 @@ import com.nhom3.client.event.ClientEventBus;
 import com.nhom3.client.event.ClientEvents;
 import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
+import com.nhom3.client.utils.DialogUtils;
 import com.nhom3.client.utils.MoneyInputFormatter;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.item.Item;
@@ -175,6 +176,7 @@ public class AddItemController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
+        DialogUtils.initOwner(alert, txtName);
         alert.showAndWait();
     }
 }

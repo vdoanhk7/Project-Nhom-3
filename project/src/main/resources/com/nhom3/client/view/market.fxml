@@ -20,7 +20,7 @@
             <Insets bottom="20.0" left="40.0" right="40.0" top="25.0" />
          </padding>
          <children>
-            <HBox alignment="CENTER_LEFT" spacing="20.0">
+            <HBox alignment="CENTER_LEFT" prefHeight="52.0" prefWidth="935.0" spacing="20.0">
                <children>
                   <VBox>
                      <Label text="Đấu Giá Trực Tuyến" textFill="#2c3e50">
@@ -35,14 +35,21 @@
                      </Label>
                   </VBox>
                   
-                  <HBox spacing="10" alignment="CENTER_LEFT">
-                     <TextField fx:id="txtSearch" promptText="Tìm theo tên sản phẩm..." prefWidth="200" />
-                     <TextField fx:id="txtSellerName" promptText="Tìm theo người bán..." prefWidth="150" />
+                  <HBox alignment="CENTER_LEFT" spacing="10">
+                     <TextField fx:id="txtSearch" prefHeight="26.0" prefWidth="159.0" promptText="Tìm theo tên sản phẩm..." />
+                     <TextField fx:id="txtSellerName" prefHeight="26.0" prefWidth="131.0" promptText="Tìm theo người bán..." />
     
-                     <ComboBox fx:id="cbCategory" promptText="Danh mục" prefWidth="120" />
-                     <ComboBox fx:id="cbTimeLeft" promptText="Thời gian còn lại" prefWidth="120" />
+                     <ComboBox fx:id="cbCategory" prefHeight="26.0" prefWidth="103.0" promptText="Danh mục" />
+                     <ComboBox fx:id="cbTimeLeft" prefWidth="120" promptText="Thời gian còn lại" />
     
-                     <Button fx:id="btnReload" text="Làm mới ↻" />
+                     <Button fx:id="btnReload" mnemonicParsing="false" onAction="#loadMarket" style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-cursor: hand; -fx-background-radius: 8; -fx-border-color: #cbd5e1; -fx-border-radius: 8;" text="🔄 Làm mới">
+                        <padding>
+                           <Insets bottom="10.0" left="15.0" right="15.0" top="10.0" />
+                        </padding>
+                        <font>
+                           <Font size="14.0" />
+                        </font>
+                     </Button>
                   </HBox>
                </children>
             </HBox>

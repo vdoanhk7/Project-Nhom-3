@@ -4,6 +4,7 @@ import com.nhom3.client.event.ClientEventBus;
 import com.nhom3.client.event.ClientEvents;
 import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
+import com.nhom3.client.utils.DialogUtils;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.StatusOfAuction;
@@ -78,6 +79,7 @@ public class ManageItemController {
 
     private final ObservableList<Item> itemList = FXCollections.observableArrayList();
     private final Map<Integer, String> itemStatusMap = new HashMap<>();
+    private final Map<Integer, Integer> itemHighestBidderMap = new HashMap<>();
     private final Map<Integer, String> imageCache = new ConcurrentHashMap<>();
     private final Set<Integer> requestedImageIds = ConcurrentHashMap.newKeySet();
     private final Set<Integer> noImageIds = ConcurrentHashMap.newKeySet();
@@ -128,6 +130,7 @@ public class ManageItemController {
 
         List<Item> realItems = new java.util.ArrayList<>();
         itemStatusMap.clear();
+        itemHighestBidderMap.clear();
         requestedImageIds.clear();
         imageCache.clear();
         noImageIds.clear();
@@ -140,6 +143,7 @@ public class ManageItemController {
             if (dto.status != null && !dto.status.isEmpty()) {
                 itemStatusMap.put(dto.id, dto.status);
             }
+            itemHighestBidderMap.put(dto.id, dto.highestBidderId);
         }
         itemList.setAll(realItems);
         tableItems.refresh();
@@ -343,10 +347,11 @@ public class ManageItemController {
             private final Button btnDelete = createStyledButton(" Xoá ", "#ef4444", "#dc2626");
             private final Button btnView = createStyledButton(" Xem Chi Tiết ", "#3b82f6", "#2563eb");
             private final Button btnConfirmPaid = createStyledButton(" Xác Nhận ", "#10b981", "#059669");
+            private final Button btnRelist = createStyledButton(" Đăng bán lại ", "#0ea5e9", "#0284c7");
             private final Label lblPaidStatus = new Label("💰 Đã Thanh Toán");
             
             private final HBox pane = new HBox(ACTION_BUTTON_SPACING, btnPublish, btnEdit, btnDelete,
-                    btnView, btnConfirmPaid, lblPaidStatus);
+                    btnView, btnConfirmPaid, btnRelist, lblPaidStatus);
 
             {
                 // Làm đẹp cho Label trạng thái
@@ -358,6 +363,7 @@ public class ManageItemController {
                 btnDelete.setOnAction(e -> handleDelete(getCurrentRowItem()));
                 btnView.setOnAction(e -> handleViewDetail(getCurrentRowItem()));
                 btnConfirmPaid.setOnAction(e -> handleConfirmPaid(getCurrentRowItem()));
+                btnRelist.setOnAction(e -> handleRelist(getCurrentRowItem()));
             }
 
             // Hàm tiện ích tạo nút bấm chuyên nghiệp (có Hover)
@@ -389,7 +395,11 @@ public class ManageItemController {
                     lblPaidStatus.setManaged(true);
                     showButtons(btnView);
                 } else if ("FINISHED".equals(status)) {
-                    showButtons(btnView, btnConfirmPaid);
+                    if (hasHighestBidder(currentItem)) {
+                        showButtons(btnView, btnConfirmPaid);
+                    } else {
+                        showButtons(btnView, btnRelist);
+                    }
                 } else if (!hasAuction(currentItem) || "CANCELLED".equals(status)) {
                     showButtons(btnPublish, btnEdit, btnDelete);
                 } else {
@@ -427,9 +437,8 @@ public class ManageItemController {
             Stage popupStage = new Stage();
             popupStage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             popupStage.setTitle("Thêm Sản Phẩm Mới");
-            popupStage.initModality(Modality.APPLICATION_MODAL);
             popupStage.setScene(new Scene(root));
-            popupStage.setResizable(false);
+            preparePopupStage(popupStage);
             popupStage.showAndWait();
         } catch (IOException e) {
             e.printStackTrace();
@@ -449,11 +458,15 @@ public class ManageItemController {
             stage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             stage.setScene(new Scene(root));
             stage.setTitle("Đăng Bán Sản Phẩm");
-            stage.initModality(Modality.APPLICATION_MODAL);
+            preparePopupStage(stage);
             stage.showAndWait();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void handleRelist(Item item) {
+        handlePublish(item);
     }
 
     private void handleEdit(Item item) {
@@ -466,9 +479,8 @@ public class ManageItemController {
             Stage popupStage = new Stage();
             popupStage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             popupStage.setTitle("Sửa Sản Phẩm: " + item.getName());
-            popupStage.initModality(Modality.APPLICATION_MODAL);
             popupStage.setScene(new Scene(root));
-            popupStage.setResizable(false);
+            preparePopupStage(popupStage);
             popupStage.showAndWait();
         } catch (Exception e) {
             e.printStackTrace();
@@ -485,6 +497,7 @@ public class ManageItemController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
                 "Bạn có chắc chắn muốn xóa sản phẩm: " + item.getName() + "?",
                 ButtonType.OK, ButtonType.CANCEL);
+        DialogUtils.initOwner(alert, tableItems);
         alert.setHeaderText(null);
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             pendingDeleteItem = item;
@@ -517,6 +530,7 @@ public class ManageItemController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
                 "Xác nhận đã nhận đủ tiền cho sản phẩm: " + item.getName() + "?",
                 ButtonType.YES, ButtonType.NO);
+        DialogUtils.initOwner(alert, tableItems);
         alert.setHeaderText(null);
         if (currentUser != null && alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
             try {
@@ -540,8 +554,8 @@ public class ManageItemController {
             Stage stage = new Stage();
             stage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             stage.setScene(new Scene(root));
-            stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Chi Tiết Đấu Giá: " + item.getName());
+            preparePopupStage(stage);
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
@@ -575,11 +589,35 @@ public class ManageItemController {
         return itemStatusMap.getOrDefault(item.getId(), "");
     }
 
+    private boolean hasHighestBidder(Item item) {
+        return itemHighestBidderMap.getOrDefault(item.getId(), -1) > 0;
+    }
+
     private void showAlert(Alert.AlertType type, String title, String content) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
+        DialogUtils.initOwner(alert, tableItems);
         alert.showAndWait();
+    }
+
+    private void preparePopupStage(Stage stage) {
+        if (tableItems != null && tableItems.getScene() != null) {
+            stage.initOwner(tableItems.getScene().getWindow());
+            stage.initModality(Modality.WINDOW_MODAL);
+        } else {
+            stage.initModality(Modality.APPLICATION_MODAL);
+        }
+        stage.setFullScreen(false);
+        stage.setMaximized(false);
+        stage.setResizable(true);
+        stage.setOnShown(event -> {
+            stage.setFullScreen(false);
+            stage.setMaximized(false);
+            stage.sizeToScene();
+            stage.setMinWidth(stage.getWidth());
+            stage.setMinHeight(stage.getHeight());
+        });
     }
 }

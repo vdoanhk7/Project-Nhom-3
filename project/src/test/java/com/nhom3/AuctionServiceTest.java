@@ -211,6 +211,24 @@ class AuctionServiceTest {
     }
 
     @Test
+    void testPlaceAutoBid_SameHighestBidder_AllowsProxyRaise() {
+        Auction auction = runningAuctionWithRealItem();
+        Bidder topBidder = new Bidder(1, null, null);
+        auction.setHighestBidder(topBidder);
+        BidTransaction bid = new BidTransaction(1, topBidder, 450.0, LocalDateTime.now(), "Auto");
+
+        when(auctionDAO.updateHighestBid(1, 1, 450.0)).thenReturn(true);
+        when(auctionDAO.getEndTime(1)).thenReturn(auction.getEndTime());
+
+        boolean result = auctionService.placeAutoBid(auction, bid);
+
+        assertTrue(result);
+        assertEquals(450.0, auction.getItem().getCurHighest());
+        assertEquals(topBidder, auction.getHighestBidder());
+        verify(auctionDAO).saveBidTransaction(bid, 1);
+    }
+
+    @Test
     void testPlaceBid_CancelledAuction_ThrowsExceptionAndDoesNotUpdateDb() {
         Auction auction = runningAuctionWithRealItem();
         auction.setStatus(StatusOfAuction.CANCELLED);

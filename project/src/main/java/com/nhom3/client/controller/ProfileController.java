@@ -4,6 +4,7 @@ import com.nhom3.client.event.ClientEventBus;
 import com.nhom3.client.event.ClientEvents;
 import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
+import com.nhom3.client.utils.DialogUtils;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.user.Admin;
 import com.nhom3.shared.model.user.Seller;
@@ -90,9 +91,8 @@ public class ProfileController {
             Stage popupStage = new Stage();
             popupStage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             popupStage.setTitle("Thay đổi mật khẩu");
-            popupStage.initModality(Modality.APPLICATION_MODAL);
             popupStage.setScene(new Scene(root));
-            popupStage.setResizable(false);
+            preparePopupStage(popupStage);
             popupStage.showAndWait();
         } catch (IOException e) {
             e.printStackTrace();
@@ -313,6 +313,26 @@ public class ProfileController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
+        DialogUtils.initOwner(alert, txtName);
         alert.showAndWait();
+    }
+
+    private void preparePopupStage(Stage stage) {
+        if (txtName != null && txtName.getScene() != null) {
+            stage.initOwner(txtName.getScene().getWindow());
+            stage.initModality(Modality.WINDOW_MODAL);
+        } else {
+            stage.initModality(Modality.APPLICATION_MODAL);
+        }
+        stage.setFullScreen(false);
+        stage.setMaximized(false);
+        stage.setResizable(true);
+        stage.setOnShown(event -> {
+            stage.setFullScreen(false);
+            stage.setMaximized(false);
+            stage.sizeToScene();
+            stage.setMinWidth(stage.getWidth());
+            stage.setMinHeight(stage.getHeight());
+        });
     }
 }

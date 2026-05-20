@@ -170,14 +170,15 @@ public class PacketDispatcher {
         AuctionDAO auctionDAOForSeller = new AuctionDAOImpl();
 
         List<Item> itemsFromDb = itemDAO.getItemsBySellerId(sellerReq.getSellerId());
-        Map<Integer, String> statusMap = auctionDAOForSeller.getAuctionStatusBySeller(sellerReq.getSellerId());
 
         List<SellerItemsResponsePayload.SellerItemDTO> dtoList = new ArrayList<>();
         for (Item itm : itemsFromDb) {
-            String stt = statusMap.getOrDefault(itm.getId(), "");
+            Auction latestAuction = auctionDAOForSeller.getAuctionByItemId(itm.getId());
+            String stt = latestAuction != null ? getRealAuctionStatus(latestAuction).name() : "";
+            int highestBidderId = latestAuction != null ? latestAuction.getHighestBidderId() : -1;
             dtoList.add(new SellerItemsResponsePayload.SellerItemDTO(itm.getId(), itm.getName(),
                     itm.getDescription(), itm.getType().name(), itm.getStartPrice(), itm.getCurHighest(), stt,
-                    itm.getImageBase64()));
+                    itm.getImageBase64(), highestBidderId));
         }
         return new Packet(PacketType.LOAD_SELLER_ITEMS, new SellerItemsResponsePayload(dtoList));
     }
@@ -390,9 +391,13 @@ public class PacketDispatcher {
                                     + String.format("%,.0f VNĐ", auction.getBidStep()) + "!",
                             -1, "", "", "", "", ""));
         }
-        if (autoData.getMaxAmount() <= auction.getItem().getCurHighest()) {
+        double minAutoBidAmount = auction.getItem().getStartPrice() + auction.getBidStep();
+        if (autoData.getMaxAmount() <= minAutoBidAmount) {
             return new Packet(PacketType.PLACE_AUTO_BID,
-                    new ResultPayload(false, "Giá tối đa phải lớn hơn giá hiện tại!", -1, "", "", "", "", ""));
+                    new ResultPayload(false,
+                            "Giá tối đa Auto-Bid phải lớn hơn giá khởi điểm + bước giá ("
+                                    + String.format("%,.0f VNĐ", minAutoBidAmount) + ")!",
+                            -1, "", "", "", "", ""));
         }
 
         boolean autoSuccess = adao.saveAutoBidConfig(autoData);
@@ -459,6 +464,24 @@ public class PacketDispatcher {
             return new Admin(payload.getUserId(), info, contact);
         }
         return new Bidder(payload.getUserId(), info, contact);
+    }
+
+    private StatusOfAuction getRealAuctionStatus(Auction auction) {
+        StatusOfAuction dbStatus = auction.getStatus();
+        if (dbStatus == StatusOfAuction.PAID
+                || dbStatus == StatusOfAuction.CANCELLED
+                || dbStatus == StatusOfAuction.FINISHED) {
+            return dbStatus;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (auction.getStartTime() != null && now.isBefore(auction.getStartTime())) {
+            return StatusOfAuction.OPEN;
+        }
+        if (auction.getEndTime() != null && !now.isBefore(auction.getEndTime())) {
+            return StatusOfAuction.FINISHED;
+        }
+        return StatusOfAuction.RUNNING;
     }
 
     private AuctionListResponsePayload.AuctionDTO toAuctionDto(Auction auction) {

@@ -55,12 +55,26 @@ public class AuctionService {
         // Một sản phẩm không thể có 2 phiên đấu giá chạy cùng lúc
         Auction existingAuction = auctionDAO.getAuctionByItemId(auction.getItem().getId());
         if (existingAuction != null) {
-            StatusOfAuction currentStatus = existingAuction.getStatus();
+            StatusOfAuction currentStatus = getRealAuctionStatus(existingAuction);
             if (currentStatus == StatusOfAuction.OPEN || currentStatus == StatusOfAuction.RUNNING) {
                 log.warn("Từ chối tạo: Sản phẩm ID {} đang có phiên đấu giá chưa kết thúc.", auction.getItem().getId());
                 throw new AuctionConflictException(
                         "AUCTION_ALREADY_ACTIVE",
                         "Sản phẩm này đang có một phiên đấu giá chưa kết thúc!");
+            }
+            if (currentStatus == StatusOfAuction.FINISHED && existingAuction.getHighestBidderId() > 0) {
+                log.warn("Từ chối đăng bán lại: Sản phẩm ID {} đã có người thắng ở phiên gần nhất.",
+                        auction.getItem().getId());
+                throw new AuctionConflictException(
+                        "AUCTION_FINISHED_HAS_WINNER",
+                        "Phiên đấu giá đã có người thắng, vui lòng xác nhận thanh toán thay vì đăng bán lại!");
+            }
+            if (currentStatus == StatusOfAuction.PAID) {
+                log.warn("Từ chối đăng bán lại: Sản phẩm ID {} đã được xác nhận thanh toán.",
+                        auction.getItem().getId());
+                throw new AuctionConflictException(
+                        "AUCTION_ALREADY_PAID",
+                        "Sản phẩm đã được xác nhận thanh toán, không thể đăng bán lại!");
             }
         }
 
@@ -151,7 +165,7 @@ public class AuctionService {
 
     // Hàm gọi từ ClientHandler khi có người bấm Đặt giá thủ công
     public boolean placeBid(Auction auction, BidTransaction bid) {
-            boolean isSuccess = placeBidInternal(auction, bid);
+            boolean isSuccess = placeBidInternal(auction, bid, false);
             if (isSuccess) {
                 auctionHandler.handleAutoBid(auction.getId());
             }
@@ -159,7 +173,12 @@ public class AuctionService {
     }
 
     // Logic cốt lõi ghi vào DB
-    private boolean placeBidInternal(Auction auction, BidTransaction bid) throws BidRejectedException {
+    public boolean placeAutoBid(Auction auction, BidTransaction bid) {
+        return placeBidInternal(auction, bid, true);
+    }
+
+    private boolean placeBidInternal(Auction auction, BidTransaction bid, boolean allowHighestBidder)
+            throws BidRejectedException {
         LocalDateTime now = LocalDateTime.now();
         if (auction.getStatus() == StatusOfAuction.CANCELLED) {
             throw new BidRejectedException("BID_AUCTION_CANCELLED", "Phiên đấu giá đã bị hủy!");
@@ -171,7 +190,7 @@ public class AuctionService {
             throw new BidRejectedException("BID_AUCTION_ENDED", "Phiên đấu giá đã kết thúc!");
         }
         
-        if (bid.getBidder().getId() == auction.getHighestBidderId()) {
+        if (!allowHighestBidder && bid.getBidder().getId() == auction.getHighestBidderId()) {
             throw new BidRejectedException(
                     "BIDDER_ALREADY_HIGHEST",
                     "Bạn đang là người dẫn đầu, không cần đặt thêm nhé!");
@@ -209,5 +228,23 @@ public class AuctionService {
             return true;
         }
         return false;
+    }
+
+    private StatusOfAuction getRealAuctionStatus(Auction auction) {
+        StatusOfAuction dbStatus = auction.getStatus();
+        if (dbStatus == StatusOfAuction.PAID
+                || dbStatus == StatusOfAuction.CANCELLED
+                || dbStatus == StatusOfAuction.FINISHED) {
+            return dbStatus;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (auction.getStartTime() != null && now.isBefore(auction.getStartTime())) {
+            return StatusOfAuction.OPEN;
+        }
+        if (auction.getEndTime() != null && !now.isBefore(auction.getEndTime())) {
+            return StatusOfAuction.FINISHED;
+        }
+        return StatusOfAuction.RUNNING;
     }
 }

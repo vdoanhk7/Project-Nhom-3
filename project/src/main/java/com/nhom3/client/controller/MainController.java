@@ -22,6 +22,7 @@ import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 import javafx.scene.control.Button; 
+import com.nhom3.client.utils.DialogUtils;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.user.User;
 import com.nhom3.shared.model.user.Admin;
@@ -34,6 +35,7 @@ import java.util.List;
 
 public class MainController {
     private static final double LOADING_SPINNER_SIZE = 50;
+    private static final double DEFAULT_STAGE_MIN_SIZE = 0;
 
     @FXML private StackPane contentArea;
     @FXML private Label lblUserName;
@@ -112,6 +114,7 @@ public class MainController {
         alert.setTitle("Tài khoản đã bị xóa");
         alert.setHeaderText(null);
         alert.setContentText(event.message());
+        DialogUtils.initOwner(alert, contentArea);
         alert.showAndWait();
 
         showLoginScene();
@@ -257,6 +260,7 @@ public class MainController {
         alert.setTitle("Xác nhận");
         alert.setHeaderText(null);
         alert.setContentText("Bạn thực sự muốn đăng xuất?");
+        DialogUtils.initOwner(alert, (Node) event.getSource());
 
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             UserSession.getInstance().logout();
@@ -275,7 +279,12 @@ public class MainController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/login.fxml"));
             Parent root = loader.load();
+            stage.setMaximized(false);
+            stage.setMinWidth(DEFAULT_STAGE_MIN_SIZE);
+            stage.setMinHeight(DEFAULT_STAGE_MIN_SIZE);
             stage.setScene(new Scene(root));
+            stage.setResizable(false);
+            stage.sizeToScene();
             stage.centerOnScreen();
         } catch (Exception e) {
             e.printStackTrace();

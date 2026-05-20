@@ -82,23 +82,23 @@
             
             <VBox spacing="2.0">
                <children>
-                  <Button fx:id="btnDashboard" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showDashboard" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="   ⊞     Tổng Quan">
+                  <Button fx:id="btnDashboard" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showDashboard" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="        Tổng Quan">
                      <padding><Insets bottom="16.0" left="30.0" top="16.0" /></padding>
                   </Button>
                   
-                  <Button fx:id="btnMarket" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showMarket" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="   ◈     Chợ Đấu Giá">
+                  <Button fx:id="btnMarket" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showMarket" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="        Chợ Đấu Giá">
                      <padding><Insets bottom="16.0" left="30.0" top="16.0" /></padding>
                   </Button>
                   
-                  <Button fx:id="btnPurchaseHistory" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showPurchaseHistory" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="   ▤     Lịch Sử Đấu Giá">
+                  <Button fx:id="btnPurchaseHistory" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showPurchaseHistory" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="        Lịch Sử Đấu Giá">
                      <padding><Insets bottom="16.0" left="30.0" top="16.0" /></padding>
                   </Button>
 
-                  <Button fx:id="btnManageItem" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showManageItem" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="   ❐     Quản Lý Sản Phẩm">
+                  <Button fx:id="btnManageItem" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showManageItem" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="        Quản Lý Sản Phẩm">
                      <padding><Insets bottom="16.0" left="30.0" top="16.0" /></padding>
                   </Button>
 
-                  <Button fx:id="btnAdminPanel" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showAdminPanel" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="   ⚙     Quản Trị Hệ Thống">
+                  <Button fx:id="btnAdminPanel" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showAdminPanel" style="-fx-background-color: transparent; -fx-text-fill: #d1d8e0; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; -fx-font-size: 15px;" text="        Quản Trị Hệ Thống">
                      <padding><Insets bottom="16.0" left="30.0" top="16.0" /></padding>
                   </Button>
                </children>

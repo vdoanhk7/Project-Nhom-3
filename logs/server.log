@@ -1323,27 +1323,212 @@ Caused by: java.net.SocketException: Connection reset
 	at java.base/java.io.BufferedReader.readLine(Unknown Source)
 	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:86)
 	... 2 common frames omitted
-2026-05-20 13:58:03 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
-2026-05-20 13:58:03 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
-2026-05-20 13:58:05 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@241102ca
-2026-05-20 13:58:05 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
-2026-05-20 13:58:05 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
-2026-05-20 13:58:08 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
-2026-05-20 13:58:16 [virtual-32] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: d
-2026-05-20 13:58:17 [virtual-32] INFO  c.nhom3.server.service.AuthService - Server: feg đã đăng nhập thành công!
-2026-05-20 13:58:17 [virtual-32] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Bidder[id=9, username=d, fullName=feg, email=dsff@gmail.com, phone=0123456789]
-2026-05-20 13:58:17 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
-2026-05-20 13:59:07 [virtual-32] ERROR c.nhom3.server.network.ClientHandler - Client ngắt kết nối
-2026-05-20 13:59:07 [Thread-1] ERROR c.n.client.network.ServerConnection - Lỗi khi nhận phản hồi từ server
+2026-05-20 12:38:30 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:546)
+	at java.base/sun.nio.ch.Net.connect(Net.java:535)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:585)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:284)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/java.net.Socket.connect(Socket.java:597)
+	at java.base/java.net.Socket.<init>(Socket.java:464)
+	at java.base/java.net.Socket.<init>(Socket.java:276)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:44)
+	at com.nhom3.client.App.main(App.java:39)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-20 12:38:31 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-20 12:38:31 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-20 12:38:32 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-20 12:38:34 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@55bddb59
+2026-05-20 12:38:34 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-20 12:38:34 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-20 12:38:41 [virtual-40] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-20 12:38:42 [virtual-40] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-20 12:38:42 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: false
+2026-05-20 12:38:51 [virtual-40] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-20 12:38:52 [virtual-40] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-20 12:38:52 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: false
+2026-05-20 12:39:00 [virtual-40] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-20 12:39:01 [virtual-40] INFO  c.nhom3.server.service.AuthService - Server: Pham Tien Dung đã đăng nhập thành công!
+2026-05-20 12:39:01 [virtual-40] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Admin[id=5, username=adminDung, fullName=Pham Tien Dung, email=admin1@gmail.com, phone=0000000000]
+2026-05-20 12:39:01 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-20 12:39:08 [JavaFX Application Thread] WARN  c.n.c.network.ClientPacketDispatcher - Loại gói tin không xác định: SUBSCRIBE_SYSTEM_LOGS
+2026-05-20 12:45:34 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-20 12:45:34 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-20 12:45:36 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@40c654fc
+2026-05-20 12:45:36 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-20 12:45:36 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-20 12:45:37 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-20 12:45:46 [virtual-42] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-20 12:45:47 [virtual-42] INFO  c.nhom3.server.service.AuthService - Server: Pham Tien Dung đã đăng nhập thành công!
+2026-05-20 12:45:47 [virtual-42] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Admin[id=5, username=adminDung, fullName=Pham Tien Dung, email=admin1@gmail.com, phone=0000000000]
+2026-05-20 12:45:47 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-20 12:45:55 [JavaFX Application Thread] WARN  c.n.c.network.ClientPacketDispatcher - Loại gói tin không xác định: SUBSCRIBE_SYSTEM_LOGS
+2026-05-20 12:56:01 [AuctionMonitor-Worker] WARN  com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@4e88eb81 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-05-20 12:56:01 [AuctionMonitor-Worker] WARN  com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@40c654fc (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-05-20 12:56:01 [AuctionMonitor-Worker] WARN  com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@24b8dbf6 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-05-20 12:56:01 [AuctionMonitor-Worker] WARN  com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@2de5e803 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-05-20 12:56:01 [AuctionMonitor-Worker] WARN  com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@46c926d8 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-05-20 12:56:14 [HikariPool-1 housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=4m7s110ms881µs).
+2026-05-20 12:59:27 [AuctionMonitor-Worker] WARN  com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@46bc9bf0 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-05-20 12:59:27 [AuctionMonitor-Worker] WARN  com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@5f3ec0d7 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-05-20 12:59:27 [AuctionMonitor-Worker] WARN  com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@6e59caa1 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-05-20 12:59:27 [AuctionMonitor-Worker] WARN  com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@4c18af81 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-05-20 12:59:27 [AuctionMonitor-Worker] WARN  com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@4b4ce5c (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-05-20 12:59:27 [AuctionMonitor-Worker] WARN  com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@2da59e65 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-05-20 12:59:47 [HikariPool-1 housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=1m33s184ms562µs300ns).
+2026-05-20 13:18:26 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:546)
+	at java.base/sun.nio.ch.Net.connect(Net.java:535)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:585)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:284)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/java.net.Socket.connect(Socket.java:597)
+	at java.base/java.net.Socket.<init>(Socket.java:464)
+	at java.base/java.net.Socket.<init>(Socket.java:276)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:44)
+	at com.nhom3.client.App.main(App.java:39)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-20 13:18:28 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:546)
+	at java.base/sun.nio.ch.Net.connect(Net.java:535)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:585)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:284)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/java.net.Socket.connect(Socket.java:597)
+	at java.base/java.net.Socket.<init>(Socket.java:464)
+	at java.base/java.net.Socket.<init>(Socket.java:276)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:44)
+	at com.nhom3.client.App.main(App.java:39)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-20 13:18:30 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:546)
+	at java.base/sun.nio.ch.Net.connect(Net.java:535)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:585)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:284)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/java.net.Socket.connect(Socket.java:597)
+	at java.base/java.net.Socket.<init>(Socket.java:464)
+	at java.base/java.net.Socket.<init>(Socket.java:276)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:44)
+	at com.nhom3.client.App.main(App.java:39)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-20 13:18:32 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:546)
+	at java.base/sun.nio.ch.Net.connect(Net.java:535)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:585)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:284)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/java.net.Socket.connect(Socket.java:597)
+	at java.base/java.net.Socket.<init>(Socket.java:464)
+	at java.base/java.net.Socket.<init>(Socket.java:276)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:44)
+	at com.nhom3.client.App.main(App.java:39)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-20 13:18:34 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-20 13:18:34 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-20 13:18:34 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-20 13:18:36 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@40c654fc
+2026-05-20 13:18:36 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-20 13:18:36 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-20 13:18:54 [virtual-40] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-20 13:18:55 [virtual-40] INFO  c.nhom3.server.service.AuthService - Server: Pham Tien Dung đã đăng nhập thành công!
+2026-05-20 13:18:55 [virtual-40] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Admin[id=5, username=adminDung, fullName=Pham Tien Dung, email=admin1@gmail.com, phone=0000000000]
+2026-05-20 13:18:55 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-20 13:18:58 [JavaFX Application Thread] WARN  c.n.c.network.ClientPacketDispatcher - Loại gói tin không xác định: SUBSCRIBE_SYSTEM_LOGS
+2026-05-20 13:19:31 [virtual-40] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-20 13:19:33 [virtual-40] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-20 13:19:33 [virtual-40] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=7, username=c, fullName=c, email=c@mail.com, phone=0368333767][managedItems=0, managedAuctions=0]
+2026-05-20 13:19:33 [virtual-40] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-20 13:19:33 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-20 13:19:33 [virtual-40] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-20 13:19:33 [virtual-40] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=7, username=c, fullName=c, email=c@mail.com, phone=0368333767][managedItems=0, managedAuctions=0]
+2026-05-20 13:19:33 [virtual-40] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: c
+2026-05-20 13:19:33 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-20 13:19:34 [virtual-40] INFO  c.nhom3.server.service.AuthService - Server: c đã đăng nhập thành công!
+2026-05-20 13:19:34 [virtual-40] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=7, username=c, fullName=c, email=c@mail.com, phone=0368333767][managedItems=0, managedAuctions=0]
+2026-05-20 13:19:34 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-20 13:19:49 [virtual-40] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 7
+2026-05-20 13:19:49 [virtual-40] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm 'vdv' cho Seller ID: 7
+2026-05-20 13:19:49 [virtual-40] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Created item detail: Electronics[id=31, name=vdv, description=Chua co mo ta, startPrice=3000000, currentHighest=3000000, seller=Chua co thong tin]
+2026-05-20 13:19:59 [virtual-40] INFO  c.n.server.service.AuctionService - Bắt đầu yêu cầu tạo phiên đấu giá cho sản phẩm ID: 31
+2026-05-20 13:20:00 [virtual-40] INFO  c.n.server.service.AuctionService - Tạo thành công phiên đấu giá ID: 29 cho sản phẩm ID: 31
+2026-05-20 13:20:00 [virtual-40] INFO  c.n.server.service.AuctionService - [OOP printInfo] Created auction detail: Auction[id=29, item=, startTime=2026-05-20T13:19:59.641255900, endTime=2026-05-21T22:00, bidStep=50000, status=RUNNING, highestBidderId=-1]
+2026-05-20 13:20:18 [virtual-40] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-20 13:20:19 [virtual-40] INFO  c.nhom3.server.service.AuthService - Server: Pham Tien Dung đã đăng nhập thành công!
+2026-05-20 13:20:19 [virtual-40] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Admin[id=5, username=adminDung, fullName=Pham Tien Dung, email=admin1@gmail.com, phone=0000000000]
+2026-05-20 13:20:19 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-20 13:20:24 [JavaFX Application Thread] WARN  c.n.c.network.ClientPacketDispatcher - Loại gói tin không xác định: SUBSCRIBE_SYSTEM_LOGS
+2026-05-20 13:27:05 [Thread-1] ERROR c.n.client.network.ServerConnection - Lỗi khi nhận phản hồi từ server
 java.io.IOException: Kết nối đã bị đóng bởi server
 	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:88)
 	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
-	at java.base/java.lang.Thread.run(Thread.java:1583)
-2026-05-20 13:59:07 [Thread-1] ERROR c.nhom3.client.network.ServerHandler - Lỗi mất kết nối. Đang thử kết nối lại...
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+2026-05-20 13:27:05 [Thread-1] ERROR c.nhom3.client.network.ServerHandler - Lỗi mất kết nối. Đang thử kết nối lại...
 java.io.IOException: Lỗi khi nhận phản hồi từ server
 	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:94)
 	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
-	at java.base/java.lang.Thread.run(Thread.java:1583)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.io.IOException: Kết nối đã bị đóng bởi server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:88)
+	... 2 common frames omitted
+2026-05-20 13:35:06 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-20 13:35:06 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-20 13:35:09 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-20 13:35:09 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@40c654fc
+2026-05-20 13:35:09 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-20 13:35:09 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-20 13:35:17 [virtual-40] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-20 13:35:18 [virtual-40] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-20 13:35:18 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: false
+2026-05-20 13:35:24 [virtual-40] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-20 13:35:25 [virtual-40] INFO  c.nhom3.server.service.AuthService - Server: Pham Tien Dung đã đăng nhập thành công!
+2026-05-20 13:35:25 [virtual-40] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Admin[id=5, username=adminDung, fullName=Pham Tien Dung, email=admin1@gmail.com, phone=0000000000]
+2026-05-20 13:35:25 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-20 13:35:28 [JavaFX Application Thread] WARN  c.n.c.network.ClientPacketDispatcher - Loại gói tin không xác định: SUBSCRIBE_SYSTEM_LOGS
+2026-05-20 13:38:56 [Thread-1] ERROR c.n.client.network.ServerConnection - Lỗi khi nhận phản hồi từ server
+java.io.IOException: Kết nối đã bị đóng bởi server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:88)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+2026-05-20 13:38:56 [Thread-1] ERROR c.nhom3.client.network.ServerHandler - Lỗi mất kết nối. Đang thử kết nối lại...
+java.io.IOException: Lỗi khi nhận phản hồi từ server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:94)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.io.IOException: Kết nối đã bị đóng bởi server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:88)
+	... 2 common frames omitted
+2026-05-20 13:39:06 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-20 13:39:06 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-20 13:39:09 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-20 13:39:10 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@40c654fc
+2026-05-20 13:39:10 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-20 13:39:10 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-20 13:39:24 [virtual-40] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: adminDung
+2026-05-20 13:39:25 [virtual-40] INFO  c.nhom3.server.service.AuthService - Server: Pham Tien Dung đã đăng nhập thành công!
+2026-05-20 13:39:25 [virtual-40] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Admin[id=5, username=adminDung, fullName=Pham Tien Dung, email=admin1@gmail.com, phone=0000000000]
+2026-05-20 13:39:25 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-20 13:39:28 [JavaFX Application Thread] WARN  c.n.c.network.ClientPacketDispatcher - Loại gói tin không xác định: SUBSCRIBE_SYSTEM_LOGS
+2026-05-20 13:40:40 [Thread-1] ERROR c.n.client.network.ServerConnection - Lỗi khi nhận phản hồi từ server
+java.io.IOException: Kết nối đã bị đóng bởi server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:88)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+2026-05-20 13:40:40 [Thread-1] ERROR c.nhom3.client.network.ServerHandler - Lỗi mất kết nối. Đang thử kết nối lại...
+java.io.IOException: Lỗi khi nhận phản hồi từ server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:94)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
 Caused by: java.io.IOException: Kết nối đã bị đóng bởi server
 	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:88)
 	... 2 common frames omitted

@@ -314,9 +314,10 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public List<Auction> getAllAuctions() {
         List<Auction> list = new ArrayList<>();
-        String sql = "SELECT a.*, i.name, i.description, i.item_type, i.start_price, i.cur_highest " +
+        String sql = "SELECT a.*, i.name, i.description, i.item_type, i.start_price, i.cur_highest, u.full_name as seller_name " +
                 "FROM auctions a " +
                 "JOIN items i ON a.item_id = i.id " +
+                "JOIN users u ON i.seller_id = u.id " +
                 "ORDER BY a.id DESC";
 
         try (Connection conn = DbConnection.getConnection()) {
@@ -332,6 +333,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                             rs.getDouble("start_price"));
                     applyDescription(item, rs);
                     item.setCurHighest(rs.getDouble("cur_highest"));
+                    item.setSellerName(rs.getString("seller_name"));
                     int id = rs.getInt("id");
                     java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                     java.time.LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();

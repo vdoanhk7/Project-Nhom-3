@@ -266,7 +266,7 @@ public class AuctionDAOImpl implements AuctionDAO {
     public List<Auction> getActiveAuctions() {
         List<Auction> list = new ArrayList<>();
         // Lấy thêm tên người bán 
-        String sql = "SELECT a.*, i.name, i.description, i.item_type, i.start_price, i.cur_highest, i.image, u.full_name as seller_name " +
+        String sql = "SELECT a.*, i.name, i.description, i.item_type, i.start_price, i.cur_highest, u.full_name as seller_name " +
             "FROM auctions a " +
             "JOIN items i ON a.item_id = i.id " +
             "JOIN users u ON i.seller_id = u.id " +

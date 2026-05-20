@@ -1323,3 +1323,27 @@ Caused by: java.net.SocketException: Connection reset
 	at java.base/java.io.BufferedReader.readLine(Unknown Source)
 	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:86)
 	... 2 common frames omitted
+2026-05-20 13:58:03 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-20 13:58:03 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-20 13:58:05 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@241102ca
+2026-05-20 13:58:05 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-20 13:58:05 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-20 13:58:08 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-20 13:58:16 [virtual-32] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: d
+2026-05-20 13:58:17 [virtual-32] INFO  c.nhom3.server.service.AuthService - Server: feg đã đăng nhập thành công!
+2026-05-20 13:58:17 [virtual-32] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Bidder[id=9, username=d, fullName=feg, email=dsff@gmail.com, phone=0123456789]
+2026-05-20 13:58:17 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-20 13:59:07 [virtual-32] ERROR c.nhom3.server.network.ClientHandler - Client ngắt kết nối
+2026-05-20 13:59:07 [Thread-1] ERROR c.n.client.network.ServerConnection - Lỗi khi nhận phản hồi từ server
+java.io.IOException: Kết nối đã bị đóng bởi server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:88)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-05-20 13:59:07 [Thread-1] ERROR c.nhom3.client.network.ServerHandler - Lỗi mất kết nối. Đang thử kết nối lại...
+java.io.IOException: Lỗi khi nhận phản hồi từ server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:94)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.io.IOException: Kết nối đã bị đóng bởi server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:88)
+	... 2 common frames omitted

@@ -20,15 +20,20 @@ import com.nhom3.shared.network.payload.ItemActionPayload;
 import com.nhom3.shared.network.payload.ItemImagePayload;
 import com.nhom3.shared.network.payload.SellerIdPayload;
 import com.nhom3.shared.network.payload.SellerItemsResponsePayload;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -49,6 +54,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
@@ -60,7 +67,7 @@ public class ManageItemController {
     @FXML private ComboBox<String> cbCategory;
     @FXML private TableView<Item> tableItems;
     @FXML private TableColumn<Item, Integer> colId;
-    @FXML private TableColumn<Item, Void> colImage;
+    @FXML private TableColumn<Item, ImageCellState> colImage;
     @FXML private TableColumn<Item, String> colName;
     @FXML private TableColumn<Item, String> colType;
     @FXML private TableColumn<Item, Double> colStartPrice;
@@ -80,11 +87,22 @@ public class ManageItemController {
     private final ObservableList<Item> itemList = FXCollections.observableArrayList();
     private final Map<Integer, String> itemStatusMap = new HashMap<>();
     private final Map<Integer, Integer> itemHighestBidderMap = new HashMap<>();
-    private final Map<Integer, String> imageCache = new ConcurrentHashMap<>();
+    private final Map<Integer, String> imageBase64Cache = new ConcurrentHashMap<>();
+    private final Map<Integer, SimpleObjectProperty<ImageCellState>> imageStateProperties =
+            new ConcurrentHashMap<>();
     private final Set<Integer> requestedImageIds = ConcurrentHashMap.newKeySet();
-    private final Set<Integer> noImageIds = ConcurrentHashMap.newKeySet();
     private Item pendingDeleteItem;
     private Item pendingViewItem;
+
+    private static final class ImageCellState {
+        private final Image image;
+        private final boolean noImage;
+
+        private ImageCellState(Image image, boolean noImage) {
+            this.image = image;
+            this.noImage = noImage;
+        }
+    }
 
     @FXML
     public void initialize() {
@@ -129,24 +147,25 @@ public class ManageItemController {
         }
 
         List<Item> realItems = new java.util.ArrayList<>();
+        Set<Integer> currentItemIds = new HashSet<>();
         itemStatusMap.clear();
         itemHighestBidderMap.clear();
         requestedImageIds.clear();
-        imageCache.clear();
-        noImageIds.clear();
         for (SellerItemsResponsePayload.SellerItemDTO dto : dtoList) {
             ItemType type = ItemType.valueOf(dto.type);
             Item item = type.createItem(dto.id, dto.name, dto.startPrice);
             item.setDescription(dto.description);
             item.setCurHighest(dto.curHighest);
+            hydrateItemImageFromCache(item);
             realItems.add(item);
+            currentItemIds.add(dto.id);
             if (dto.status != null && !dto.status.isEmpty()) {
                 itemStatusMap.put(dto.id, dto.status);
             }
             itemHighestBidderMap.put(dto.id, dto.highestBidderId);
         }
+        pruneImageCache(currentItemIds);
         itemList.setAll(realItems);
-        tableItems.refresh();
     }
 
     private void handleSellerItemsLoaded(ClientEvents.SellerItemsLoaded event) {
@@ -160,22 +179,16 @@ public class ManageItemController {
 
         String imageBase64 = payload.getImageBase64();
         if (imageBase64 == null || imageBase64.isEmpty()) {
-            noImageIds.add(payload.getItemId());
-            tableItems.refresh();
+            requestedImageIds.remove(payload.getItemId());
+            imageBase64Cache.remove(payload.getItemId());
+            setImageState(payload.getItemId(), new ImageCellState(null, true));
             return;
         }
 
-        imageCache.put(payload.getItemId(), imageBase64);
-        for (Item item : itemList) {
-            if (item.getId() == payload.getItemId()) {
-                item.setImageBase64(imageBase64);
-                break;
-            }
-        }
-        if (pendingViewItem != null && pendingViewItem.getId() == payload.getItemId()) {
-            pendingViewItem.setImageBase64(imageBase64);
-        }
-        tableItems.refresh();
+        imageBase64Cache.put(payload.getItemId(), imageBase64);
+        setItemImageBase64(payload.getItemId(), imageBase64);
+
+        IMAGE_LOADER.submit(() -> decodeImage(payload.getItemId(), imageBase64));
     }
 
     private void handleItemImageLoaded(ClientEvents.ItemImageLoaded event) {
@@ -187,6 +200,7 @@ public class ManageItemController {
                 success ? "Thành công" : "Thất bại", message);
         if (success && pendingDeleteItem != null) {
             itemList.remove(pendingDeleteItem);
+            removeImageCache(pendingDeleteItem.getId());
         }
         pendingDeleteItem = null;
     }
@@ -225,6 +239,7 @@ public class ManageItemController {
     }
 
     private void handleSellerItemsChanged(ClientEvents.SellerItemsChanged event) {
+        clearImageLazyCache();
         loadSellerItems();
     }
 
@@ -238,32 +253,27 @@ public class ManageItemController {
             }
         });
         
+        colImage.setCellValueFactory(cellData -> {
+            Item item = cellData.getValue();
+            return item == null ? new SimpleObjectProperty<>() : imageStatePropertyFor(item.getId());
+        });
         colImage.setCellFactory(tc -> new TableCell<>() {
             @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getIndex() >= getTableView().getItems().size()) {
+            protected void updateItem(ImageCellState imageState, boolean empty) {
+                super.updateItem(imageState, empty);
+                Item currentItem = getTableRow() != null ? getTableRow().getItem() : null;
+                if (empty || currentItem == null) {
                     setGraphic(null);
                     return;
                 }
-                Item currentItem = getTableView().getItems().get(getIndex());
-                if (currentItem.getImageBase64() != null && !currentItem.getImageBase64().isEmpty()) {
-                    try {
-                        byte[] imageBytes = java.util.Base64.getDecoder().decode(currentItem.getImageBase64());
-                        javafx.scene.image.Image img = new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imageBytes));
-                        javafx.scene.image.ImageView imageView = new javafx.scene.image.ImageView(img);
-                        imageView.setFitWidth(ITEM_IMAGE_SIZE);
-                        imageView.setFitHeight(ITEM_IMAGE_SIZE);
-                        imageView.setPreserveRatio(true);
-                        setGraphic(imageView);
-                        setAlignment(javafx.geometry.Pos.CENTER);
-                    } catch (Exception e) {
-                        setGraphic(null);
-                    }
+
+                setAlignment(Pos.CENTER);
+                if (imageState != null && imageState.noImage) {
+                    setGraphic(createImagePlaceholder("No Image"));
+                } else if (imageState != null && imageState.image != null) {
+                    setGraphic(createImageView(imageState.image));
                 } else {
-                    setGraphic(createImagePlaceholder(
-                            noImageIds.contains(currentItem.getId()) ? "No Image" : "..."));
-                    setAlignment(Pos.CENTER);
+                    setGraphic(createImagePlaceholder("..."));
                     requestItemImage(currentItem.getId());
                 }
             }
@@ -298,8 +308,16 @@ public class ManageItemController {
         return placeholder;
     }
 
+    private ImageView createImageView(Image image) {
+        ImageView imageView = new ImageView(image);
+        imageView.setFitWidth(ITEM_IMAGE_SIZE);
+        imageView.setFitHeight(ITEM_IMAGE_SIZE);
+        imageView.setPreserveRatio(true);
+        return imageView;
+    }
+
     private void requestItemImage(int itemId) {
-        if (itemId <= 0 || imageCache.containsKey(itemId) || noImageIds.contains(itemId)
+        if (itemId <= 0 || isImageLoadedOrUnavailable(itemId)
                 || !requestedImageIds.add(itemId)) {
             return;
         }
@@ -313,6 +331,92 @@ public class ManageItemController {
                 e.printStackTrace();
             }
         });
+    }
+
+    private SimpleObjectProperty<ImageCellState> imageStatePropertyFor(int itemId) {
+        return imageStateProperties.computeIfAbsent(itemId, ignored -> new SimpleObjectProperty<>());
+    }
+
+    private boolean isImageLoadedOrUnavailable(int itemId) {
+        ImageCellState state = getImageState(itemId);
+        return imageBase64Cache.containsKey(itemId)
+                || (state != null && (state.image != null || state.noImage));
+    }
+
+    private ImageCellState getImageState(int itemId) {
+        SimpleObjectProperty<ImageCellState> property = imageStateProperties.get(itemId);
+        return property != null ? property.get() : null;
+    }
+
+    private void decodeImage(int itemId, String imageBase64) {
+        try {
+            byte[] imageBytes = Base64.getDecoder().decode(imageBase64);
+            Image image = new Image(new ByteArrayInputStream(
+                    imageBytes), ITEM_IMAGE_SIZE, ITEM_IMAGE_SIZE, true, true);
+            if (image.isError()) {
+                markImageUnavailable(itemId);
+                return;
+            }
+            setImageState(itemId, new ImageCellState(image, false));
+        } catch (Exception e) {
+            markImageUnavailable(itemId);
+            e.printStackTrace();
+        }
+    }
+
+    private void setImageState(int itemId, ImageCellState state) {
+        runOnFxThread(() -> imageStatePropertyFor(itemId).set(state));
+    }
+
+    private void markImageUnavailable(int itemId) {
+        requestedImageIds.remove(itemId);
+        imageBase64Cache.remove(itemId);
+        setImageState(itemId, new ImageCellState(null, true));
+    }
+
+    private void setItemImageBase64(int itemId, String imageBase64) {
+        for (Item item : itemList) {
+            if (item.getId() == itemId) {
+                item.setImageBase64(imageBase64);
+                break;
+            }
+        }
+        if (pendingViewItem != null && pendingViewItem.getId() == itemId) {
+            pendingViewItem.setImageBase64(imageBase64);
+        }
+    }
+
+    private void hydrateItemImageFromCache(Item item) {
+        String cachedImage = imageBase64Cache.get(item.getId());
+        if (cachedImage != null && !cachedImage.isEmpty()) {
+            item.setImageBase64(cachedImage);
+        }
+    }
+
+    private void pruneImageCache(Set<Integer> currentItemIds) {
+        imageBase64Cache.keySet().removeIf(itemId -> !currentItemIds.contains(itemId));
+        imageStateProperties.keySet().removeIf(itemId -> !currentItemIds.contains(itemId));
+        requestedImageIds.removeIf(itemId -> !currentItemIds.contains(itemId));
+    }
+
+    private void removeImageCache(int itemId) {
+        imageBase64Cache.remove(itemId);
+        imageStateProperties.remove(itemId);
+        requestedImageIds.remove(itemId);
+    }
+
+    private void clearImageLazyCache() {
+        imageBase64Cache.clear();
+        imageStateProperties.clear();
+        requestedImageIds.clear();
+    }
+
+    private void runOnFxThread(Runnable action) {
+        if (Platform.isFxApplicationThread()) {
+            action.run();
+        } else {
+            Platform.runLater(action);
+        }
     }
 
     private void setupSearchAndFilter() {
@@ -447,6 +551,7 @@ public class ManageItemController {
     }
 
     private void handlePublish(Item item) {
+        hydrateItemImageFromCache(item);
         try {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/com/nhom3/client/view/publish_auction.fxml"));
@@ -470,6 +575,7 @@ public class ManageItemController {
     }
 
     private void handleEdit(Item item) {
+        hydrateItemImageFromCache(item);
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/add_item.fxml"));
             Parent root = loader.load();
@@ -512,6 +618,7 @@ public class ManageItemController {
     }
 
     private void handleViewDetail(Item item) {
+        hydrateItemImageFromCache(item);
         pendingViewItem = item;
         if (item.getImageBase64() == null || item.getImageBase64().isEmpty()) {
             requestItemImage(item.getId());

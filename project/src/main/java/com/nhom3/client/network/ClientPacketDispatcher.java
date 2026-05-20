@@ -3,6 +3,7 @@ package com.nhom3.client.network;
 import com.google.gson.Gson;
 import com.nhom3.client.event.ClientEventBus;
 import com.nhom3.client.event.ClientEvents;
+import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.user.Admin;
 import com.nhom3.shared.model.user.Bidder;
 import com.nhom3.shared.model.user.Seller;
@@ -51,8 +52,12 @@ public class ClientPacketDispatcher {
         handlers.put(PacketType.UPDATE_ITEM, this::handleItemMutation);
         handlers.put(PacketType.DELETE_ITEM, this::handleDeleteItem);
         handlers.put(PacketType.CONFIRM_PAYMENT, this::handleConfirmPayment);
+        handlers.put(PacketType.CANCEL_TRANSACTION, this::handleCancelTransaction);
+        handlers.put(PacketType.RATE_SELLER, this::handleRateSeller);
         handlers.put(PacketType.CANCEL_AUCTION, this::handleCancelAuction);
+        handlers.put(PacketType.LOAD_PROFILE, this::handleLoadProfile);
         handlers.put(PacketType.UPDATE_PROFILE, this::handleUpdateProfile);
+        handlers.put(PacketType.REPUTATION_UPDATED, this::handleReputationUpdated);
         handlers.put(PacketType.CHANGE_PASSWORD, this::handleChangePassword);
         handlers.put(PacketType.LOAD_USERS, this::handleLoadUsers);
         handlers.put(PacketType.PUBLISH_AUCTION, this::handlePublishAuction);
@@ -96,11 +101,14 @@ public class ClientPacketDispatcher {
         UserInfo info = new UserInfo(loginResult.getUsername(), "", loginResult.getFullName());
         info.setProfileImageBase64(loginResult.getProfileImageBase64());
         UserContact contact = new UserContact(loginResult.getEmail(), loginResult.getPhone());
-        return switch (loginResult.getRole()) {
+        User user = switch (loginResult.getRole()) {
             case "BIDDER" -> new Bidder(loginResult.getUserId(), info, contact);
             case "SELLER" -> new Seller(loginResult.getUserId(), info, contact);
             default -> new Admin(loginResult.getUserId(), info, contact);
         };
+        user.setReputationScore(loginResult.getReputationScore());
+        user.setSellerRatingSummary(loginResult.getSellerRatingAverage(), loginResult.getSellerRatingCount());
+        return user;
     }
 
     private void handleRegister(Packet response, Gson gson) {
@@ -161,14 +169,39 @@ public class ClientPacketDispatcher {
         eventBus.publish(new ClientEvents.ConfirmPaymentResult(result.getResult(), result.getMessage()));
     }
 
+    private void handleCancelTransaction(Packet response, Gson gson) {
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        updateLoggedInUserReputation(result);
+        eventBus.publish(new ClientEvents.CancelTransactionResult(result.getResult(), result.getMessage()));
+    }
+
+    private void handleRateSeller(Packet response, Gson gson) {
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        eventBus.publish(new ClientEvents.SellerRatingResult(result.getResult(), result.getMessage()));
+    }
+
     private void handleCancelAuction(Packet response, Gson gson) {
         ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
         eventBus.publish(new ClientEvents.CancelAuctionResult(result.getResult(), result.getMessage()));
     }
 
+    private void handleLoadProfile(Packet response, Gson gson) {
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        if (result.getResult()) {
+            UserSession.getInstance().setLoggedInUser(toUser(result));
+            eventBus.publish(new ClientEvents.UserProfileChanged());
+        }
+        eventBus.publish(new ClientEvents.CurrentUserLoaded(result));
+    }
+
     private void handleUpdateProfile(Packet response, Gson gson) {
         ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
         eventBus.publish(new ClientEvents.ProfileUpdateResult(result));
+    }
+
+    private void handleReputationUpdated(Packet response, Gson gson) {
+        ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
+        updateLoggedInUserReputation(result);
     }
 
     private void handleChangePassword(Packet response, Gson gson) {
@@ -239,5 +272,19 @@ public class ClientPacketDispatcher {
     private void handleSystemLogsResponse(Packet response, Gson gson) {
         SystemLogResponsePayload payload = gson.fromJson(response.getPayload(), SystemLogResponsePayload.class);
         eventBus.publish(new ClientEvents.SystemLogsLoaded(payload.getLogs(), payload.isAppend()));
+    }
+
+    private void updateLoggedInUserReputation(ResultPayload result) {
+        if (result == null || !result.getResult() || result.getUserId() <= 0) {
+            return;
+        }
+
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        if (currentUser == null || currentUser.getId() != result.getUserId()) {
+            return;
+        }
+
+        currentUser.setReputationScore(result.getReputationScore());
+        eventBus.publish(new ClientEvents.UserProfileChanged());
     }
 }

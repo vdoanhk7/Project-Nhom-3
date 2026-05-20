@@ -498,9 +498,11 @@ public class ManageItemController {
                     lblPaidStatus.setVisible(true);
                     lblPaidStatus.setManaged(true);
                     showButtons(btnView);
+                } else if ("DEAL_CANCELLED".equals(status)) {
+                    showButtons(btnView, btnRelist);
                 } else if ("FINISHED".equals(status)) {
                     if (hasHighestBidder(currentItem)) {
-                        showButtons(btnView, btnConfirmPaid);
+                        showButtons(btnView, btnConfirmPaid, btnRelist);
                     } else {
                         showButtons(btnView, btnRelist);
                     }
@@ -571,6 +573,16 @@ public class ManageItemController {
     }
 
     private void handleRelist(Item item) {
+        if ("FINISHED".equals(getAuctionStatus(item)) && hasHighestBidder(item)) {
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                    "Nếu giao dịch đã quá hạn thanh toán 2 ngày, hệ thống sẽ hủy giao dịch cũ và trừ 60 điểm uy tín của bidder.\nBạn muốn tiếp tục đăng bán lại sản phẩm này?",
+                    ButtonType.YES, ButtonType.NO);
+            DialogUtils.initOwner(confirm, tableItems);
+            confirm.setHeaderText(null);
+            if (confirm.showAndWait().orElse(ButtonType.NO) != ButtonType.YES) {
+                return;
+            }
+        }
         handlePublish(item);
     }
 

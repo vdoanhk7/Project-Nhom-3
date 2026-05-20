@@ -183,7 +183,9 @@ public class MarketController {
         item.setDescription(dto.itemDescription);
         item.setCurHighest(dto.curHighest);
         item.setImageBase64(imageCache.getOrDefault(dto.itemId, dto.imageBase64));
+        item.setSellerId(dto.sellerId);
         item.setSellerName(dto.sellerName); // Lấy tên người bán từ Server
+        item.setSellerRatingSummary(dto.sellerRatingAverage, dto.sellerRatingCount);
         
         Auction auction = new Auction(
                 dto.auctionId,
@@ -321,7 +323,7 @@ public class MarketController {
         
         // Hiển thị tên người bán
         String sellerStr = item.getSellerName() != null && !item.getSellerName().isEmpty() ? item.getSellerName() : "Ẩn danh";
-        Label lblSeller = new Label("👤 " + sellerStr);
+        Label lblSeller = new Label("👤 " + sellerStr + " · " + formatSellerRating(item));
         lblSeller.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 12px; -fx-font-style: italic;");
 
         VBox priceBox = new VBox(2);
@@ -402,6 +404,13 @@ public class MarketController {
             return " Vào Đấu Giá ";
         }
         return " Xem Phiên Đấu Giá ";
+    }
+
+    private String formatSellerRating(Item item) {
+        if (item == null || item.getSellerRatingCount() <= 0) {
+            return "★ 0.0 (0)";
+        }
+        return String.format("★ %.1f (%d)", item.getSellerRatingAverage(), item.getSellerRatingCount());
     }
 
     public void openItemDetail(Item item, Auction auction, Runnable onWindowClosed) {

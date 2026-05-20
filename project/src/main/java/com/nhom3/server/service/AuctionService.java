@@ -31,6 +31,10 @@ public class AuctionService {
     }
     
     public boolean createAuction(Auction auction) throws InvalidAuctionException, AuctionConflictException {
+        return createAuction(auction, -1);
+    }
+
+    public boolean createAuction(Auction auction, int sellerId) throws InvalidAuctionException, AuctionConflictException {
 
         if (auction == null) {
             throw new InvalidAuctionException("AUCTION_INVALID_DATA", "Dữ liệu không hợp lệ!");
@@ -63,11 +67,16 @@ public class AuctionService {
                         "Sản phẩm này đang có một phiên đấu giá chưa kết thúc!");
             }
             if (currentStatus == StatusOfAuction.FINISHED && existingAuction.getHighestBidderId() > 0) {
-                log.warn("Từ chối đăng bán lại: Sản phẩm ID {} đã có người thắng ở phiên gần nhất.",
-                        auction.getItem().getId());
-                throw new AuctionConflictException(
-                        "AUCTION_FINISHED_HAS_WINNER",
-                        "Phiên đấu giá đã có người thắng, vui lòng xác nhận thanh toán thay vì đăng bán lại!");
+                boolean cancelledForRelist = sellerId > 0
+                        && auctionDAO.cancelLatestUnpaidAuctionForRelist(auction.getItem().getId(), sellerId);
+                if (!cancelledForRelist) {
+                    log.warn("Từ chối đăng bán lại: Sản phẩm ID {} đã có người thắng ở phiên gần nhất.",
+                            auction.getItem().getId());
+                    throw new AuctionConflictException(
+                            "AUCTION_FINISHED_HAS_WINNER",
+                            "Phiên đấu giá đã có người thắng. Chỉ được đăng bán lại sau 2 ngày quá hạn thanh toán.");
+                }
+                log.info("Đã hủy giao dịch quá hạn để đăng bán lại sản phẩm ID {}.", auction.getItem().getId());
             }
             if (currentStatus == StatusOfAuction.PAID) {
                 log.warn("Từ chối đăng bán lại: Sản phẩm ID {} đã được xác nhận thanh toán.",
@@ -104,7 +113,9 @@ public class AuctionService {
         if (auction.getStatus() == StatusOfAuction.RUNNING) {
             log.info("Phiên đấu giá đang chạy.");
             return false;
-        } else if (auction.getStatus() == StatusOfAuction.FINISHED || auction.getStatus() == StatusOfAuction.PAID) {
+        } else if (auction.getStatus() == StatusOfAuction.FINISHED
+                || auction.getStatus() == StatusOfAuction.PAID
+                || auction.getStatus() == StatusOfAuction.DEAL_CANCELLED) {
             log.info("Phiên đấu giá đã kết thúc.");
             return false;
         } else if (auction.getStatus() == StatusOfAuction.CANCELLED) {
@@ -129,7 +140,9 @@ public class AuctionService {
         if (auction.getStatus() == StatusOfAuction.OPEN) {
             log.info("Phiên đấu giá chưa bắt đầu.");
             return false;
-        } else if (auction.getStatus() == StatusOfAuction.FINISHED || auction.getStatus() == StatusOfAuction.PAID) {
+        } else if (auction.getStatus() == StatusOfAuction.FINISHED
+                || auction.getStatus() == StatusOfAuction.PAID
+                || auction.getStatus() == StatusOfAuction.DEAL_CANCELLED) {
             log.info("Phiên đấu giá đã kết thúc.");
             return false;
         } else if (auction.getStatus() == StatusOfAuction.CANCELLED) {
@@ -183,11 +196,19 @@ public class AuctionService {
         if (auction.getStatus() == StatusOfAuction.CANCELLED) {
             throw new BidRejectedException("BID_AUCTION_CANCELLED", "Phiên đấu giá đã bị hủy!");
         }
+        if (auction.getStatus() == StatusOfAuction.DEAL_CANCELLED) {
+            throw new BidRejectedException("BID_DEAL_CANCELLED", "Giao dịch của phiên đấu giá này đã bị hủy!");
+        }
         if (now.isBefore(auction.getStartTime())) {
             throw new BidRejectedException("BID_AUCTION_NOT_STARTED", "Phiên đấu giá chưa bắt đầu!");
         }
         if (now.isAfter(auction.getEndTime())) {
             throw new BidRejectedException("BID_AUCTION_ENDED", "Phiên đấu giá đã kết thúc!");
+        }
+        if (auctionDAO.getBidderReputation(bid.getBidder().getId()) <= 0) {
+            throw new BidRejectedException(
+                    "BIDDER_REPUTATION_ZERO",
+                    "Uy tín của bạn đã về 0, bạn không thể tham gia đấu giá.");
         }
         
         if (!allowHighestBidder && bid.getBidder().getId() == auction.getHighestBidderId()) {
@@ -234,6 +255,7 @@ public class AuctionService {
         StatusOfAuction dbStatus = auction.getStatus();
         if (dbStatus == StatusOfAuction.PAID
                 || dbStatus == StatusOfAuction.CANCELLED
+                || dbStatus == StatusOfAuction.DEAL_CANCELLED
                 || dbStatus == StatusOfAuction.FINISHED) {
             return dbStatus;
         }

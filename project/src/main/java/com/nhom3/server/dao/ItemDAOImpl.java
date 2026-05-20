@@ -90,7 +90,7 @@ public class ItemDAOImpl implements ItemDAO {
                 + "a.highest_bidder_id, "
                 + "CASE "
                 + "  WHEN a.id IS NULL THEN '' "
-                + "  WHEN a.status IN ('PAID', 'CANCELLED', 'FINISHED') THEN a.status "
+                + "  WHEN a.status IN ('PAID', 'CANCELLED', 'DEAL_CANCELLED', 'FINISHED') THEN a.status "
                 + "  WHEN ? < a.start_time THEN 'OPEN' "
                 + "  WHEN ? >= a.end_time THEN 'FINISHED' "
                 + "  ELSE 'RUNNING' "

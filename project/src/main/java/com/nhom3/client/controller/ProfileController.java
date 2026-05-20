@@ -12,6 +12,7 @@ import com.nhom3.shared.model.user.User;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
 import com.nhom3.shared.network.payload.ResultPayload;
+import com.nhom3.shared.network.payload.UserIdPayload;
 import com.nhom3.shared.network.payload.UserProfilePayload;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -41,10 +42,12 @@ public class ProfileController {
     @FXML private TextField txtEmail;
     @FXML private TextField txtPhone;
     @FXML private TextField txtRole;
+    @FXML private TextField txtReputation;
     @FXML private Button btnEditSave;
     @FXML private Button btnCancel;
     @FXML private Label lblUsername;
     @FXML private Label lblAvatarInitial;
+    @FXML private Label lblSellerRating;
     @FXML private ImageView imgAvatar;
 
     private boolean editMode;
@@ -55,9 +58,14 @@ public class ProfileController {
     public void initialize() {
         ClientEventBus.getDefault().subscribe(
                 ClientEvents.ProfileUpdateResult.class, this, ProfileController::handleProfileUpdateEvent);
+        ClientEventBus.getDefault().subscribe(
+                ClientEvents.CurrentUserLoaded.class, this, ProfileController::handleCurrentUserLoaded);
+        ClientEventBus.getDefault().subscribe(
+                ClientEvents.UserProfileChanged.class, this, ProfileController::handleUserProfileChanged);
         ControllerLifecycle.unsubscribeOnDetach(txtName, this);
         setupAvatarClip();
         loadUserToForm();
+        requestLatestProfile();
         txtPhone.textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.matches("\\d*")) {
                 txtPhone.setText(newValue.replaceAll("[^\\d]", ""));
@@ -155,6 +163,16 @@ public class ProfileController {
         handleUpdateProfileResult(event.result());
     }
 
+    private void handleCurrentUserLoaded(ClientEvents.CurrentUserLoaded event) {
+        if (event.result().getResult()) {
+            loadUserToForm();
+        }
+    }
+
+    private void handleUserProfileChanged(ClientEvents.UserProfileChanged event) {
+        loadUserToForm();
+    }
+
     private void sendUpdateProfileRequest() {
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (currentUser == null) {
@@ -201,6 +219,20 @@ public class ProfileController {
         }
     }
 
+    private void requestLatestProfile() {
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        if (currentUser == null) {
+            return;
+        }
+
+        try {
+            ServerConnection.getInstance().sendMessage(
+                    new Packet(PacketType.LOAD_PROFILE, new UserIdPayload(currentUser.getId())));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void loadUserToForm() {
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (currentUser == null) {
@@ -222,6 +254,25 @@ public class ProfileController {
         } else {
             txtRole.setText("Bidder");
         }
+        if (txtReputation != null) {
+            txtReputation.setText(currentUser instanceof com.nhom3.shared.model.user.Bidder
+                    ? currentUser.getReputationScore() + " / 100"
+                    : "Không áp dụng");
+        }
+        if (lblSellerRating != null) {
+            boolean isSeller = currentUser instanceof Seller;
+            lblSellerRating.setVisible(isSeller);
+            lblSellerRating.setManaged(isSeller);
+            if (isSeller) {
+                lblSellerRating.setText(formatSellerRating(currentUser));
+            }
+        }
+    }
+
+    private String formatSellerRating(User user) {
+        int count = user != null ? user.getSellerRatingCount() : 0;
+        double average = user != null ? user.getSellerRatingAverage() : 0;
+        return String.format("★ %.1f / 5 (%d đánh giá)", average, count);
     }
 
     private void setFieldsEditable(boolean value) {

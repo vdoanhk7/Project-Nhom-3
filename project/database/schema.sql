@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100),
     phone VARCHAR(20),
     profile_image MEDIUMTEXT NULL,
+    reputation_score INT NOT NULL DEFAULT 100,
     role VARCHAR(20) NOT NULL COMMENT 'ADMIN, SELLER, BIDDER',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -32,8 +33,9 @@ CREATE TABLE IF NOT EXISTS auctions (
     start_time DATETIME NOT NULL,
     end_time DATETIME NOT NULL,
     bid_step DOUBLE NOT NULL DEFAULT 50000,
-    status VARCHAR(20) NOT NULL DEFAULT 'OPEN' COMMENT 'OPEN, RUNNING, FINISHED, PAID, CANCELLED',
+    status VARCHAR(20) NOT NULL DEFAULT 'OPEN' COMMENT 'OPEN, RUNNING, FINISHED, PAID, CANCELLED, DEAL_CANCELLED',
     highest_bidder_id INT,
+    reputation_penalty INT NOT NULL DEFAULT 0,
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
     FOREIGN KEY (highest_bidder_id) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -59,6 +61,19 @@ CREATE TABLE IF NOT EXISTS auto_bids (
     FOREIGN KEY (bidder_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE,
     UNIQUE KEY unique_auto_bid (bidder_id, auction_id)
+);
+
+CREATE TABLE IF NOT EXISTS seller_ratings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    auction_id INT NOT NULL,
+    buyer_id INT NOT NULL,
+    seller_id INT NOT NULL,
+    stars INT NOT NULL COMMENT '0..5',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_seller_rating_per_auction_buyer (auction_id, buyer_id),
+    FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE,
+    FOREIGN KEY (buyer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS activity_logs (

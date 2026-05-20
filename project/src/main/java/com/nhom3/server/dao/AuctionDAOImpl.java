@@ -12,9 +12,11 @@ import com.nhom3.shared.model.item.Item;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,25 +27,36 @@ import org.slf4j.Logger;
 public class AuctionDAOImpl implements AuctionDAO {
     private static final Logger log = LoggerFactory.getLogger(AuctionDAOImpl.class);
     private static final int DASHBOARD_TOP_LIMIT = 5;
+    private static final int PAYMENT_GRACE_DAYS = 2;
+    private static final int LATE_PENALTY_PER_DAY = 15;
+    private static final int MAX_TRANSACTION_PENALTY = 60;
+    private static final int PAYMENT_REWARD = 5;
+    private static final String AUCTION_REPUTATION_PENALTY_COLUMN = "reputation_penalty";
+    private static final String SELLER_RATINGS_TABLE = "seller_ratings";
 
     @Override
     public boolean updateHighestBid(int auctionId, int bidderId, double newAmount) {
         String sql = "UPDATE items i " +
                 "JOIN auctions a ON i.id = a.item_id " +
+                "JOIN users u ON u.id = ? " +
                 "SET i.cur_highest = ? " +
                 "WHERE a.id = ? " +
                 "AND ? >= i.cur_highest + a.bid_step " +
-                "AND a.status = 'RUNNING'";
+                "AND a.status = 'RUNNING' " +
+                "AND u.role = 'BIDDER' " +
+                "AND u.reputation_score > 0";
 
         String sqlAuction = "UPDATE auctions SET highest_bidder_id = ? WHERE id = ?";
 
         try (Connection conn = DbConnection.getConnection()) {
+            UserDAOImpl.ensureReputationColumn(conn);
             conn.setAutoCommit(false);
             try {
                 try (PreparedStatement stmt1 = conn.prepareStatement(sql)) {
-                    stmt1.setDouble(1, newAmount);
-                    stmt1.setInt(2, auctionId);
-                    stmt1.setDouble(3, newAmount);
+                    stmt1.setInt(1, bidderId);
+                    stmt1.setDouble(2, newAmount);
+                    stmt1.setInt(3, auctionId);
+                    stmt1.setDouble(4, newAmount);
 
                     int rowsUpdated = stmt1.executeUpdate();
                     if (rowsUpdated == 0) {
@@ -115,11 +128,75 @@ public class AuctionDAOImpl implements AuctionDAO {
     }
 
     @Override
+    public Map<Integer, Integer> applyOverduePaymentPenalties(Timestamp currentTime) {
+        Map<Integer, Integer> changedReputations = new HashMap<>();
+        String sql = "SELECT id, highest_bidder_id, end_time, reputation_penalty "
+                + "FROM auctions "
+                + "WHERE status = 'FINISHED' "
+                + "AND highest_bidder_id IS NOT NULL";
+
+        try (Connection conn = DbConnection.getConnection()) {
+            UserDAOImpl.ensureReputationColumn(conn);
+            ensureAuctionReputationPenaltyColumn(conn);
+
+            List<PenaltyCandidate> candidates = new ArrayList<>();
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                    ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    candidates.add(new PenaltyCandidate(
+                            rs.getInt("id"),
+                            rs.getInt("highest_bidder_id"),
+                            rs.getTimestamp("end_time").toLocalDateTime(),
+                            rs.getInt(AUCTION_REPUTATION_PENALTY_COLUMN)));
+                }
+            }
+
+            LocalDateTime now = currentTime.toLocalDateTime();
+            for (PenaltyCandidate candidate : candidates) {
+                int targetPenalty = calculateLatePaymentPenalty(candidate.endTime(), now);
+                if (targetPenalty <= candidate.currentPenalty()) {
+                    continue;
+                }
+
+                conn.setAutoCommit(false);
+                try {
+                    applyReputationPenalty(
+                            conn,
+                            candidate.auctionId(),
+                            candidate.bidderId(),
+                            candidate.currentPenalty(),
+                            targetPenalty,
+                            targetPenalty >= MAX_TRANSACTION_PENALTY);
+                    conn.commit();
+                    changedReputations.put(candidate.bidderId(), getBidderReputation(candidate.bidderId()));
+                } catch (Exception e) {
+                    conn.rollback();
+                    throw e;
+                } finally {
+                    conn.setAutoCommit(true);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return changedReputations;
+    }
+
+    @Override
     public boolean createAuction(Auction auction) {
         String sql = "INSERT INTO auctions (item_id, start_time, end_time, bid_step, status) VALUES (?, ?, ?, ?, ?)";
+        String resetPriceSql = "UPDATE items SET cur_highest = start_price WHERE id = ?";
 
-        try (Connection conn = DbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DbConnection.getConnection()) {
+            ensureAuctionReputationPenaltyColumn(conn);
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement resetStmt = conn.prepareStatement(resetPriceSql)) {
+                resetStmt.setInt(1, auction.getItem().getId());
+                resetStmt.executeUpdate();
+            }
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, auction.getItem().getId());
             stmt.setTimestamp(2, Timestamp.valueOf(auction.getStartTime()));
@@ -136,7 +213,10 @@ public class AuctionDAOImpl implements AuctionDAO {
                         auction.setId(generatedKeys.getInt(1));
                     }
                 }
+                conn.commit();
                 return true;
+            }
+            conn.rollback();
             }
         } catch (Exception e) {
             log.error("Lỗi SQL khi insert phiên đấu giá mới cho Item ID: {}", auction.getItem().getId(), e);
@@ -149,7 +229,7 @@ public class AuctionDAOImpl implements AuctionDAO {
         Map<Integer, String> statusMap = new HashMap<>();
         String sql = "SELECT a.item_id, " +
                 "CASE " +
-                "   WHEN a.status IN ('PAID', 'CANCELLED') THEN a.status " +
+                "   WHEN a.status IN ('PAID', 'CANCELLED', 'DEAL_CANCELLED') THEN a.status " +
                 "   WHEN ? >= a.end_time THEN 'FINISHED' " +
                 "   WHEN ? >= a.start_time THEN 'RUNNING' " +
                 "   ELSE 'OPEN' " +
@@ -178,13 +258,21 @@ public class AuctionDAOImpl implements AuctionDAO {
     public Auction getAuctionByItemId(int itemId) {
         // Lấy phiên đấu giá mới nhất của sản phẩm này
         String sql = "SELECT a.*, i.id AS item_id, i.name AS item_name, i.description, i.item_type, "
-                + "i.start_price, i.cur_highest "
+                + "i.start_price, i.cur_highest, i.seller_id, u.full_name AS seller_name, "
+                + "COALESCE(sr.seller_rating_avg, 0) AS seller_rating_avg, "
+                + "COALESCE(sr.seller_rating_count, 0) AS seller_rating_count "
                 + "FROM auctions a "
                 + "JOIN items i ON a.item_id = i.id "
+                + "JOIN users u ON i.seller_id = u.id "
+                + "LEFT JOIN ("
+                + "    SELECT seller_id, AVG(stars) AS seller_rating_avg, COUNT(*) AS seller_rating_count "
+                + "    FROM seller_ratings GROUP BY seller_id"
+                + ") sr ON sr.seller_id = i.seller_id "
                 + "WHERE a.item_id = ? ORDER BY a.id DESC LIMIT 1";
 
         try (Connection conn = DbConnection.getConnection()) {
             ensureDescriptionColumn(conn);
+            ensureSellerRatingsTable(conn);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, itemId);
             ResultSet rs = stmt.executeQuery();
@@ -198,6 +286,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                         rs.getDouble("start_price"));
                 applyDescription(item, rs);
                 item.setCurHighest(rs.getDouble("cur_highest"));
+                applySellerInfo(item, rs);
                 java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                 java.time.LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
                 // Khởi tạo Auction (Truyền null cho thuộc tính Item để tránh query vòng lặp, vì
@@ -220,16 +309,206 @@ public class AuctionDAOImpl implements AuctionDAO {
 
     @Override
     public boolean confirmPayment(int auctionId, int sellerId) {
-        String sql = "UPDATE auctions SET status = 'PAID' " +
+        String selectSql = "SELECT highest_bidder_id, end_time, reputation_penalty FROM auctions " +
                 "WHERE id = ? " +
                 "AND highest_bidder_id IS NOT NULL " +
                 "AND (status = 'FINISHED' OR (status = 'RUNNING' AND end_time <= CURRENT_TIMESTAMP)) " +
                 "AND EXISTS (SELECT 1 FROM items WHERE items.id = auctions.item_id AND seller_id = ?)";
-        try (Connection conn = DbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, auctionId);
-            stmt.setInt(2, sellerId);
-            return stmt.executeUpdate() > 0;
+        String updateAuctionSql = "UPDATE auctions SET status = 'PAID' WHERE id = ?";
+        String rewardSql = "UPDATE users SET reputation_score = "
+                + "CASE WHEN reputation_score + ? > 100 THEN 100 ELSE reputation_score + ? END "
+                + "WHERE id = ?";
+
+        try (Connection conn = DbConnection.getConnection()) {
+            UserDAOImpl.ensureReputationColumn(conn);
+            ensureAuctionReputationPenaltyColumn(conn);
+            conn.setAutoCommit(false);
+
+            int bidderId;
+            int currentPenalty;
+            LocalDateTime endTime;
+            try (PreparedStatement stmt = conn.prepareStatement(selectSql)) {
+                stmt.setInt(1, auctionId);
+                stmt.setInt(2, sellerId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (!rs.next()) {
+                        conn.rollback();
+                        return false;
+                    }
+                    bidderId = rs.getInt("highest_bidder_id");
+                    endTime = rs.getTimestamp("end_time").toLocalDateTime();
+                    currentPenalty = rs.getInt(AUCTION_REPUTATION_PENALTY_COLUMN);
+                }
+            }
+
+            int targetPenalty = calculateLatePaymentPenalty(endTime, LocalDateTime.now());
+            if (targetPenalty >= MAX_TRANSACTION_PENALTY) {
+                applyReputationPenalty(
+                        conn, auctionId, bidderId, currentPenalty, MAX_TRANSACTION_PENALTY, true);
+                conn.commit();
+                return false;
+            }
+            if (targetPenalty > currentPenalty) {
+                applyReputationPenalty(conn, auctionId, bidderId, currentPenalty, targetPenalty, false);
+            }
+
+            try (PreparedStatement stmt = conn.prepareStatement(updateAuctionSql)) {
+                stmt.setInt(1, auctionId);
+                if (stmt.executeUpdate() == 0) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            try (PreparedStatement stmt = conn.prepareStatement(rewardSql)) {
+                stmt.setInt(1, PAYMENT_REWARD);
+                stmt.setInt(2, PAYMENT_REWARD);
+                stmt.setInt(3, bidderId);
+                stmt.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean rateSeller(int auctionId, int buyerId, int stars) {
+        if (auctionId <= 0 || buyerId <= 0 || stars < 0 || stars > 5) {
+            return false;
+        }
+
+        String sql = "INSERT INTO seller_ratings (auction_id, buyer_id, seller_id, stars) "
+                + "SELECT a.id, ?, i.seller_id, ? "
+                + "FROM auctions a "
+                + "JOIN items i ON a.item_id = i.id "
+                + "WHERE a.id = ? "
+                + "AND a.status = 'PAID' "
+                + "AND a.highest_bidder_id = ? "
+                + "AND i.seller_id <> ?";
+
+        try (Connection conn = DbConnection.getConnection()) {
+            ensureSellerRatingsTable(conn);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, buyerId);
+                stmt.setInt(2, stars);
+                stmt.setInt(3, auctionId);
+                stmt.setInt(4, buyerId);
+                stmt.setInt(5, buyerId);
+                return stmt.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            if (e.getErrorCode() == 1062 || "23505".equals(e.getSQLState())) {
+                return false;
+            }
+            log.warn("Không thể lưu đánh giá seller cho auction {} từ buyer {}: {}",
+                    auctionId, buyerId, e.getMessage());
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public int getBidderReputation(int bidderId) {
+        String sql = "SELECT reputation_score FROM users WHERE id = ? AND role = 'BIDDER'";
+        try (Connection conn = DbConnection.getConnection()) {
+            UserDAOImpl.ensureReputationColumn(conn);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, bidderId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt("reputation_score");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean cancelTransactionByBidder(int auctionId, int bidderId) {
+        String sql = "SELECT reputation_penalty FROM auctions "
+                + "WHERE id = ? "
+                + "AND highest_bidder_id = ? "
+                + "AND (status = 'FINISHED' OR (status = 'RUNNING' AND end_time <= CURRENT_TIMESTAMP))";
+
+        try (Connection conn = DbConnection.getConnection()) {
+            UserDAOImpl.ensureReputationColumn(conn);
+            ensureAuctionReputationPenaltyColumn(conn);
+            conn.setAutoCommit(false);
+
+            int currentPenalty;
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, auctionId);
+                stmt.setInt(2, bidderId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (!rs.next()) {
+                        conn.rollback();
+                        return false;
+                    }
+                    currentPenalty = rs.getInt(AUCTION_REPUTATION_PENALTY_COLUMN);
+                }
+            }
+
+            applyReputationPenalty(conn, auctionId, bidderId, currentPenalty, MAX_TRANSACTION_PENALTY, true);
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean cancelLatestUnpaidAuctionForRelist(int itemId, int sellerId) {
+        String sql = "SELECT a.id, a.end_time, a.highest_bidder_id, a.reputation_penalty "
+                + "FROM auctions a "
+                + "JOIN items i ON a.item_id = i.id "
+                + "WHERE a.item_id = ? "
+                + "AND i.seller_id = ? "
+                + "AND a.highest_bidder_id IS NOT NULL "
+                + "AND (a.status = 'FINISHED' OR (a.status = 'RUNNING' AND a.end_time <= CURRENT_TIMESTAMP)) "
+                + "ORDER BY a.id DESC LIMIT 1";
+
+        try (Connection conn = DbConnection.getConnection()) {
+            UserDAOImpl.ensureReputationColumn(conn);
+            ensureAuctionReputationPenaltyColumn(conn);
+            conn.setAutoCommit(false);
+
+            int auctionId;
+            int bidderId;
+            int currentPenalty;
+            LocalDateTime endTime;
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, itemId);
+                stmt.setInt(2, sellerId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (!rs.next()) {
+                        conn.rollback();
+                        return false;
+                    }
+                    auctionId = rs.getInt("id");
+                    endTime = rs.getTimestamp("end_time").toLocalDateTime();
+                    bidderId = rs.getInt("highest_bidder_id");
+                    currentPenalty = rs.getInt(AUCTION_REPUTATION_PENALTY_COLUMN);
+                }
+            }
+
+            if (LocalDateTime.now().isBefore(endTime.plusDays(PAYMENT_GRACE_DAYS))) {
+                conn.rollback();
+                return false;
+            }
+
+            applyReputationPenalty(conn, auctionId, bidderId, currentPenalty, MAX_TRANSACTION_PENALTY, true);
+            conn.commit();
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -266,15 +545,23 @@ public class AuctionDAOImpl implements AuctionDAO {
     public List<Auction> getActiveAuctions() {
         List<Auction> list = new ArrayList<>();
         // Lấy thêm tên người bán 
-        String sql = "SELECT a.*, i.name, i.description, i.item_type, i.start_price, i.cur_highest, u.full_name as seller_name " +
+        String sql = "SELECT a.*, i.seller_id, i.name, i.description, i.item_type, i.start_price, i.cur_highest, "
+                + "u.full_name AS seller_name, "
+                + "COALESCE(sr.seller_rating_avg, 0) AS seller_rating_avg, "
+                + "COALESCE(sr.seller_rating_count, 0) AS seller_rating_count " +
             "FROM auctions a " +
             "JOIN items i ON a.item_id = i.id " +
             "JOIN users u ON i.seller_id = u.id " +
-            "WHERE a.end_time > ? AND a.status != 'CANCELLED' " +
+            "LEFT JOIN (" +
+            "    SELECT seller_id, AVG(stars) AS seller_rating_avg, COUNT(*) AS seller_rating_count " +
+            "    FROM seller_ratings GROUP BY seller_id" +
+            ") sr ON sr.seller_id = i.seller_id " +
+            "WHERE a.end_time > ? AND a.status IN ('OPEN', 'RUNNING') " +
             "ORDER BY a.end_time ASC";
 
         try (Connection conn = DbConnection.getConnection()) {
             ensureDescriptionColumn(conn);
+            ensureSellerRatingsTable(conn);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setTimestamp(1, java.sql.Timestamp.valueOf(LocalDateTime.now()));
             try (ResultSet rs = stmt.executeQuery()) {
@@ -287,7 +574,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                             rs.getDouble("start_price"));
                     applyDescription(item, rs);
                     item.setCurHighest(rs.getDouble("cur_highest"));
-                    item.setSellerName(rs.getString("seller_name"));
+                    applySellerInfo(item, rs);
                     int id = rs.getInt("id");
                     java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                     java.time.LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
@@ -314,14 +601,22 @@ public class AuctionDAOImpl implements AuctionDAO {
     @Override
     public List<Auction> getAllAuctions() {
         List<Auction> list = new ArrayList<>();
-        String sql = "SELECT a.*, i.name, i.description, i.item_type, i.start_price, i.cur_highest, u.full_name as seller_name " +
+        String sql = "SELECT a.*, i.seller_id, i.name, i.description, i.item_type, i.start_price, i.cur_highest, "
+                + "u.full_name AS seller_name, "
+                + "COALESCE(sr.seller_rating_avg, 0) AS seller_rating_avg, "
+                + "COALESCE(sr.seller_rating_count, 0) AS seller_rating_count " +
                 "FROM auctions a " +
                 "JOIN items i ON a.item_id = i.id " +
                 "JOIN users u ON i.seller_id = u.id " +
+                "LEFT JOIN (" +
+                "    SELECT seller_id, AVG(stars) AS seller_rating_avg, COUNT(*) AS seller_rating_count " +
+                "    FROM seller_ratings GROUP BY seller_id" +
+                ") sr ON sr.seller_id = i.seller_id " +
                 "ORDER BY a.id DESC";
 
         try (Connection conn = DbConnection.getConnection()) {
             ensureDescriptionColumn(conn);
+            ensureSellerRatingsTable(conn);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -333,7 +628,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                             rs.getDouble("start_price"));
                     applyDescription(item, rs);
                     item.setCurHighest(rs.getDouble("cur_highest"));
-                    item.setSellerName(rs.getString("seller_name"));
+                    applySellerInfo(item, rs);
                     int id = rs.getInt("id");
                     java.time.LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                     java.time.LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
@@ -342,7 +637,10 @@ public class AuctionDAOImpl implements AuctionDAO {
 
                     java.time.LocalDateTime now = java.time.LocalDateTime.now();
                     String dbStatus = rs.getString("status");
-                    if ("PAID".equals(dbStatus) || "CANCELLED".equals(dbStatus) || "FINISHED".equals(dbStatus)) {
+                    if ("PAID".equals(dbStatus)
+                            || "CANCELLED".equals(dbStatus)
+                            || "DEAL_CANCELLED".equals(dbStatus)
+                            || "FINISHED".equals(dbStatus)) {
                         auction.setStatus(StatusOfAuction.valueOf(dbStatus));
                     } else if (now.isBefore(start)) {
                         auction.setStatus(StatusOfAuction.OPEN);
@@ -405,7 +703,11 @@ public class AuctionDAOImpl implements AuctionDAO {
         // Ta tạo một bảng ảo "my_bids" chỉ chứa mức giá CAO NHẤT (MAX) của user này cho
         // từng auction_id
         String sql = "SELECT a.id AS auction_id, a.highest_bidder_id, a.start_time, a.end_time, a.status, " +
-                "a.bid_step, i.id AS item_id, i.name AS item_name, i.description, i.item_type, i.start_price, i.cur_highest, i.image, " +
+                "a.bid_step, i.id AS item_id, i.seller_id, seller.full_name AS seller_name, " +
+                "COALESCE(sr.seller_rating_avg, 0) AS seller_rating_avg, " +
+                "COALESCE(sr.seller_rating_count, 0) AS seller_rating_count, " +
+                "seller_rating.stars AS my_seller_rating, " +
+                "i.name AS item_name, i.description, i.item_type, i.start_price, i.cur_highest, i.image, " +
                 "my_bids.max_amount AS amount, my_bids.last_bid_time AS bid_time " +
                 "FROM ( " +
                 "    SELECT auction_id, MAX(amount) AS max_amount, MAX(bid_time) AS last_bid_time " +
@@ -415,12 +717,21 @@ public class AuctionDAOImpl implements AuctionDAO {
                 ") my_bids " +
                 "JOIN auctions a ON my_bids.auction_id = a.id " +
                 "JOIN items i ON a.item_id = i.id " +
+                "JOIN users seller ON i.seller_id = seller.id " +
+                "LEFT JOIN ( " +
+                "    SELECT seller_id, AVG(stars) AS seller_rating_avg, COUNT(*) AS seller_rating_count " +
+                "    FROM seller_ratings GROUP BY seller_id " +
+                ") sr ON sr.seller_id = i.seller_id " +
+                "LEFT JOIN seller_ratings seller_rating "
+                + "ON seller_rating.auction_id = a.id AND seller_rating.buyer_id = ? " +
                 "ORDER BY my_bids.last_bid_time DESC";
 
         try (Connection conn = DbConnection.getConnection()) {
             ensureDescriptionColumn(conn);
+            ensureSellerRatingsTable(conn);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, bidderId);
+            stmt.setInt(2, bidderId);
             ResultSet rs = stmt.executeQuery();
 
             // Lấy giờ chuẩn của máy chủ Java
@@ -436,6 +747,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 applyDescription(item, rs);
                 item.setCurHighest(rs.getDouble("cur_highest"));
                 item.setImageBase64(rs.getString("image"));
+                applySellerInfo(item, rs);
 
                 LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                 LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
@@ -444,7 +756,7 @@ public class AuctionDAOImpl implements AuctionDAO {
 
                 // TÍNH TOÁN LẠI TRẠNG THÁI BẰNG JAVA
                 String dbStatus = rs.getString("status");
-                if ("PAID".equals(dbStatus) || "CANCELLED".equals(dbStatus)) {
+                if ("PAID".equals(dbStatus) || "CANCELLED".equals(dbStatus) || "DEAL_CANCELLED".equals(dbStatus)) {
                     auction.setStatus(StatusOfAuction.valueOf(dbStatus));
                 } else if (javaNow.isAfter(end) || javaNow.isEqual(end)) {
                     auction.setStatus(StatusOfAuction.FINISHED);
@@ -461,6 +773,8 @@ public class AuctionDAOImpl implements AuctionDAO {
                 BidTransaction myBid = new BidTransaction(0, null, rs.getDouble("amount"),
                         rs.getTimestamp("bid_time").toLocalDateTime(), "");
                 auction.getBidHistory().add(myBid);
+                int mySellerRating = rs.getInt("my_seller_rating");
+                auction.setSellerRatingByCurrentBuyer(rs.wasNull() ? -1 : mySellerRating);
 
                 list.add(auction);
             }
@@ -560,9 +874,11 @@ public class AuctionDAOImpl implements AuctionDAO {
         String sqlUpdate = "UPDATE auto_bids SET max_amount = ?, increment_amount = ? WHERE bidder_id = ? AND auction_id = ?";
         String sqlInsert = "INSERT INTO auto_bids (bidder_id, auction_id, max_amount, increment_amount) VALUES (?, ?, ?, ?)";
         String sqlValidate = "SELECT 1 FROM auctions a JOIN users u ON u.id = ? " +
-                "WHERE a.id = ? AND a.status = 'RUNNING'";
+                "WHERE a.id = ? AND a.status = 'RUNNING' " +
+                "AND u.role = 'BIDDER' AND u.reputation_score > 0";
 
         try (Connection conn = DbConnection.getConnection()) {
+            UserDAOImpl.ensureReputationColumn(conn);
             try (PreparedStatement validateStmt = conn.prepareStatement(sqlValidate)) {
                 validateStmt.setInt(1, payload.getUserId());
                 validateStmt.setInt(2, payload.getAuctionId());
@@ -667,10 +983,21 @@ public class AuctionDAOImpl implements AuctionDAO {
 
     @Override
     public Auction getAuctionById(int auctionId) {
-        String sql = "SELECT a.*, i.id AS item_id, i.name AS item_name, i.description, i.item_type, i.start_price, i.cur_highest, i.image " +
-                "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = ?";
+        String sql = "SELECT a.*, i.id AS item_id, i.seller_id, i.name AS item_name, i.description, i.item_type, "
+                + "i.start_price, i.cur_highest, i.image, u.full_name AS seller_name, "
+                + "COALESCE(sr.seller_rating_avg, 0) AS seller_rating_avg, "
+                + "COALESCE(sr.seller_rating_count, 0) AS seller_rating_count "
+                + "FROM auctions a "
+                + "JOIN items i ON a.item_id = i.id "
+                + "JOIN users u ON i.seller_id = u.id "
+                + "LEFT JOIN ("
+                + "    SELECT seller_id, AVG(stars) AS seller_rating_avg, COUNT(*) AS seller_rating_count "
+                + "    FROM seller_ratings GROUP BY seller_id"
+                + ") sr ON sr.seller_id = i.seller_id "
+                + "WHERE a.id = ?";
         try (Connection conn = DbConnection.getConnection()) {
             ensureDescriptionColumn(conn);
+            ensureSellerRatingsTable(conn);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, auctionId);
             ResultSet rs = stmt.executeQuery();
@@ -680,6 +1007,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 applyDescription(item, rs);
                 item.setCurHighest(rs.getDouble("cur_highest"));
                 item.setImageBase64(rs.getString("image"));
+                applySellerInfo(item, rs);
 
                 LocalDateTime start = rs.getTimestamp("start_time").toLocalDateTime();
                 LocalDateTime end = rs.getTimestamp("end_time").toLocalDateTime();
@@ -705,6 +1033,32 @@ public class AuctionDAOImpl implements AuctionDAO {
         } catch (Exception e) {
             item.setDescription("");
         }
+    }
+
+    private void applySellerInfo(Item item, ResultSet rs) {
+        try {
+            item.setSellerId(rs.getInt("seller_id"));
+        } catch (Exception e) {
+            item.setSellerId(-1);
+        }
+        try {
+            item.setSellerName(rs.getString("seller_name"));
+        } catch (Exception e) {
+            item.setSellerName("");
+        }
+        double average = 0;
+        int count = 0;
+        try {
+            average = rs.getDouble("seller_rating_avg");
+        } catch (Exception e) {
+            average = 0;
+        }
+        try {
+            count = rs.getInt("seller_rating_count");
+        } catch (Exception e) {
+            count = 0;
+        }
+        item.setSellerRatingSummary(average, count);
     }
 
     private void ensureDescriptionColumn(Connection conn) {
@@ -738,12 +1092,102 @@ public class AuctionDAOImpl implements AuctionDAO {
         return Auction.DEFAULT_BID_STEP;
     }
 
+    private int calculateLatePaymentPenalty(LocalDateTime endTime, LocalDateTime now) {
+        LocalDateTime dueTime = endTime.plusDays(PAYMENT_GRACE_DAYS);
+        if (!now.isAfter(dueTime)) {
+            return 0;
+        }
+
+        long lateDays = ChronoUnit.DAYS.between(dueTime, now);
+        if (lateDays <= 0) {
+            return 0;
+        }
+        return Math.min(MAX_TRANSACTION_PENALTY, (int) lateDays * LATE_PENALTY_PER_DAY);
+    }
+
+    private void applyReputationPenalty(Connection conn, int auctionId, int bidderId,
+            int currentPenalty, int targetPenalty, boolean cancelDeal) throws SQLException {
+        int normalizedTargetPenalty = Math.min(MAX_TRANSACTION_PENALTY, Math.max(0, targetPenalty));
+        int normalizedCurrentPenalty = Math.min(MAX_TRANSACTION_PENALTY, Math.max(0, currentPenalty));
+        int delta = Math.max(0, normalizedTargetPenalty - normalizedCurrentPenalty);
+
+        if (delta > 0) {
+            String updateUserSql = "UPDATE users SET reputation_score = "
+                    + "CASE WHEN reputation_score - ? < 0 THEN 0 ELSE reputation_score - ? END "
+                    + "WHERE id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(updateUserSql)) {
+                stmt.setInt(1, delta);
+                stmt.setInt(2, delta);
+                stmt.setInt(3, bidderId);
+                stmt.executeUpdate();
+            }
+        }
+
+        String updateAuctionSql = cancelDeal
+                ? "UPDATE auctions SET reputation_penalty = ?, status = 'DEAL_CANCELLED' WHERE id = ?"
+                : "UPDATE auctions SET reputation_penalty = ? WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(updateAuctionSql)) {
+            stmt.setInt(1, normalizedTargetPenalty);
+            stmt.setInt(2, auctionId);
+            stmt.executeUpdate();
+        }
+    }
+
+    private void ensureAuctionReputationPenaltyColumn(Connection conn) {
+        try {
+            if (hasColumn(conn, "auctions", AUCTION_REPUTATION_PENALTY_COLUMN)
+                    || hasColumn(conn, "AUCTIONS", AUCTION_REPUTATION_PENALTY_COLUMN.toUpperCase())) {
+                return;
+            }
+            try (Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("ALTER TABLE auctions ADD COLUMN reputation_penalty INT NOT NULL DEFAULT 0");
+            }
+        } catch (Exception e) {
+            // Older local databases are migrated opportunistically; callers still handle SQL failures.
+        }
+    }
+
+    public static void ensureSellerRatingsTable(Connection conn) {
+        String sql = "CREATE TABLE IF NOT EXISTS " + SELLER_RATINGS_TABLE + " ("
+                + "id INT AUTO_INCREMENT PRIMARY KEY,"
+                + "auction_id INT NOT NULL,"
+                + "buyer_id INT NOT NULL,"
+                + "seller_id INT NOT NULL,"
+                + "stars INT NOT NULL,"
+                + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+                + "UNIQUE KEY unique_seller_rating_per_auction_buyer (auction_id, buyer_id),"
+                + "FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE,"
+                + "FOREIGN KEY (buyer_id) REFERENCES users(id) ON DELETE CASCADE,"
+                + "FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE"
+                + ")";
+        try (Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(sql);
+        } catch (NullPointerException e) {
+            // Unit tests may use minimal mocked connections without statements.
+        } catch (SQLException e) {
+            // Older local databases are migrated opportunistically; callers still handle SQL failures.
+        }
+    }
+
+    private record PenaltyCandidate(
+            int auctionId,
+            int bidderId,
+            LocalDateTime endTime,
+            int currentPenalty) {
+    }
+
     @Override
     public List<AutoBidPayload> getActiveAutoBids(int auctionId) {
         List<AutoBidPayload> list = new ArrayList<>();
-        String sql = "SELECT bidder_id, max_amount, increment_amount FROM auto_bids WHERE auction_id = ? ORDER BY id ASC";
-        try (Connection conn = DbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+        String sql = "SELECT ab.bidder_id, ab.max_amount, ab.increment_amount "
+                + "FROM auto_bids ab "
+                + "JOIN users u ON u.id = ab.bidder_id "
+                + "WHERE ab.auction_id = ? "
+                + "AND u.reputation_score > 0 "
+                + "ORDER BY ab.id ASC";
+        try (Connection conn = DbConnection.getConnection()) {
+            UserDAOImpl.ensureReputationColumn(conn);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, auctionId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -752,6 +1196,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                         auctionId,
                         rs.getDouble("max_amount"),
                         rs.getDouble("increment_amount")));
+            }
             }
         } catch (Exception e) {
             e.printStackTrace();

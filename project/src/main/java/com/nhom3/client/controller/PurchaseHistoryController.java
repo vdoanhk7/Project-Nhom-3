@@ -60,7 +60,7 @@ public class PurchaseHistoryController {
 
         cbFilter.setItems(FXCollections.observableArrayList(
             "Tất cả", "Đang Dẫn Đầu", "Bị Vượt Giá", "CHIẾN THẮNG", "THUA CUỘC",
-            "Đã Bị Huỷ"
+            "ĐÁNH GIÁ", "ĐÃ ĐÁNH GIÁ", "Đã Bị Huỷ", "Giao Dịch Huỷ"
         ));
         cbFilter.setValue("Tất cả");
 
@@ -86,6 +86,7 @@ public class PurchaseHistoryController {
                 case "FINISHED": return new SimpleStringProperty("Chờ thanh toán");
                 case "PAID": return new SimpleStringProperty("Đã hoàn tất");
                 case "CANCELLED": return new SimpleStringProperty("Đã bị hủy");
+                case "DEAL_CANCELLED": return new SimpleStringProperty("Giao dịch bị hủy");
                 default: return new SimpleStringProperty(status);
             }
         });
@@ -117,8 +118,10 @@ public class PurchaseHistoryController {
                         String baseStyle = "-fx-font-weight: bold; -fx-text-fill: white; -fx-background-radius: 15; ";
                         if (item.contains("Đang Dẫn Đầu")) btnAction.setStyle(baseStyle + "-fx-background-color: #27ae60;"); 
                         else if (item.contains("Bị Vượt Giá")) btnAction.setStyle(baseStyle + "-fx-background-color: #e67e22;"); 
+                        else if (item.contains("ĐÃ ĐÁNH GIÁ")) btnAction.setStyle(baseStyle + "-fx-background-color: #16a34a;");
+                        else if (item.contains("ĐÁNH GIÁ")) btnAction.setStyle(baseStyle + "-fx-background-color: #0ea5e9;");
                         else if (item.contains("CHIẾN THẮNG")) btnAction.setStyle(baseStyle + "-fx-background-color: #f1c40f; -fx-text-fill: #2c3e50;"); 
-                        else if (item.contains("Đã Bị Huỷ")) btnAction.setStyle(baseStyle + "-fx-background-color: #7f8c8d;");
+                        else if (item.contains("Đã Bị Huỷ") || item.contains("Giao Dịch Huỷ")) btnAction.setStyle(baseStyle + "-fx-background-color: #7f8c8d;");
                         else btnAction.setStyle(baseStyle + "-fx-background-color: #95a5a6;"); 
                         
                         setGraphic(btnAction);
@@ -169,8 +172,13 @@ public class PurchaseHistoryController {
         String status = a.getStatus().name();
         
         if (status.equals("RUNNING") || status.equals("OPEN")) return isMeTop1 ? "Đang Dẫn Đầu" : "Bị Vượt Giá";
-        else if (status.equals("FINISHED") || status.equals("PAID")) return isMeTop1 ? "CHIẾN THẮNG" : "THUA CUỘC";
+        else if (status.equals("FINISHED")) return isMeTop1 ? "CHIẾN THẮNG" : "THUA CUỘC";
+        else if (status.equals("PAID")) {
+            if (!isMeTop1) return "THUA CUỘC";
+            return a.getSellerRatingByCurrentBuyer() >= 0 ? "ĐÃ ĐÁNH GIÁ" : "ĐÁNH GIÁ";
+        }
         else if (status.equals("CANCELLED")) return "Đã Bị Huỷ";
+        else if (status.equals("DEAL_CANCELLED")) return "Giao Dịch Huỷ";
         return "-";
     }
 
@@ -206,6 +214,9 @@ public class PurchaseHistoryController {
             item.setDescription(dto.itemDescription);
             item.setCurHighest(dto.curHighest);
             item.setImageBase64(dto.imageBase64);
+            item.setSellerId(dto.sellerId);
+            item.setSellerName(dto.sellerName);
+            item.setSellerRatingSummary(dto.sellerRatingAverage, dto.sellerRatingCount);
 
             // 2. TÁI TẠO THỜI GIAN ĐẦY ĐỦ
             LocalDateTime start = LocalDateTime.now();
@@ -217,6 +228,7 @@ public class PurchaseHistoryController {
 
             Auction auction = new Auction(dto.auctionId, item, start, end); 
             auction.setBidStep(dto.bidStep);
+            auction.setSellerRatingByCurrentBuyer(dto.mySellerRating);
             
             try { auction.setStatus(StatusOfAuction.valueOf(dto.status)); } 
             catch (Exception e) { auction.setStatus(StatusOfAuction.OPEN); }

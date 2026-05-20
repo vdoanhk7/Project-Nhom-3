@@ -63,7 +63,10 @@ public class PacketDispatcher {
         handlers.put(PacketType.UPDATE_ITEM, this::handleUpdateItem);
         handlers.put(PacketType.DELETE_ITEM, this::handleDeleteItem);
         handlers.put(PacketType.CONFIRM_PAYMENT, this::handleConfirmPayment);
+        handlers.put(PacketType.CANCEL_TRANSACTION, this::handleCancelTransaction);
+        handlers.put(PacketType.RATE_SELLER, this::handleRateSeller);
         handlers.put(PacketType.CANCEL_AUCTION, this::handleCancelAuction);
+        handlers.put(PacketType.LOAD_PROFILE, this::handleLoadProfile);
         handlers.put(PacketType.UPDATE_PROFILE, this::handleUpdateProfile);
         handlers.put(PacketType.CHANGE_PASSWORD, this::handleChangePassword);
         handlers.put(PacketType.LOAD_USERS, this::handleLoadUsers);
@@ -108,12 +111,7 @@ public class PacketDispatcher {
         ResultPayload resultPayload;
         if (user != null) {
             currentClient.setAuthenticatedUserId(user.getId());
-            String uEmail = user.getUserContact() != null ? user.getUserContact().getEmail() : "";
-            String uPhone = user.getUserContact() != null ? user.getUserContact().getPhoneNumber() : "";
-            String profileImage = user.getUserInfo() != null ? user.getUserInfo().getProfileImageBase64() : null;
-            resultPayload = new ResultPayload(true, "Đăng nhập thành công", user.getId(),
-                    user.getUserInfo().getUserName(), user.getUserInfo().getName(), user.getRole().name(), uEmail,
-                    uPhone, profileImage);
+            resultPayload = toUserResultPayload(true, "Đăng nhập thành công", user);
         } else {
             currentClient.setAuthenticatedUserId(-1);
             resultPayload = new ResultPayload(false, "Sai tài khoản hoặc mật khẩu", -1, "", "", "", "", "");
@@ -255,10 +253,49 @@ public class PacketDispatcher {
         ItemActionPayload payload = gson.fromJson(request.getPayload(), ItemActionPayload.class);
         AuctionDAO dao = new AuctionDAOImpl();
         Auction auction = dao.getAuctionByItemId(payload.getItemId());
+        int bidderId = auction != null ? auction.getHighestBidderId() : -1;
         boolean success = auction != null && dao.confirmPayment(auction.getId(), payload.getSellerId());
+        if (success && bidderId > 0) {
+            ClientHandler.notifyUserReputationChanged(
+                    bidderId,
+                    dao.getBidderReputation(bidderId),
+                    "Thanh toán hoàn tất. Uy tín của bạn đã được cập nhật.");
+        }
         return new Packet(PacketType.CONFIRM_PAYMENT, new ResultPayload(success,
-                success ? "Đã xác nhận thanh toán!" : "Không thể xác nhận thanh toán!",
+                success ? "Đã xác nhận thanh toán! Bidder được cộng 5 điểm uy tín."
+                        : "Không thể xác nhận thanh toán!",
                 -1, "", "", "", "", ""));
+    }
+
+    private Packet handleCancelTransaction(Packet request, Gson gson) {
+        TransactionActionPayload payload = gson.fromJson(request.getPayload(), TransactionActionPayload.class);
+        AuctionDAO dao = new AuctionDAOImpl();
+        boolean success = dao.cancelTransactionByBidder(payload.getAuctionId(), payload.getUserId());
+        int reputationScore = success
+                ? dao.getBidderReputation(payload.getUserId())
+                : User.DEFAULT_REPUTATION_SCORE;
+        if (success) {
+            announcer.notifyAuctionDealCancelled(
+                    payload.getAuctionId(), "Bidder đã hủy giao dịch. Phiên đấu giá được đóng theo quy định.");
+            ClientHandler.notifyUserReputationChanged(
+                    payload.getUserId(),
+                    reputationScore,
+                    "Bạn đã hủy giao dịch. Uy tín của bạn đã được cập nhật.");
+        }
+        return new Packet(PacketType.CANCEL_TRANSACTION, new ResultPayload(success,
+                success ? "Đã hủy giao dịch. Bạn bị trừ 60 điểm uy tín."
+                        : "Không thể hủy giao dịch này!",
+                success ? payload.getUserId() : -1, "", "", "BIDDER", "", "", null, reputationScore));
+    }
+
+    private Packet handleRateSeller(Packet request, Gson gson) {
+        SellerRatingPayload payload = gson.fromJson(request.getPayload(), SellerRatingPayload.class);
+        AuctionDAO dao = new AuctionDAOImpl();
+        boolean success = dao.rateSeller(payload.getAuctionId(), payload.getBuyerId(), payload.getStars());
+        return new Packet(PacketType.RATE_SELLER, new ResultPayload(success,
+                success ? "Đã gửi đánh giá người bán!"
+                        : "Không thể đánh giá. Chỉ người thắng phiên đã thanh toán mới được đánh giá một lần.",
+                payload.getBuyerId(), "", "", "BIDDER", "", ""));
     }
 
     private Packet handleCancelAuction(Packet request, Gson gson) {
@@ -276,6 +313,17 @@ public class PacketDispatcher {
             return new Packet(PacketType.CANCEL_AUCTION, new ResultPayload(false,
                     e.getMessage(), -1, "", "", "", "", ""));
         }
+    }
+
+    private Packet handleLoadProfile(Packet request, Gson gson) {
+        UserIdPayload payload = gson.fromJson(request.getPayload(), UserIdPayload.class);
+        User user = authService.getUserById(payload.getUserId());
+        if (user == null) {
+            return new Packet(PacketType.LOAD_PROFILE,
+                    new ResultPayload(false, "Không tìm thấy tài khoản!", -1, "", "", "", "", ""));
+        }
+        return new Packet(PacketType.LOAD_PROFILE,
+                toUserResultPayload(true, "Đã tải thông tin tài khoản mới nhất.", user));
     }
 
     private Packet handleUpdateProfile(Packet request, Gson gson) {
@@ -319,6 +367,10 @@ public class PacketDispatcher {
         PublishAuctionPayload pubData = gson.fromJson(request.getPayload(), PublishAuctionPayload.class);
         boolean isPubSuccess = false;
         String pubMsg = "Lỗi không xác định";
+        AuctionDAO notificationDao = new AuctionDAOImpl();
+        Auction previousAuction = notificationDao.getAuctionByItemId(pubData.getItemId());
+        int previousBidderId = previousAuction != null ? previousAuction.getHighestBidderId() : -1;
+        boolean shouldNotifyRelistPenalty = previousBidderId > 0 && isOverdueUnpaidAuction(previousAuction);
         try {
             LocalDateTime startTime = LocalDateTime.parse(pubData.getStartTime());
             LocalDateTime endTime = LocalDateTime.parse(pubData.getEndTime());
@@ -326,8 +378,14 @@ public class PacketDispatcher {
             Auction newAuction = new Auction(0, dummyItem, startTime, endTime);
             newAuction.setBidStep(pubData.getBidStep());
 
-            isPubSuccess = auctionService.createAuction(newAuction);
+            isPubSuccess = auctionService.createAuction(newAuction, pubData.getSellerId());
             pubMsg = isPubSuccess ? "Đăng bán thành công!" : "Lỗi lưu Database!";
+            if (isPubSuccess && shouldNotifyRelistPenalty) {
+                ClientHandler.notifyUserReputationChanged(
+                        previousBidderId,
+                        notificationDao.getBidderReputation(previousBidderId),
+                        "Seller đã đăng bán lại sản phẩm quá hạn thanh toán. Uy tín của bạn đã được cập nhật.");
+            }
         } catch (BusinessRuleException | BusinessValidationException e) {
             pubMsg = e.getMessage();
         } catch (Exception e) {
@@ -352,7 +410,10 @@ public class PacketDispatcher {
                     topBidderId,
                     a.getItem().getType().name(), a.getItem().getStartPrice(), a.getItem().getCurHighest(),
                     a.getBidStep(),
-                    a.getStartTime().toString(), a.getEndTime().toString(), a.getItem().getImageBase64()));
+                    a.getStartTime().toString(), a.getEndTime().toString(), a.getItem().getImageBase64(),
+                    a.getItem().getSellerId(), a.getItem().getSellerName(),
+                    a.getItem().getSellerRatingAverage(), a.getItem().getSellerRatingCount(),
+                    a.getSellerRatingByCurrentBuyer()));
         }
         return new Packet(PacketType.LOAD_PURCHASE_HISTORY, new PurchaseHistoryResponsePayload(purDtoList));
     }
@@ -369,9 +430,17 @@ public class PacketDispatcher {
         if (auction.getStatus() != StatusOfAuction.RUNNING) {
             String message = auction.getStatus() == StatusOfAuction.CANCELLED
                     ? "Phiên đấu giá đã bị hủy bởi quản trị viên!"
+                    : auction.getStatus() == StatusOfAuction.DEAL_CANCELLED
+                            ? "Giao dịch của phiên đấu giá này đã bị hủy!"
                     : "Phiên đấu giá hiện không mở để đặt Auto-Bid!";
             return new Packet(PacketType.PLACE_AUTO_BID,
                     new ResultPayload(false, message, -1, "", "", "", "", ""));
+        }
+        if (adao.getBidderReputation(autoData.getUserId()) <= 0) {
+            return new Packet(PacketType.PLACE_AUTO_BID,
+                    new ResultPayload(false,
+                            "Uy tín của bạn đã về 0, bạn không thể tham gia đấu giá.",
+                            -1, "", "", "", "", ""));
         }
         if (autoData.getIncrement() < auction.getBidStep()) {
             return new Packet(PacketType.PLACE_AUTO_BID,
@@ -459,6 +528,7 @@ public class PacketDispatcher {
         StatusOfAuction dbStatus = auction.getStatus();
         if (dbStatus == StatusOfAuction.PAID
                 || dbStatus == StatusOfAuction.CANCELLED
+                || dbStatus == StatusOfAuction.DEAL_CANCELLED
                 || dbStatus == StatusOfAuction.FINISHED) {
             return dbStatus;
         }
@@ -475,6 +545,7 @@ public class PacketDispatcher {
 
     private AuctionListResponsePayload.AuctionDTO toAuctionDto(Auction auction) {
         Item item = auction.getItem();
+        StatusOfAuction status = getRealAuctionStatus(auction);
         return new AuctionListResponsePayload.AuctionDTO(
                 auction.getId(),
                 item != null ? item.getId() : -1,
@@ -486,10 +557,13 @@ public class PacketDispatcher {
                 auction.getBidStep(),
                 auction.getStartTime() != null ? auction.getStartTime().toString() : "",
                 auction.getEndTime() != null ? auction.getEndTime().toString() : "",
-                auction.getStatus() != null ? auction.getStatus().name() : "",
+                status != null ? status.name() : "",
                 auction.getHighestBidderId(),
                 item != null ? item.getImageBase64() : null,
-                item != null && item.getSellerName() != null ? item.getSellerName() : "");
+                item != null ? item.getSellerId() : -1,
+                item != null && item.getSellerName() != null ? item.getSellerName() : "",
+                item != null ? item.getSellerRatingAverage() : 0,
+                item != null ? item.getSellerRatingCount() : 0);
     }
 
     private UserListResponsePayload.UserDTO toUserDto(User user) {
@@ -499,7 +573,8 @@ public class PacketDispatcher {
                 user.getUserInfo() != null ? user.getUserInfo().getName() : "",
                 user.getRole() != null ? user.getRole().name() : "",
                 user.getUserContact() != null ? user.getUserContact().getEmail() : "",
-                user.getUserContact() != null ? user.getUserContact().getPhoneNumber() : "");
+                user.getUserContact() != null ? user.getUserContact().getPhoneNumber() : "",
+                user.getReputationScore());
     }
 
     private Packet handleDeleteUser(Packet request, Gson gson) {
@@ -529,14 +604,40 @@ public class PacketDispatcher {
                     -1, "", "", "", "", ""));
         }
 
-        return new Packet(PacketType.DELETE_USER, new ResultPayload(success,
-                success ? "Đã xóa tài khoản thành công!" : "Lỗi: Không thể xóa tài khoản!",
+        return new Packet(PacketType.DELETE_USER, new ResultPayload(true,
+                "Đã xóa tài khoản thành công!",
                 -1, "", "", "", "", ""));
     }
 
     private Packet accountDeletedPacket(int userId) {
         return new Packet(PacketType.ACCOUNT_DELETED,
                 new ResultPayload(false, ACCOUNT_DELETED_MESSAGE, userId, "", "", "", "", ""));
+    }
+
+    private ResultPayload toUserResultPayload(boolean success, String message, User user) {
+        String email = user.getUserContact() != null ? user.getUserContact().getEmail() : "";
+        String phone = user.getUserContact() != null ? user.getUserContact().getPhoneNumber() : "";
+        String username = user.getUserInfo() != null ? user.getUserInfo().getUserName() : "";
+        String fullName = user.getUserInfo() != null ? user.getUserInfo().getName() : "";
+        String profileImage = user.getUserInfo() != null ? user.getUserInfo().getProfileImageBase64() : null;
+        return new ResultPayload(success, message, user.getId(), username, fullName,
+                user.getRole().name(), email, phone, profileImage, user.getReputationScore(),
+                user.getSellerRatingAverage(), user.getSellerRatingCount());
+    }
+
+    private boolean isOverdueUnpaidAuction(Auction auction) {
+        if (auction == null || auction.getEndTime() == null) {
+            return false;
+        }
+
+        StatusOfAuction status = auction.getStatus();
+        if (status == StatusOfAuction.PAID
+                || status == StatusOfAuction.CANCELLED
+                || status == StatusOfAuction.DEAL_CANCELLED) {
+            return false;
+        }
+
+        return !LocalDateTime.now().isBefore(auction.getEndTime().plusDays(2));
     }
 
     private int findAuthenticatedUserId(Packet request, Gson gson) {
@@ -548,14 +649,22 @@ public class PacketDispatcher {
             case PLACE_BID -> gson.fromJson(request.getPayload(), BidPayload.class).getUserId();
             case PLACE_AUTO_BID, CHECK_AUTO_BID, CANCEL_AUTO_BID ->
                     gson.fromJson(request.getPayload(), AutoBidPayload.class).getUserId();
+            case CANCEL_TRANSACTION ->
+                    gson.fromJson(request.getPayload(), TransactionActionPayload.class).getUserId();
+            case RATE_SELLER ->
+                    gson.fromJson(request.getPayload(), SellerRatingPayload.class).getBuyerId();
             case LOAD_PURCHASE_HISTORY ->
                     gson.fromJson(request.getPayload(), BidderIdPayload.class).getBidderId();
             case LOAD_SELLER_ITEMS ->
                     gson.fromJson(request.getPayload(), SellerIdPayload.class).getSellerId();
             case SAVE_ITEM, UPDATE_ITEM ->
                     gson.fromJson(request.getPayload(), ItemPayload.class).getSellerId();
+            case PUBLISH_AUCTION ->
+                    gson.fromJson(request.getPayload(), PublishAuctionPayload.class).getSellerId();
             case DELETE_ITEM, CONFIRM_PAYMENT ->
                     gson.fromJson(request.getPayload(), ItemActionPayload.class).getSellerId();
+            case LOAD_PROFILE ->
+                    gson.fromJson(request.getPayload(), UserIdPayload.class).getUserId();
             case UPDATE_PROFILE ->
                     gson.fromJson(request.getPayload(), UserProfilePayload.class).getUserId();
             case CHANGE_PASSWORD ->

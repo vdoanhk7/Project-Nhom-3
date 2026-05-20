@@ -71,7 +71,16 @@ public final class ClientEvents {
     public record ConfirmPaymentResult(boolean success, String message) {
     }
 
+    public record CancelTransactionResult(boolean success, String message) {
+    }
+
+    public record SellerRatingResult(boolean success, String message) {
+    }
+
     public record CancelAuctionResult(boolean success, String message) {
+    }
+
+    public record CurrentUserLoaded(ResultPayload result) {
     }
 
     public record ProfileUpdateResult(ResultPayload result) {

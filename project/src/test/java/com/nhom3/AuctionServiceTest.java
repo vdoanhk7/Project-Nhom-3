@@ -32,6 +32,7 @@ class AuctionServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         auctionService = new AuctionService(auctionDAO);
+        when(auctionDAO.getBidderReputation(anyInt())).thenReturn(100);
     }
 
     @Test

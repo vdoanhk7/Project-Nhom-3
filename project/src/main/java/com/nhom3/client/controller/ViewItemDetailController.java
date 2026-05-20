@@ -18,6 +18,8 @@ import com.nhom3.shared.network.payload.ItemActionPayload;
 import com.nhom3.shared.network.payload.ItemImagePayload;
 import com.nhom3.shared.network.payload.AuctionSubscribePayload;
 import com.nhom3.shared.network.payload.BidPayload;
+import com.nhom3.shared.network.payload.SellerRatingPayload;
+import com.nhom3.shared.network.payload.TransactionActionPayload;
 import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.DialogUtils;
 import javafx.animation.Animation;
@@ -76,6 +78,14 @@ public class ViewItemDetailController {
     // ĐÃ FIX: Chuyển thành VBox để khớp với FXML thiết kế mới
     @FXML
     private VBox boxBidderActions;
+    @FXML
+    private VBox boxWinnerActions;
+    @FXML
+    private VBox boxRatingActions;
+    @FXML
+    private Label lblSellerRatingStatus;
+    @FXML
+    private Button btnRateSeller;
     // ĐÃ FIX: Thêm ID dòng ngang để nhét nút Auto-bid vào cạnh nút Đặt giá
     @FXML
     private HBox boxBidInputRow;
@@ -114,6 +124,9 @@ public class ViewItemDetailController {
     private boolean waitingForAutoBidResult;
     private boolean waitingForAutoBidCheck;
     private boolean waitingForAutoBidCancelResult;
+    private boolean waitingForCancelTransactionResult;
+    private boolean waitingForSellerRatingResult;
+    private int pendingSellerRating = -1;
     private boolean auctionCancelledHandled;
     private javafx.scene.layout.VBox autoBidInfoBox;
 
@@ -125,6 +138,8 @@ public class ViewItemDetailController {
 
         if (currentAuction.getStatus() == StatusOfAuction.CANCELLED) {
             setupCancelledState(currentAuction);
+        } else if (currentAuction.getStatus() == StatusOfAuction.DEAL_CANCELLED) {
+            setupDealCancelledState(currentAuction);
         } else if (currentAuction.getStatus() == StatusOfAuction.PAID) {
             setupPaidState(currentAuction);
         } else if (currentAuction.getStatus() == StatusOfAuction.FINISHED) {
@@ -134,6 +149,7 @@ public class ViewItemDetailController {
         } else if (now.isBefore(currentAuction.getEndTime())) {
             setupRunningState(currentAuction);
         } else {
+            currentAuction.setStatus(StatusOfAuction.FINISHED);
             setupFinishedState(currentAuction);
         }
     }
@@ -205,6 +221,10 @@ public class ViewItemDetailController {
         eventBus.subscribe(ClientEvents.AutoBidPlaced.class, this, ViewItemDetailController::handleAutoBidPlaced);
         eventBus.subscribe(ClientEvents.AutoBidChecked.class, this, ViewItemDetailController::handleAutoBidChecked);
         eventBus.subscribe(ClientEvents.AutoBidCancelled.class, this, ViewItemDetailController::handleAutoBidCancelled);
+        eventBus.subscribe(ClientEvents.CancelTransactionResult.class, this,
+                ViewItemDetailController::handleCancelTransactionResult);
+        eventBus.subscribe(ClientEvents.SellerRatingResult.class, this,
+                ViewItemDetailController::handleSellerRatingResult);
         eventBus.subscribe(ClientEvents.ScreenNotified.class, this, ViewItemDetailController::handleScreenNotified);
     }
 
@@ -245,6 +265,8 @@ public class ViewItemDetailController {
             setupPaidState(auction);
         } else if ("CANCELLED".equals(status)) {
             setupCancelledState(auction);
+        } else if ("DEAL_CANCELLED".equals(status)) {
+            setupDealCancelledState(auction);
         } else {
             refreshState();
         }
@@ -375,6 +397,17 @@ public class ViewItemDetailController {
             countdownTimeline.stop();
     }
 
+    private void setupDealCancelledState(Auction auction) {
+        lblStatusBadge.setText("GIAO DỊCH ĐÃ HỦY");
+        lblStatusBadge.setStyle(
+                "-fx-background-color: #7f8c8d; -fx-text-fill: white; -fx-padding: 5 15; -fx-background-radius: 20;");
+        lblTimeTitle.setText("GIAO DỊCH ĐÃ ĐÓNG");
+        lblCountdown.setText("--:--:--");
+        lblTimeRange.setText("Lý do: Bidder không hoàn tất giao dịch đúng quy định");
+        if (countdownTimeline != null)
+            countdownTimeline.stop();
+    }
+
     private void startCountdown(LocalDateTime targetTime) {
         if (countdownTimeline != null)
             countdownTimeline.stop();
@@ -393,6 +426,7 @@ public class ViewItemDetailController {
             if (countdownTimeline != null)
                 countdownTimeline.stop();
             refreshState();
+            setupDynamicUI();
             return false;
         }
 
@@ -420,10 +454,38 @@ public class ViewItemDetailController {
             return;
         boxBidderActions.setVisible(false);
         boxBidderActions.setManaged(false);
+        if (boxWinnerActions != null) {
+            boxWinnerActions.setVisible(false);
+            boxWinnerActions.setManaged(false);
+        }
+        if (boxRatingActions != null) {
+            boxRatingActions.setVisible(false);
+            boxRatingActions.setManaged(false);
+        }
 
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (currentUser == null || currentAuction == null)
             return;
+
+        boolean isWinningBidder = currentAuction.getHighestBidderId() == currentUser.getId();
+        if (currentUser instanceof Bidder
+                && currentAuction.getStatus() == StatusOfAuction.PAID
+                && isWinningBidder
+                && boxRatingActions != null) {
+            boxRatingActions.setVisible(true);
+            boxRatingActions.setManaged(true);
+            updateSellerRatingAction();
+            return;
+        }
+
+        if (currentUser instanceof Bidder
+                && currentAuction.getStatus() == StatusOfAuction.FINISHED
+                && isWinningBidder
+                && boxWinnerActions != null) {
+            boxWinnerActions.setVisible(true);
+            boxWinnerActions.setManaged(true);
+            return;
+        }
 
         if (currentUser instanceof Bidder
                 && currentAuction.getStatus() == com.nhom3.shared.model.auction.StatusOfAuction.RUNNING) {
@@ -452,6 +514,73 @@ public class ViewItemDetailController {
 
             checkAutoBidStatus();
         }
+    }
+
+    private void updateSellerRatingAction() {
+        if (lblSellerRatingStatus == null || btnRateSeller == null || currentAuction == null) {
+            return;
+        }
+
+        int ratedStars = currentAuction.getSellerRatingByCurrentBuyer();
+        if (ratedStars >= 0) {
+            lblSellerRatingStatus.setText("Bạn đã đánh giá người bán " + ratedStars + "/5 sao.");
+            btnRateSeller.setDisable(true);
+            btnRateSeller.setText("ĐÃ ĐÁNH GIÁ");
+            return;
+        }
+
+        Item item = currentAuction.getItem();
+        String sellerName = item != null && item.getSellerName() != null && !item.getSellerName().isBlank()
+                ? item.getSellerName()
+                : "người bán";
+        lblSellerRatingStatus.setText("Giao dịch đã thanh toán. Bạn có thể đánh giá " + sellerName + ".");
+        btnRateSeller.setDisable(false);
+        btnRateSeller.setText("ĐÁNH GIÁ NGƯỜI BÁN");
+    }
+
+    @FXML
+    private void handleRateSeller() {
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        if (!(currentUser instanceof Bidder) || currentAuction == null || currentItem == null) {
+            return;
+        }
+        if (currentAuction.getStatus() != StatusOfAuction.PAID
+                || currentAuction.getHighestBidderId() != currentUser.getId()) {
+            showAlert(Alert.AlertType.WARNING, "Không thể đánh giá",
+                    "Chỉ người thắng phiên đã thanh toán mới được đánh giá người bán.");
+            return;
+        }
+        if (currentItem.getSellerId() == currentUser.getId()) {
+            showAlert(Alert.AlertType.WARNING, "Không thể đánh giá",
+                    "Bạn không thể tự đánh giá chính mình.");
+            return;
+        }
+        if (currentAuction.getSellerRatingByCurrentBuyer() >= 0) {
+            showAlert(Alert.AlertType.INFORMATION, "Đã đánh giá",
+                    "Bạn đã đánh giá người bán cho phiên đấu giá này.");
+            return;
+        }
+
+        ChoiceDialog<Integer> dialog = new ChoiceDialog<>(5, java.util.List.of(0, 1, 2, 3, 4, 5));
+        dialog.setTitle("Đánh giá người bán");
+        dialog.setHeaderText("Chọn số sao từ 0 đến 5");
+        dialog.setContentText("Số sao:");
+        DialogUtils.initOwner(dialog, lblItemName);
+
+        dialog.showAndWait().ifPresent(stars -> {
+            try {
+                pendingSellerRating = stars;
+                waitingForSellerRatingResult = true;
+                ServerConnection.getInstance().sendMessage(new Packet(
+                        PacketType.RATE_SELLER,
+                        new SellerRatingPayload(currentAuction.getId(), currentUser.getId(), stars)));
+            } catch (Exception e) {
+                waitingForSellerRatingResult = false;
+                pendingSellerRating = -1;
+                e.printStackTrace();
+                showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi đánh giá người bán.");
+            }
+        });
     }
 
     private void openAutoBidDialog() {
@@ -605,6 +734,36 @@ public class ViewItemDetailController {
             this.pendingBidAmount = 0;
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi yêu cầu đặt giá.");
+        }
+    }
+
+    @FXML
+    private void handleCancelTransaction() {
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        if (!(currentUser instanceof Bidder) || currentAuction == null) {
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Hủy giao dịch sẽ trừ ngay 60 điểm uy tín của bạn. Bạn có chắc chắn muốn tiếp tục?",
+                ButtonType.YES, ButtonType.NO);
+        confirm.setTitle("Xác nhận hủy giao dịch");
+        confirm.setHeaderText(null);
+        DialogUtils.initOwner(confirm, lblItemName);
+
+        if (confirm.showAndWait().orElse(ButtonType.NO) != ButtonType.YES) {
+            return;
+        }
+
+        try {
+            waitingForCancelTransactionResult = true;
+            ServerConnection.getInstance().sendMessage(new Packet(
+                    PacketType.CANCEL_TRANSACTION,
+                    new TransactionActionPayload(currentAuction.getId(), currentUser.getId())));
+        } catch (Exception e) {
+            waitingForCancelTransactionResult = false;
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi yêu cầu hủy giao dịch.");
         }
     }
 
@@ -782,6 +941,10 @@ public class ViewItemDetailController {
         if (event.auctionId() > 0 && event.auctionId() != currentAuction.getId()) {
             return;
         }
+        if ("DEAL_CANCELLED".equals(event.eventType()) || "DEAL_CANCELLED".equals(event.status())) {
+            handleDealCancelled(event.message());
+            return;
+        }
         if ("AUCTION_CANCELLED".equals(event.eventType()) || "CANCELLED".equals(event.status())) {
             handleAuctionCancelled(event.message());
             return;
@@ -803,6 +966,24 @@ public class ViewItemDetailController {
         if (!auctionCancelledHandled) {
             auctionCancelledHandled = true;
             showAlert(Alert.AlertType.WARNING, "Phiên đấu giá đã bị hủy", alertMessage);
+        }
+    }
+
+    private void handleDealCancelled(String message) {
+        currentAuction.setStatus(StatusOfAuction.DEAL_CANCELLED);
+        waitingForAutoBidCheck = false;
+        waitingForAutoBidResult = false;
+        waitingForAutoBidCancelResult = false;
+        waitingForCancelTransactionResult = false;
+        setupDealCancelledState(currentAuction);
+        setupDynamicUI();
+
+        String alertMessage = message != null && !message.isBlank()
+                ? message
+                : "Giao dịch của phiên đấu giá này đã bị hủy.";
+        if (!auctionCancelledHandled) {
+            auctionCancelledHandled = true;
+            showAlert(Alert.AlertType.WARNING, "Giao dịch đã bị hủy", alertMessage);
         }
     }
 
@@ -968,6 +1149,49 @@ public class ViewItemDetailController {
         if (event.success()) {
             checkAutoBidStatus();
         }
+    }
+
+    private void handleSellerRatingResult(ClientEvents.SellerRatingResult event) {
+        if (!waitingForSellerRatingResult) {
+            return;
+        }
+        waitingForSellerRatingResult = false;
+
+        showAlert(event.success() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
+                event.success() ? "Đã đánh giá" : "Thất bại",
+                event.message());
+        if (event.success() && currentAuction != null) {
+            currentAuction.setSellerRatingByCurrentBuyer(pendingSellerRating);
+            updateLocalSellerRatingSummary(pendingSellerRating);
+            updateSellerRatingAction();
+        }
+        pendingSellerRating = -1;
+    }
+
+    private void handleCancelTransactionResult(ClientEvents.CancelTransactionResult event) {
+        if (!waitingForCancelTransactionResult) {
+            return;
+        }
+        waitingForCancelTransactionResult = false;
+
+        showAlert(event.success() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
+                event.success() ? "Đã hủy giao dịch" : "Thất bại",
+                event.message());
+        if (event.success()) {
+            currentAuction.setStatus(StatusOfAuction.DEAL_CANCELLED);
+            setupDealCancelledState(currentAuction);
+            setupDynamicUI();
+        }
+    }
+
+    private void updateLocalSellerRatingSummary(int stars) {
+        if (currentItem == null || stars < 0) {
+            return;
+        }
+        int count = currentItem.getSellerRatingCount();
+        double average = currentItem.getSellerRatingAverage();
+        double newAverage = ((average * count) + stars) / (count + 1);
+        currentItem.setSellerRatingSummary(newAverage, count + 1);
     }
 
     private void handleCancelAutoBid() {

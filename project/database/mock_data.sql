@@ -3,6 +3,7 @@
 
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE auto_bids;
+TRUNCATE TABLE seller_ratings;
 TRUNCATE TABLE bid_transactions;
 TRUNCATE TABLE auctions;
 TRUNCATE TABLE activity_logs;
@@ -10,12 +11,12 @@ TRUNCATE TABLE items;
 TRUNCATE TABLE users;
 SET FOREIGN_KEY_CHECKS = 1;
 
-INSERT INTO users (id, username, password, full_name, email, phone, role) VALUES
-(1, 'admin01', '$2a$10$iQHpPnCg2QA1J5IL6jN0jO0y/vC3Y7rYxPOKD.W.y7fB2QaR4556C', 'Quan tri vien', 'admin@example.com', '0123456789', 'ADMIN'),
-(2, 'seller01', '$2a$10$iQHpPnCg2QA1J5IL6jN0jO0y/vC3Y7rYxPOKD.W.y7fB2QaR4556C', 'Nguyen Van Ban', 'seller1@example.com', '0987654321', 'SELLER'),
-(3, 'seller02', '$2a$10$iQHpPnCg2QA1J5IL6jN0jO0y/vC3Y7rYxPOKD.W.y7fB2QaR4556C', 'Tran Thi Hang', 'seller2@example.com', '0912345678', 'SELLER'),
-(4, 'bidder01', '$2a$10$iQHpPnCg2QA1J5IL6jN0jO0y/vC3Y7rYxPOKD.W.y7fB2QaR4556C', 'Le Mua Nhieu', 'bidder1@example.com', '0901112223', 'BIDDER'),
-(5, 'bidder02', '$2a$10$iQHpPnCg2QA1J5IL6jN0jO0y/vC3Y7rYxPOKD.W.y7fB2QaR4556C', 'Pham Tra Gia', 'bidder2@example.com', '0944455566', 'BIDDER');
+INSERT INTO users (id, username, password, full_name, email, phone, reputation_score, role) VALUES
+(1, 'admin01', '$2a$10$iQHpPnCg2QA1J5IL6jN0jO0y/vC3Y7rYxPOKD.W.y7fB2QaR4556C', 'Quan tri vien', 'admin@example.com', '0123456789', 100, 'ADMIN'),
+(2, 'seller01', '$2a$10$iQHpPnCg2QA1J5IL6jN0jO0y/vC3Y7rYxPOKD.W.y7fB2QaR4556C', 'Nguyen Van Ban', 'seller1@example.com', '0987654321', 100, 'SELLER'),
+(3, 'seller02', '$2a$10$iQHpPnCg2QA1J5IL6jN0jO0y/vC3Y7rYxPOKD.W.y7fB2QaR4556C', 'Tran Thi Hang', 'seller2@example.com', '0912345678', 100, 'SELLER'),
+(4, 'bidder01', '$2a$10$iQHpPnCg2QA1J5IL6jN0jO0y/vC3Y7rYxPOKD.W.y7fB2QaR4556C', 'Le Mua Nhieu', 'bidder1@example.com', '0901112223', 100, 'BIDDER'),
+(5, 'bidder02', '$2a$10$iQHpPnCg2QA1J5IL6jN0jO0y/vC3Y7rYxPOKD.W.y7fB2QaR4556C', 'Pham Tra Gia', 'bidder2@example.com', '0944455566', 100, 'BIDDER');
 
 INSERT INTO items (id, seller_id, name, description, start_price, cur_highest, item_type, image) VALUES
 (1, 2, 'Buc tranh Hoa Huong Duong', 'Tranh son dau chu de hoa huong duong, phu hop trang tri phong khach.', 5000000, 5000000, 'ART', NULL),

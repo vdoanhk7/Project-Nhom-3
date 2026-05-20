@@ -20,25 +20,42 @@ public class PurchaseHistoryResponsePayload {
         public String startTimeStr;
         public String endTimeStr;
         public String imageBase64;
+        public int sellerId;
+        public String sellerName;
+        public double sellerRatingAverage;
+        public int sellerRatingCount;
+        public int mySellerRating;
 
         public HistoryDTO(int auctionId, int itemId, String itemName, double myBidAmount, String myBidTimeStr, String status, int topBidderId,
                           String itemType, double startPrice, double curHighest, String startTimeStr, String endTimeStr) {
             this(auctionId, itemId, itemName, "", myBidAmount, myBidTimeStr, status, topBidderId,
                     itemType, startPrice, curHighest,
                     com.nhom3.shared.model.auction.Auction.DEFAULT_BID_STEP,
-                    startTimeStr, endTimeStr, null);
+                    startTimeStr, endTimeStr, null, -1, "", 0, 0, -1);
         }
 
         public HistoryDTO(int auctionId, int itemId, String itemName, double myBidAmount, String myBidTimeStr, String status, int topBidderId,
                            String itemType, double startPrice, double curHighest, double bidStep, String startTimeStr, String endTimeStr, String imageBase64) {
             this(auctionId, itemId, itemName, "", myBidAmount, myBidTimeStr, status, topBidderId,
-                    itemType, startPrice, curHighest, bidStep, startTimeStr, endTimeStr, imageBase64);
+                    itemType, startPrice, curHighest, bidStep, startTimeStr, endTimeStr, imageBase64,
+                    -1, "", 0, 0, -1);
         }
 
         public HistoryDTO(int auctionId, int itemId, String itemName, String itemDescription, double myBidAmount,
                            String myBidTimeStr, String status, int topBidderId,
                            String itemType, double startPrice, double curHighest, double bidStep,
                            String startTimeStr, String endTimeStr, String imageBase64) {
+            this(auctionId, itemId, itemName, itemDescription, myBidAmount, myBidTimeStr, status, topBidderId,
+                    itemType, startPrice, curHighest, bidStep, startTimeStr, endTimeStr, imageBase64,
+                    -1, "", 0, 0, -1);
+        }
+
+        public HistoryDTO(int auctionId, int itemId, String itemName, String itemDescription, double myBidAmount,
+                           String myBidTimeStr, String status, int topBidderId,
+                           String itemType, double startPrice, double curHighest, double bidStep,
+                           String startTimeStr, String endTimeStr, String imageBase64,
+                           int sellerId, String sellerName, double sellerRatingAverage,
+                           int sellerRatingCount, int mySellerRating) {
             this.auctionId = auctionId;
             this.itemId = itemId;
             this.itemName = itemName;
@@ -54,6 +71,11 @@ public class PurchaseHistoryResponsePayload {
             this.startTimeStr = startTimeStr;
             this.endTimeStr = endTimeStr;
             this.imageBase64 = imageBase64;
+            this.sellerId = sellerId;
+            this.sellerName = sellerName;
+            this.sellerRatingAverage = Math.max(0, Math.min(5, sellerRatingAverage));
+            this.sellerRatingCount = Math.max(0, sellerRatingCount);
+            this.mySellerRating = mySellerRating < 0 ? -1 : Math.min(5, mySellerRating);
         }
     }
 

@@ -2,6 +2,7 @@ package com.nhom3.server.service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -10,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.nhom3.server.dao.AuctionDAO;
 import com.nhom3.server.dao.AuctionDAOImpl;
+import com.nhom3.server.network.ClientHandler;
 
 /**
  * Service chịu trách nhiệm tự động kiểm tra và cập nhật trạng thái các phiên
@@ -74,6 +76,17 @@ public class AuctionMonitorService {
 
             // Tự động đóng các phiên đấu giá đã đến thời gian kết thúc
             auctionDAO.closeExpiredAuctions(now);
+
+            // Tự động trừ điểm uy tín cho giao dịch chậm thanh toán sau khi phiên đã đóng
+            Map<Integer, Integer> changedReputations = auctionDAO.applyOverduePaymentPenalties(now);
+            if (changedReputations != null) {
+                for (Map.Entry<Integer, Integer> entry : changedReputations.entrySet()) {
+                    ClientHandler.notifyUserReputationChanged(
+                            entry.getKey(),
+                            entry.getValue(),
+                            "Uy tín của bạn đã được cập nhật do quá hạn thanh toán.");
+                }
+            }
 
         } catch (Exception e) {
             log.error("[Monitor] Lỗi xảy ra trong quá trình kiểm tra định kỳ: ", e);

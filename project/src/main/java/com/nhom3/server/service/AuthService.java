@@ -70,6 +70,10 @@ public class AuthService {
         return userId > 0 && userDAO.userExists(userId);
     }
 
+    public User getUserById(int userId) {
+        return userDAO.getById(userId);
+    }
+
     public List<Integer> getSellerAuctionIds(int sellerId) {
         return userDAO.getSellerAuctionIds(sellerId);
     }

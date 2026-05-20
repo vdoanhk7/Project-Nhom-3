@@ -151,7 +151,7 @@ public class AuctionService {
 
     // Hàm gọi từ ClientHandler khi có người bấm Đặt giá thủ công
     public boolean placeBid(Auction auction, BidTransaction bid) {
-            boolean isSuccess = placeBidInternal(auction, bid);
+            boolean isSuccess = placeBidInternal(auction, bid, false);
             if (isSuccess) {
                 auctionHandler.handleAutoBid(auction.getId());
             }
@@ -159,7 +159,12 @@ public class AuctionService {
     }
 
     // Logic cốt lõi ghi vào DB
-    private boolean placeBidInternal(Auction auction, BidTransaction bid) throws BidRejectedException {
+    public boolean placeAutoBid(Auction auction, BidTransaction bid) {
+        return placeBidInternal(auction, bid, true);
+    }
+
+    private boolean placeBidInternal(Auction auction, BidTransaction bid, boolean allowHighestBidder)
+            throws BidRejectedException {
         LocalDateTime now = LocalDateTime.now();
         if (auction.getStatus() == StatusOfAuction.CANCELLED) {
             throw new BidRejectedException("BID_AUCTION_CANCELLED", "Phiên đấu giá đã bị hủy!");
@@ -171,7 +176,7 @@ public class AuctionService {
             throw new BidRejectedException("BID_AUCTION_ENDED", "Phiên đấu giá đã kết thúc!");
         }
         
-        if (bid.getBidder().getId() == auction.getHighestBidderId()) {
+        if (!allowHighestBidder && bid.getBidder().getId() == auction.getHighestBidderId()) {
             throw new BidRejectedException(
                     "BIDDER_ALREADY_HIGHEST",
                     "Bạn đang là người dẫn đầu, không cần đặt thêm nhé!");

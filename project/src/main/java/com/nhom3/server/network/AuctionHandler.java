@@ -164,7 +164,7 @@ public class AuctionHandler {
 
                     Bidder bidder = new Bidder(winnerBot.getUserId(), null, null);
                     BidTransaction newBid = new BidTransaction(0, bidder, intendedAmount, LocalDateTime.now(), "Đặt giá qua \ud83e\udd16 Auto-Bid");
-                    boolean isBidSuccess = auctionService.placeBid(currentAuction, newBid);
+                    boolean isBidSuccess = auctionService.placeAutoBid(currentAuction, newBid);
                     if (isBidSuccess) {
                         announcer.notify(auctionId, intendedAmount);
                     } else if (cancelledAutoBid) {
@@ -188,7 +188,7 @@ public class AuctionHandler {
                     // Chốt giá chiến thắng cho winnerBot (chỉ gọi 1 lần duy nhất vào DB, tránh spam đệ quy)
                     Bidder bidder = new Bidder(winnerBot.getUserId(), null, null);
                     BidTransaction newBid = new BidTransaction(0, bidder, intendedAmount, LocalDateTime.now(), "Đặt giá qua \ud83e\udd16 Auto-Bid");
-                    boolean isBidSuccess = auctionService.placeBid(currentAuction, newBid);
+                    boolean isBidSuccess = auctionService.placeAutoBid(currentAuction, newBid);
                     if (isBidSuccess) {
                         announcer.notify(auctionId, intendedAmount);
                     } else if (cancelledAutoBid) {

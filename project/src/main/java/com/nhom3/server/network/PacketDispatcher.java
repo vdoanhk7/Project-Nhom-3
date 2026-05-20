@@ -390,9 +390,13 @@ public class PacketDispatcher {
                                     + String.format("%,.0f VNĐ", auction.getBidStep()) + "!",
                             -1, "", "", "", "", ""));
         }
-        if (autoData.getMaxAmount() <= auction.getItem().getCurHighest()) {
+        double minAutoBidAmount = auction.getItem().getStartPrice() + auction.getBidStep();
+        if (autoData.getMaxAmount() <= minAutoBidAmount) {
             return new Packet(PacketType.PLACE_AUTO_BID,
-                    new ResultPayload(false, "Giá tối đa phải lớn hơn giá hiện tại!", -1, "", "", "", "", ""));
+                    new ResultPayload(false,
+                            "Giá tối đa Auto-Bid phải lớn hơn giá khởi điểm + bước giá ("
+                                    + String.format("%,.0f VNĐ", minAutoBidAmount) + ")!",
+                            -1, "", "", "", "", ""));
         }
 
         boolean autoSuccess = adao.saveAutoBidConfig(autoData);

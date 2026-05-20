@@ -514,8 +514,11 @@ public class ViewItemDetailController {
                     double maxAmt = MoneyInputFormatter.parseAmount(txtMaxAmount.getText());
                     double incAmt = MoneyInputFormatter.parseAmount(txtIncrement.getText());
 
-                    if (maxAmt <= currentAuction.getItem().getCurHighest()) {
-                        showAlert(Alert.AlertType.ERROR, "Lỗi", "Giá tối đa phải lớn hơn giá hiện tại!");
+                    double minAutoBidAmount = currentAuction.getItem().getStartPrice() + sellerBidStep;
+                    if (maxAmt <= minAutoBidAmount) {
+                        showAlert(Alert.AlertType.ERROR, "Lỗi",
+                                "Giá tối đa Auto-Bid phải lớn hơn giá khởi điểm + bước giá ("
+                                        + formatMoney(minAutoBidAmount) + ")!");
                         return null;
                     }
                     if (incAmt < sellerBidStep) {
@@ -766,6 +769,10 @@ public class ViewItemDetailController {
             updateBidInputHint();
         }
         loadBidHistory();
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        if (currentUser instanceof Bidder && currentAuction.getStatus() == StatusOfAuction.RUNNING) {
+            checkAutoBidStatus();
+        }
     }
 
     private void handleScreenNotified(ClientEvents.ScreenNotified event) {

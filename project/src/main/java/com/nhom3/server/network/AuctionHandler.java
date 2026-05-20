@@ -107,6 +107,7 @@ public class AuctionHandler {
 
                 double currentHighest = currentAuction.getItem().getCurHighest();
                 int highestBidderId = currentAuction.getHighestBidderId();
+                boolean cancelledAutoBid = false;
 
                 // Dùng Map để lưu thứ tự đăng ký (đảm bảo người đăng ký trước thắng nếu bằng giá)
                 java.util.Map<Integer, Integer> timeOrder = new java.util.HashMap<>();
@@ -135,19 +136,25 @@ public class AuctionHandler {
                         secondBot = bot;
                         break;
                     } else {
-                        dao.cancelAutoBid(auctionId, bot.getUserId()); // Bot này hết tiền, hủy.
+                        cancelledAutoBid |= dao.cancelAutoBid(auctionId, bot.getUserId()); // Bot này hết tiền, hủy.
                     }
                 }
 
                 if (secondBot == null) {
                     // CHỈ CÒN 1 NGƯỜI DUY NHẤT
                     if (winnerBot.getUserId() == highestBidderId) {
+                        if (cancelledAutoBid) {
+                            announcer.notify(auctionId, currentHighest);
+                        }
                         return; // Đang dẫn đầu, không cần tự tự nâng giá mình lên
                     }
                     
                     double requiredMin = currentHighest + bidStep;
                     if (winnerBot.getMaxAmount() < requiredMin) {
-                        dao.cancelAutoBid(auctionId, winnerBot.getUserId());
+                        cancelledAutoBid |= dao.cancelAutoBid(auctionId, winnerBot.getUserId());
+                        if (cancelledAutoBid) {
+                            announcer.notify(auctionId, currentHighest);
+                        }
                         return;
                     }
                     
@@ -160,6 +167,8 @@ public class AuctionHandler {
                     boolean isBidSuccess = auctionService.placeBid(currentAuction, newBid);
                     if (isBidSuccess) {
                         announcer.notify(auctionId, intendedAmount);
+                    } else if (cancelledAutoBid) {
+                        announcer.notify(auctionId, currentHighest);
                     }
                 } else {
                     // CÓ 2 NGƯỜI ĐẤU VỚI NHAU TRỞ LÊN
@@ -171,9 +180,9 @@ public class AuctionHandler {
                     if (intendedAmount > winnerBot.getMaxAmount()) intendedAmount = winnerBot.getMaxAmount();
 
                     // Hủy người thua cuộc (secondBot) và tất cả các bot yếu hơn trong hàng đợi
-                    dao.cancelAutoBid(auctionId, secondBot.getUserId());
+                    cancelledAutoBid |= dao.cancelAutoBid(auctionId, secondBot.getUserId());
                     while (!pq.isEmpty()) {
-                        dao.cancelAutoBid(auctionId, pq.poll().getUserId());
+                        cancelledAutoBid |= dao.cancelAutoBid(auctionId, pq.poll().getUserId());
                     }
 
                     // Chốt giá chiến thắng cho winnerBot (chỉ gọi 1 lần duy nhất vào DB, tránh spam đệ quy)
@@ -182,6 +191,8 @@ public class AuctionHandler {
                     boolean isBidSuccess = auctionService.placeBid(currentAuction, newBid);
                     if (isBidSuccess) {
                         announcer.notify(auctionId, intendedAmount);
+                    } else if (cancelledAutoBid) {
+                        announcer.notify(auctionId, currentHighest);
                     }
                 }
             } catch (BusinessRuleException e) {

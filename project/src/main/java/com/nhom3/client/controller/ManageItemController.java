@@ -4,6 +4,7 @@ import com.nhom3.client.event.ClientEventBus;
 import com.nhom3.client.event.ClientEvents;
 import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
+import com.nhom3.client.utils.DialogUtils;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.StatusOfAuction;
@@ -427,9 +428,8 @@ public class ManageItemController {
             Stage popupStage = new Stage();
             popupStage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             popupStage.setTitle("Thêm Sản Phẩm Mới");
-            popupStage.initModality(Modality.APPLICATION_MODAL);
             popupStage.setScene(new Scene(root));
-            popupStage.setResizable(false);
+            preparePopupStage(popupStage);
             popupStage.showAndWait();
         } catch (IOException e) {
             e.printStackTrace();
@@ -449,7 +449,7 @@ public class ManageItemController {
             stage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             stage.setScene(new Scene(root));
             stage.setTitle("Đăng Bán Sản Phẩm");
-            stage.initModality(Modality.APPLICATION_MODAL);
+            preparePopupStage(stage);
             stage.showAndWait();
         } catch (Exception e) {
             e.printStackTrace();
@@ -466,9 +466,8 @@ public class ManageItemController {
             Stage popupStage = new Stage();
             popupStage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             popupStage.setTitle("Sửa Sản Phẩm: " + item.getName());
-            popupStage.initModality(Modality.APPLICATION_MODAL);
             popupStage.setScene(new Scene(root));
-            popupStage.setResizable(false);
+            preparePopupStage(popupStage);
             popupStage.showAndWait();
         } catch (Exception e) {
             e.printStackTrace();
@@ -485,6 +484,7 @@ public class ManageItemController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
                 "Bạn có chắc chắn muốn xóa sản phẩm: " + item.getName() + "?",
                 ButtonType.OK, ButtonType.CANCEL);
+        DialogUtils.initOwner(alert, tableItems);
         alert.setHeaderText(null);
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             pendingDeleteItem = item;
@@ -517,6 +517,7 @@ public class ManageItemController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
                 "Xác nhận đã nhận đủ tiền cho sản phẩm: " + item.getName() + "?",
                 ButtonType.YES, ButtonType.NO);
+        DialogUtils.initOwner(alert, tableItems);
         alert.setHeaderText(null);
         if (currentUser != null && alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
             try {
@@ -540,8 +541,8 @@ public class ManageItemController {
             Stage stage = new Stage();
             stage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
             stage.setScene(new Scene(root));
-            stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Chi Tiết Đấu Giá: " + item.getName());
+            preparePopupStage(stage);
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
@@ -580,6 +581,26 @@ public class ManageItemController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
+        DialogUtils.initOwner(alert, tableItems);
         alert.showAndWait();
+    }
+
+    private void preparePopupStage(Stage stage) {
+        if (tableItems != null && tableItems.getScene() != null) {
+            stage.initOwner(tableItems.getScene().getWindow());
+            stage.initModality(Modality.WINDOW_MODAL);
+        } else {
+            stage.initModality(Modality.APPLICATION_MODAL);
+        }
+        stage.setFullScreen(false);
+        stage.setMaximized(false);
+        stage.setResizable(true);
+        stage.setOnShown(event -> {
+            stage.setFullScreen(false);
+            stage.setMaximized(false);
+            stage.sizeToScene();
+            stage.setMinWidth(stage.getWidth());
+            stage.setMinHeight(stage.getHeight());
+        });
     }
 }

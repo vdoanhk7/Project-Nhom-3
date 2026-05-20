@@ -19,6 +19,7 @@ import com.nhom3.shared.network.payload.ItemImagePayload;
 import com.nhom3.shared.network.payload.AuctionSubscribePayload;
 import com.nhom3.shared.network.payload.BidPayload;
 import com.nhom3.client.network.ServerConnection;
+import com.nhom3.client.utils.DialogUtils;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -536,6 +537,8 @@ public class ViewItemDetailController {
             return null;
         });
 
+        DialogUtils.initOwner(dialog, lblItemName);
+
         // Gửi qua mạng nếu có dữ liệu hợp lệ
         dialog.showAndWait().ifPresent(payload -> {
             try {
@@ -677,10 +680,7 @@ public class ViewItemDetailController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
-        if (lblItemName != null && lblItemName.getScene() != null) {
-            Stage stage = (Stage) lblItemName.getScene().getWindow();
-            alert.initOwner(stage);
-        }
+        DialogUtils.initOwner(alert, lblItemName);
         alert.showAndWait();
     }
 
@@ -933,6 +933,7 @@ public class ViewItemDetailController {
         alert.setTitle("Auto-Bid");
         alert.setHeaderText(null);
         alert.setContentText(event.message());
+        DialogUtils.initOwner(alert, lblItemName);
         alert.showAndWait();
         if (event.success()) {
             checkAutoBidStatus();
@@ -962,6 +963,7 @@ public class ViewItemDetailController {
         alert.setTitle("Hủy Auto-Bid");
         alert.setHeaderText(null);
         alert.setContentText(event.message());
+        DialogUtils.initOwner(alert, lblItemName);
         alert.showAndWait();
         if (event.success()) {
             checkAutoBidStatus();
@@ -974,6 +976,7 @@ public class ViewItemDetailController {
                 ButtonType.YES, ButtonType.NO);
         confirm.setTitle("Xác nhận dừng");
         confirm.setHeaderText(null);
+        DialogUtils.initOwner(confirm, lblItemName);
 
         if (confirm.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
             User currentUser = UserSession.getInstance().getLoggedInUser();

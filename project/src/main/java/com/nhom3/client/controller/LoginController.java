@@ -25,6 +25,8 @@ import javafx.stage.Stage;
 public class LoginController {
     private static final double MAIN_LAYOUT_WIDTH = 1300;
     private static final double MAIN_LAYOUT_HEIGHT = 800;
+    private static final double MAIN_LAYOUT_MIN_WIDTH = 1200;
+    private static final double MAIN_LAYOUT_MIN_HEIGHT = 750;
 
     @FXML private TextField txtUsername;
     @FXML private PasswordField txtPassword;
@@ -89,8 +91,12 @@ public class LoginController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/nhom3/client/view/layout_main.fxml"));
             Parent root = loader.load();
-            currentStage.setScene(new Scene(root, MAIN_LAYOUT_WIDTH, MAIN_LAYOUT_HEIGHT));
-            currentStage.centerOnScreen();
+            Scene mainScene = new Scene(root, MAIN_LAYOUT_WIDTH, MAIN_LAYOUT_HEIGHT);
+            currentStage.setScene(mainScene);
+            currentStage.setResizable(true);
+            currentStage.setMinWidth(MAIN_LAYOUT_MIN_WIDTH);
+            currentStage.setMinHeight(MAIN_LAYOUT_MIN_HEIGHT);
+            currentStage.setMaximized(true);
         } catch (Exception e) {
             e.printStackTrace();
         }

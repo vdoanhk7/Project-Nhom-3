@@ -4,6 +4,7 @@ import com.nhom3.client.event.ClientEventBus;
 import com.nhom3.client.event.ClientEvents;
 import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
+import com.nhom3.client.utils.DialogUtils;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
 import com.nhom3.shared.network.payload.AuctionIdPayload;
@@ -226,6 +227,7 @@ public class AdminDashboardController {
                     confirm.setTitle("Xác Nhận Xóa");
                     confirm.setHeaderText(null);
                     confirm.setContentText("Bạn có chắc chắn muốn xóa tài khoản '" + user.username + "' không?");
+                    DialogUtils.initOwner(confirm, tableUsers);
                     
                     if (confirm.showAndWait().orElse(javafx.scene.control.ButtonType.CANCEL) == javafx.scene.control.ButtonType.OK) {
                         try {
@@ -312,6 +314,7 @@ public class AdminDashboardController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
+        DialogUtils.initOwner(alert, tableUsers);
         alert.showAndWait();
     }
 }

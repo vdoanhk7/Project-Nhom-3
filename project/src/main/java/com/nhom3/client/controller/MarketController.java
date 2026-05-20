@@ -57,7 +57,6 @@ public class MarketController {
     @FXML private FlowPane flowMarket;
     @FXML private TextField txtSearch;
     @FXML private ComboBox<String> cbCategory;
-    @FXML private Button btnReload;
 
     private static final int IMAGE_LOADER_THREADS = 4;
     private static final int ONE_HOUR = 1;
@@ -67,7 +66,7 @@ public class MarketController {
     private static final double PRODUCT_CARD_SPACING = 12;
     private static final double PRODUCT_CARD_PADDING = 15;
     private static final double PRODUCT_CARD_WIDTH = 240;
-    private static final double PRODUCT_CARD_HEIGHT = 360;
+    private static final double PRODUCT_CARD_HEIGHT = 440;
     private static final double PRODUCT_CARD_HOVER_OFFSET = -4;
     private static final double PRODUCT_IMAGE_WIDTH = 210;
     private static final double PRODUCT_IMAGE_HEIGHT = 160;
@@ -112,17 +111,6 @@ public class MarketController {
             txtSellerName.textProperty().addListener((obs, oldV, newV) -> filterMarket());
         }
 
-        btnReload.setOnMouseEntered(e -> btnReload.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-weight: bold; -fx-font-size: 14px;"));
-        btnReload.setOnMouseExited(e -> btnReload.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-weight: bold; -fx-font-size: 14px;"));
-
-        btnReload.setOnAction(e -> {
-            txtSearch.clear();
-            cbCategory.setValue("Tất Cả");
-            if(txtSellerName != null) txtSellerName.clear();
-            if(cbTimeLeft != null) cbTimeLeft.setValue("Tất Cả");
-            loadMarket();
-        });
-        
         txtSearch.textProperty().addListener((observable, oldValue, newValue) -> filterMarket());
         cbCategory.valueProperty().addListener((observable, oldValue, newValue) -> filterMarket());
         loadMarket();
@@ -291,8 +279,9 @@ public class MarketController {
         
         card.setStyle(defaultStyle);
         card.setPadding(new Insets(PRODUCT_CARD_PADDING));
-        card.setPrefWidth(PRODUCT_CARD_WIDTH);
-        card.setPrefHeight(PRODUCT_CARD_HEIGHT);
+        card.setMinSize(PRODUCT_CARD_WIDTH, PRODUCT_CARD_HEIGHT);
+        card.setPrefSize(PRODUCT_CARD_WIDTH, PRODUCT_CARD_HEIGHT);
+        card.setMaxSize(PRODUCT_CARD_WIDTH, PRODUCT_CARD_HEIGHT);
 
         card.setOnMouseEntered(e -> {
             card.setStyle(hoverStyle);
@@ -304,7 +293,9 @@ public class MarketController {
         });
 
         StackPane imageWrapper = new StackPane();
+        imageWrapper.setMinSize(PRODUCT_IMAGE_WIDTH, PRODUCT_IMAGE_HEIGHT);
         imageWrapper.setPrefSize(PRODUCT_IMAGE_WIDTH, PRODUCT_IMAGE_HEIGHT);
+        imageWrapper.setMaxSize(PRODUCT_IMAGE_WIDTH, PRODUCT_IMAGE_HEIGHT);
         imageWrapper.setStyle("-fx-background-color: linear-gradient(to bottom right, #f1f2f6, #dfe4ea); -fx-background-radius: 8;");
 
         if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
@@ -424,9 +415,9 @@ public class MarketController {
 
             Stage stage = new Stage();
             stage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/icon.png")));
-            stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Chi tiết sản phẩm - " + item.getName());
             stage.setScene(new Scene(root));
+            preparePopupStage(stage);
             stage.showAndWait();
 
             if (onWindowClosed != null) {
@@ -435,5 +426,24 @@ public class MarketController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void preparePopupStage(Stage stage) {
+        if (flowMarket != null && flowMarket.getScene() != null) {
+            stage.initOwner(flowMarket.getScene().getWindow());
+            stage.initModality(Modality.WINDOW_MODAL);
+        } else {
+            stage.initModality(Modality.APPLICATION_MODAL);
+        }
+        stage.setFullScreen(false);
+        stage.setMaximized(false);
+        stage.setResizable(true);
+        stage.setOnShown(event -> {
+            stage.setFullScreen(false);
+            stage.setMaximized(false);
+            stage.sizeToScene();
+            stage.setMinWidth(stage.getWidth());
+            stage.setMinHeight(stage.getHeight());
+        });
     }
 }

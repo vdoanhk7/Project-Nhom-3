@@ -144,10 +144,11 @@ public class MainController {
         setChatInputEnabled(false);
 
         final String userInput = input;
+        final String contextAtSend = currentChatContext;
         Thread responseThread = new Thread(() -> {
             try {
                 Thread.sleep(ThreadLocalRandom.current().nextInt(300, 501));
-                ChatResult result = chatbotLogic.getResponse(userInput);
+                ChatResult result = chatbotLogic.getResponse(userInput, contextAtSend);
                 Platform.runLater(() -> {
                     appendChatBubble(result, false);
                     handleChatAction(result.getActionCode());

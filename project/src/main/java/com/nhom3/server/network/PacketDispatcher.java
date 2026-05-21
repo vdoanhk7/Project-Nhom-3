@@ -450,7 +450,7 @@ public class PacketDispatcher {
                             -1, "", "", "", "", ""));
         }
         double minAutoBidAmount = auction.getItem().getCurHighest() + auction.getBidStep();
-        if (autoData.getMaxAmount() <= minAutoBidAmount) {
+        if (autoData.getMaxAmount() < minAutoBidAmount) {
             return new Packet(PacketType.PLACE_AUTO_BID,
                     new ResultPayload(false,
                             "Giá tối đa Auto-Bid phải lớn hơn giá hiện tại + bước giá ("

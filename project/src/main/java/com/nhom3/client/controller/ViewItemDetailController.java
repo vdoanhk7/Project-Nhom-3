@@ -22,6 +22,7 @@ import com.nhom3.shared.network.payload.SellerRatingPayload;
 import com.nhom3.shared.network.payload.TransactionActionPayload;
 import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.DialogUtils;
+import com.nhom3.client.utils.UserBehaviorTracker;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -255,6 +256,7 @@ public class ViewItemDetailController {
 
     public void setItemData(Item item, Auction auction, String status) {
         this.currentItem = item;
+        UserBehaviorTracker.getInstance().recordView(item);
         lblItemName.setText(item.getName());
         lblItemType.setText("Phân loại: " + item.getType());
         String description = item.getDescription();
@@ -264,6 +266,7 @@ public class ViewItemDetailController {
         lblStartPrice.setText(String.format("Khởi điểm: %,.0f VNĐ", item.getStartPrice()));
         lblCurrentPrice.setText(String.format("%,.0f VNĐ", item.getCurHighest()));
         this.currentAuction = auction;
+        ClientEventBus.getDefault().publish(new ClientEvents.ChatContextChanged("VIEW_ITEM", currentAuction));
 
         if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
             renderItemImage(item.getImageBase64());
@@ -827,6 +830,7 @@ public class ViewItemDetailController {
             showAlert(Alert.AlertType.INFORMATION, "Thành công",
                     "Bạn đã đặt giá " + String.format("%,.0f VNĐ", pendingBidAmount) + " thành công!");
             currentAuction.getItem().setCurHighest(pendingBidAmount);
+            UserBehaviorTracker.getInstance().recordBid(currentItem);
             lblCurrentPrice.setText(String.format("%,.0f VNĐ", pendingBidAmount));
             updateBidInputHint();
             txtBidAmount.clear();
@@ -1230,6 +1234,7 @@ public class ViewItemDetailController {
         DialogUtils.initOwner(alert, lblItemName);
         alert.showAndWait();
         if (event.success()) {
+            UserBehaviorTracker.getInstance().recordBid(currentItem);
             checkAutoBidStatus();
         }
     }

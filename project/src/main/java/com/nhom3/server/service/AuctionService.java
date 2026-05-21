@@ -19,7 +19,6 @@ public class AuctionService {
     private static final int SNIPE_THRESHOLD_SECONDS = 30;
     private static final int EXTENSION_MINUTES = 2;
     private static final Logger log = LoggerFactory.getLogger(AuctionService.class);
-    private static final AuctionHandler auctionHandler = AuctionHandler.getInstance();
 
     public AuctionService() {
         this.auctionDAO = new AuctionDAOImpl();
@@ -180,7 +179,7 @@ public class AuctionService {
     public boolean placeBid(Auction auction, BidTransaction bid) {
             boolean isSuccess = placeBidInternal(auction, bid, false);
             if (isSuccess) {
-                auctionHandler.handleAutoBid(auction.getId());
+                AuctionHandler.getInstance().handleAutoBid(auction.getId());
             }
             return isSuccess;
     }
@@ -243,7 +242,13 @@ public class AuctionService {
             if (realEndTime != null) {
                 long secondsLeft = ChronoUnit.SECONDS.between(now, realEndTime);
                 if (secondsLeft > 0 && secondsLeft <= SNIPE_THRESHOLD_SECONDS) {
-                    auctionDAO.extendAuctionTime(auction.getId(), EXTENSION_MINUTES);
+                    boolean extended = auctionDAO.extendAuctionTime(auction.getId(), EXTENSION_MINUTES);
+                    if (extended) {
+                        LocalDateTime extendedEndTime = auctionDAO.getEndTime(auction.getId());
+                        if (extendedEndTime != null) {
+                            auction.setEndTime(extendedEndTime);
+                        }
+                    }
                 }
             }
             return true;

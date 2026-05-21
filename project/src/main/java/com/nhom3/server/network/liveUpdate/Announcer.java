@@ -3,6 +3,8 @@ package com.nhom3.server.network.liveUpdate;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import com.nhom3.shared.model.auction.Auction;
+import com.nhom3.shared.network.payload.BidHistoryResponsePayload;
 import com.nhom3.server.network.ClientHandler;
 import java.io.IOException;
 
@@ -50,6 +52,33 @@ public class Announcer {
             } catch (IOException e) {
                 // Client mat ket noi voi server
                 removeObserver(auctionId, observer.client);
+            }
+        }
+    }
+
+    public void notifyAuctionSnapshot(
+            Auction auction,
+            String eventType,
+            String message,
+            BidHistoryResponsePayload.SimpleBid latestBid) {
+        if (auction == null) {
+            return;
+        }
+
+        Set<AuctionObserver> observers = clientInAuctions.get(auction.getId());
+        if (observers == null || observers.isEmpty()) {
+            return;
+        }
+        for (AuctionObserver observer : observers) {
+            try {
+                if (observer instanceof ScreenObserver screenObserver) {
+                    screenObserver.notifySnapshot(auction, eventType, message, latestBid);
+                } else {
+                    double highestPrice = auction.getItem() != null ? auction.getItem().getCurHighest() : 0;
+                    observer.update(auction.getId(), highestPrice);
+                }
+            } catch (IOException e) {
+                removeObserver(auction.getId(), observer.client);
             }
         }
     }

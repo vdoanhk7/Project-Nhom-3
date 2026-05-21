@@ -2,6 +2,7 @@ package com.nhom3.server.service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -12,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import com.nhom3.server.dao.AuctionDAO;
 import com.nhom3.server.dao.AuctionDAOImpl;
 import com.nhom3.server.network.ClientHandler;
+import com.nhom3.server.network.liveUpdate.Announcer;
+import com.nhom3.shared.model.auction.Auction;
 
 /**
  * Service chịu trách nhiệm tự động kiểm tra và cập nhật trạng thái các phiên
@@ -28,6 +31,7 @@ public class AuctionMonitorService {
 
     private final AuctionDAO auctionDAO;
     private final ScheduledExecutorService scheduler;
+    private final Announcer announcer;
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
 
     /**
@@ -40,6 +44,7 @@ public class AuctionMonitorService {
             t.setDaemon(true); // Để thread này không ngăn JVM tắt
             return t;
         });
+        this.announcer = Announcer.getInstance();
     }
 
     /**
@@ -48,6 +53,7 @@ public class AuctionMonitorService {
     public AuctionMonitorService(AuctionDAO auctionDAO, ScheduledExecutorService scheduler) {
         this.auctionDAO = auctionDAO;
         this.scheduler = scheduler;
+        this.announcer = Announcer.getInstance();
     }
 
     /**
@@ -72,10 +78,12 @@ public class AuctionMonitorService {
             Timestamp now = Timestamp.valueOf(LocalDateTime.now());
 
             // Tự động mở các phiên đấu giá đã đến thời gian bắt đầu
-            auctionDAO.startScheduledAuctions(now);
+            List<Integer> startedAuctionIds = auctionDAO.startScheduledAuctions(now);
+            notifyStatusChanges(startedAuctionIds, "AUCTION_STARTED", "Phiên đấu giá đã bắt đầu.");
 
             // Tự động đóng các phiên đấu giá đã đến thời gian kết thúc
-            auctionDAO.closeExpiredAuctions(now);
+            List<Integer> closedAuctionIds = auctionDAO.closeExpiredAuctions(now);
+            notifyStatusChanges(closedAuctionIds, "AUCTION_FINISHED", "Phiên đấu giá đã kết thúc.");
 
             // Tự động trừ điểm uy tín cho giao dịch chậm thanh toán sau khi phiên đã đóng
             Map<Integer, Integer> changedReputations = auctionDAO.applyOverduePaymentPenalties(now);
@@ -90,6 +98,22 @@ public class AuctionMonitorService {
 
         } catch (Exception e) {
             log.error("[Monitor] Lỗi xảy ra trong quá trình kiểm tra định kỳ: ", e);
+        }
+    }
+
+    private void notifyStatusChanges(List<Integer> auctionIds, String eventType, String message) {
+        if (auctionIds == null || auctionIds.isEmpty()) {
+            return;
+        }
+
+        for (Integer auctionId : auctionIds) {
+            if (auctionId == null || auctionId <= 0) {
+                continue;
+            }
+            Auction auction = auctionDAO.getAuctionById(auctionId);
+            if (auction != null) {
+                announcer.notifyAuctionSnapshot(auction, eventType, message, null);
+            }
         }
     }
 

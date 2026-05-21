@@ -29,9 +29,9 @@ public interface AuctionDAO {
     LocalDateTime getEndTime(int auctionId);
     boolean endAuction(int auctionId);
     boolean startAuction(int auctionId);
-    void closeExpiredAuctions(Timestamp currentTime); 
+    List<Integer> closeExpiredAuctions(Timestamp currentTime);
     Map<Integer, Integer> applyOverduePaymentPenalties(Timestamp currentTime);
-    void startScheduledAuctions(Timestamp currentTime); 
+    List<Integer> startScheduledAuctions(Timestamp currentTime);
     boolean saveAutoBidConfig(AutoBidPayload payload);
     DashboardResponsePayload getDashboardStats();
     Auction getAuctionById(int auctionId);

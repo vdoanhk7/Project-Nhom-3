@@ -42,6 +42,7 @@ public class DashboardController {
 
     @FXML
     public void initialize() {
+        ClientEventBus.getDefault().publish(new ClientEvents.ChatContextChanged("DASHBOARD", null));
         ClientEventBus.getDefault().subscribe(
                 ClientEvents.DashboardLoaded.class, this, DashboardController::handleDashboardLoaded);
         ControllerLifecycle.unsubscribeOnDetach(lblTotalUsers, this);

@@ -29,6 +29,12 @@ public final class ClientEvents {
     public record NavigationRequested(Route route) {
     }
 
+    public record UserContextChanged(String contextType, Object contextData) {
+    }
+
+    public record ChatContextChanged(String contextType, Object data) {
+    }
+
     public record UserProfileChanged() {
     }
 

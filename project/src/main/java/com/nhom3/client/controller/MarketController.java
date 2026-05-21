@@ -1,6 +1,8 @@
 package com.nhom3.client.controller;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,6 +16,7 @@ import com.nhom3.client.event.ClientEventBus;
 import com.nhom3.client.event.ClientEvents;
 import com.nhom3.client.event.ControllerLifecycle;
 import com.nhom3.client.network.ServerConnection;
+import com.nhom3.client.utils.UserBehaviorTracker;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.StatusOfAuction;
@@ -91,6 +94,7 @@ public class MarketController {
     @FXML
     public void initialize() {
         ClientEventBus eventBus = ClientEventBus.getDefault();
+        eventBus.publish(new ClientEvents.ChatContextChanged("MARKET", null));
         eventBus.subscribe(ClientEvents.ActiveAuctionsLoaded.class, this, MarketController::handleActiveAuctionsLoaded);
         eventBus.subscribe(ClientEvents.ItemImageLoaded.class, this, MarketController::handleItemImageLoaded);
         ControllerLifecycle.unsubscribeOnDetach(flowMarket, this);
@@ -217,37 +221,30 @@ public class MarketController {
         String searchSeller = txtSellerName != null ? txtSellerName.getText().toLowerCase().trim() : "";
         String selectedTime = cbTimeLeft != null ? cbTimeLeft.getValue() : "Tất Cả";
 
-        int displayCount = 0;
+        List<Auction> filteredAuctions = allActiveAuctions.stream()
+                .filter(auction -> matchesCurrentFilters(
+                        auction, searchText, selectedCategory, searchSeller, selectedTime))
+                .toList();
 
-        for (Auction auction : allActiveAuctions) {
-            Item item = auction.getItem();
-            
-            // Lọc Danh mục
-            boolean matchCategory = "Tất Cả".equals(selectedCategory)
-                    || item.getType().name().equalsIgnoreCase(selectedCategory);
-                    
-            // Lọc Tên Sản phẩm
-            boolean matchSearch = searchText.isEmpty()
-                    || item.getName().toLowerCase().contains(searchText);
+        User currentUser = UserSession.getInstance().getLoggedInUser();
+        boolean shouldShowRecommendations = currentUser != null && currentUser.getRole() == Role.BIDDER;
+        UserBehaviorTracker tracker = UserBehaviorTracker.getInstance();
+        List<Auction> recommendedAuctions = shouldShowRecommendations
+                ? filteredAuctions.stream()
+                        .filter(auction -> tracker.calculateMatchScore(auction) > 0)
+                        .sorted(Comparator.comparingDouble(tracker::calculateMatchScore).reversed())
+                        .limit(3)
+                        .toList()
+                : List.of();
+        Set<Integer> recommendedAuctionIds = new HashSet<>();
+        if (!recommendedAuctions.isEmpty()) {
+            flowMarket.getChildren().add(createRecommendationSection(recommendedAuctions, tracker));
+            recommendedAuctions.forEach(auction -> recommendedAuctionIds.add(auction.getId()));
+        }
 
-            // Lọc Tên Người Bán
-            boolean matchSeller = searchSeller.isEmpty() || 
-                    (item.getSellerName() != null && item.getSellerName().toLowerCase().contains(searchSeller));
-
-            // Lọc Thời Gian Còn Lại
-            boolean matchTime = true;
-            if (!"Tất Cả".equals(selectedTime) && auction.getEndTime() != null) {
-                long hoursLeft = ChronoUnit.HOURS.between(LocalDateTime.now(), auction.getEndTime());
-                if ("Dưới 1 giờ".equals(selectedTime)) {
-                    matchTime = hoursLeft < ONE_HOUR && hoursLeft >= 0;
-                } else if ("Dưới 24 giờ".equals(selectedTime)) {
-                    matchTime = hoursLeft < ONE_DAY_HOURS && hoursLeft >= 0;
-                } else if ("Trên 24 giờ".equals(selectedTime)) {
-                    matchTime = hoursLeft >= ONE_DAY_HOURS;
-                }
-            }
-
-            if (matchCategory && matchSearch && matchSeller && matchTime) {
+        int displayCount = recommendedAuctions.size();
+        for (Auction auction : filteredAuctions) {
+            if (!recommendedAuctionIds.contains(auction.getId())) {
                 flowMarket.getChildren().add(createProductCard(auction));
                 displayCount++;
             }
@@ -256,6 +253,69 @@ public class MarketController {
         if (displayCount == 0) {
             showEmptyMessage("Không tìm thấy sản phẩm phù hợp.");
         }
+    }
+
+    private boolean matchesCurrentFilters(
+            Auction auction, String searchText, String selectedCategory, String searchSeller, String selectedTime) {
+        if (auction == null || auction.getItem() == null) {
+            return false;
+        }
+
+        Item item = auction.getItem();
+        boolean matchCategory = "Tất Cả".equals(selectedCategory)
+                || (item.getType() != null && item.getType().name().equalsIgnoreCase(selectedCategory));
+        boolean matchSearch = searchText == null || searchText.isEmpty()
+                || (item.getName() != null && item.getName().toLowerCase().contains(searchText));
+        boolean matchSeller = searchSeller == null || searchSeller.isEmpty()
+                || (item.getSellerName() != null && item.getSellerName().toLowerCase().contains(searchSeller));
+        boolean matchTime = matchesTimeFilter(auction, selectedTime);
+
+        return matchCategory && matchSearch && matchSeller && matchTime;
+    }
+
+    private boolean matchesTimeFilter(Auction auction, String selectedTime) {
+        if ("Tất Cả".equals(selectedTime) || auction.getEndTime() == null) {
+            return true;
+        }
+
+        long hoursLeft = ChronoUnit.HOURS.between(LocalDateTime.now(), auction.getEndTime());
+        if ("Dưới 1 giờ".equals(selectedTime)) {
+            return hoursLeft < ONE_HOUR && hoursLeft >= 0;
+        }
+        if ("Dưới 24 giờ".equals(selectedTime)) {
+            return hoursLeft < ONE_DAY_HOURS && hoursLeft >= 0;
+        }
+        if ("Trên 24 giờ".equals(selectedTime)) {
+            return hoursLeft >= ONE_DAY_HOURS;
+        }
+        return true;
+    }
+
+    private VBox createRecommendationSection(List<Auction> recommendedAuctions, UserBehaviorTracker tracker) {
+        Label title = new Label(createRecommendationTitle(recommendedAuctions.get(0), tracker));
+        title.setStyle("-fx-text-fill: #8a5a00; -fx-font-size: 18px; -fx-font-weight: bold;");
+
+        HBox cardRow = new HBox(16);
+        cardRow.setAlignment(Pos.CENTER_LEFT);
+        recommendedAuctions.forEach(auction -> cardRow.getChildren().add(createProductCard(auction)));
+
+        VBox section = new VBox(12, title, cardRow);
+        section.setPadding(new Insets(16));
+        section.setPrefWidth(EMPTY_STATE_WIDTH);
+        section.setStyle("-fx-background-color: linear-gradient(to bottom right, #fff8e1, #e8f4ff); "
+                + "-fx-background-radius: 14; -fx-border-color: #f3c766; -fx-border-radius: 14; "
+                + "-fx-border-width: 1.5;");
+        return section;
+    }
+
+    private String createRecommendationTitle(Auction topAuction, UserBehaviorTracker tracker) {
+        if (tracker.getUrgencyScore(topAuction) == 20) {
+            return "⏰ Đừng bỏ lỡ: Siêu phẩm đang đếm ngược!";
+        }
+        if (tracker.getBudgetScore(topAuction) == 30) {
+            return "🔥 Phù hợp với ngân sách của bạn!";
+        }
+        return "✨ Gợi ý dành riêng cho bạn";
     }
 
     private void showEmptyMessage(String message) {

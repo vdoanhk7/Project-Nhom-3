@@ -1,138 +1,161 @@
 [
   {
     "id": "greeting_bidder",
-    "keywords": ["chao", "hi"],
     "targetRoles": ["BIDDER"],
-    "response": "Chào {name}, bạn là Người mua. Mình có thể giúp gì?",
-    "suggestions": ["Điểm uy tín", "Auto-Bid", "Thanh toán"]
+    "keywords": ["chao", "xin chao", "hello", "hi"],
+    "response": "Chào {name}, bạn đang ở vai trò Bidder. Mình có thể hỗ trợ bạn cách đấu giá, theo dõi điểm uy tín hoặc hướng dẫn thanh toán.",
+    "suggestions": ["Cách đấu giá", "Điểm uy tín", "Thanh toán"]
   },
   {
     "id": "greeting_seller",
-    "keywords": ["chao", "hi"],
     "targetRoles": ["SELLER"],
-    "response": "Chào {name}, bạn là Người bán. Mình có thể giúp gì?",
+    "keywords": ["chao", "xin chao", "hello", "hi"],
+    "response": "Chào {name}, bạn đang ở vai trò Seller. Mình có thể hỗ trợ bạn đăng bán, quản lý sản phẩm hoặc xác nhận tiền sau giao dịch.",
     "suggestions": ["Cách đăng bán", "Quản lý sản phẩm", "Xác nhận tiền"]
   },
   {
     "id": "greeting_admin",
-    "keywords": ["chao", "hi"],
     "targetRoles": ["ADMIN"],
-    "response": "Chào {name}, bạn đang đăng nhập với vai trò Admin. Mình có thể hỗ trợ điều hướng và giải thích quy trình chung.",
-    "suggestions": ["Tổng quan", "Mở hồ sơ", "Hướng dẫn sử dụng"]
+    "keywords": ["chao", "xin chao", "hello", "hi"],
+    "response": "Chào {name}, bạn đang ở vai trò Admin. Mình có thể hỗ trợ bạn mở trang quản trị hoặc quay về tổng quan hệ thống.",
+    "suggestions": ["Trang quản trị", "Tổng quan"]
   },
   {
-    "id": "reputation_wrong_role",
-    "keywords": ["uy tin", "diem cua toi", "diem uy tin", "diem tin cay"],
-    "targetRoles": ["SELLER", "ADMIN"],
-    "response": "Tính năng Điểm uy tín chỉ áp dụng cho người mua (Bidder) thôi nhé. Bạn là Người bán nên không bị ràng buộc hệ thống điểm này.",
-    "suggestions": ["Cách đăng bán", "Quản lý sản phẩm"]
-  },
-  {
-    "id": "profile_help",
-    "keywords": ["doi mat khau", "cap nhat thong tin", "thong tin ca nhan", "sua ho so", "avatar", "anh dai dien"],
-    "response": "Ở trang Hồ sơ, bạn có thể cập nhật thông tin cá nhân, ảnh đại diện và đổi mật khẩu. Hãy kiểm tra kỹ thông tin trước khi lưu để hệ thống hiển thị đúng tên và liên hệ của bạn.",
-    "suggestions": ["Mở hồ sơ", "Tổng quan"]
-  },
-  {
-    "id": "reputation_score_bidder",
-    "keywords": ["uy tin", "diem", "diem cua toi", "diem uy tin"],
+    "id": "bidder_manual_bid_guide",
     "targetRoles": ["BIDDER"],
-    "response": "{name} hiện có {reputation} điểm uy tín. Điểm mặc định là 100. Bạn sẽ bị trừ 60 điểm khi hủy đơn, trừ 15 điểm mỗi ngày nếu thanh toán trễ, và được cộng 5 điểm khi giao dịch thành công.",
-    "suggestions": ["Chi tiết uy tín", "Hình phạt", "Thanh toán"]
+    "keywords": ["cach dau gia", "cach dat gia", "huong dan dat gia", "dat gia thu cong"],
+    "response": "Để đặt giá thủ công, bạn mở Chợ đấu giá, chọn sản phẩm đang diễn ra, nhập số tiền muốn trả và bấm đặt giá. Số tiền cần cao hơn giá hiện tại và phù hợp bước giá của phiên.",
+    "suggestions": ["Cài Auto-Bid", "Mở chợ đấu giá"]
   },
   {
-    "id": "reputation_deep_guide_bidder",
-    "keywords": ["chi tiet uy tin", "luat tru diem", "diem tin cay", "hinh phat"],
+    "id": "bidder_auto_bid_setup",
     "targetRoles": ["BIDDER"],
-    "response": "Quy tắc điểm uy tín của {name}:\n- Hiện tại: {reputation}đ.\n- Mặc định có 100đ.\n- Hủy giao dịch: -60đ.\n- Trễ thanh toán (>2 ngày): -15đ/ngày.\n- Hoàn tất tốt: +5đ.\nNếu điểm = 0, bạn sẽ bị cấm đấu giá.",
-    "suggestions": ["Hướng dẫn thanh toán", "Auto-Bid"]
-  },
-  {
-    "id": "auto_bid",
-    "keywords": ["auto bid", "auto-bid", "tu dong", "dau gia tu dong", "cai auto-bid", "cai auto bid", "thiet lap auto bid"],
-    "targetRoles": ["BIDDER"],
-    "response": "Để dùng Auto-Bid, hãy cài đặt giới hạn ví và bước giá tự động. Hệ thống sẽ tự đặt giá theo bước bạn chọn nhưng không vượt quá giới hạn đã đặt.",
+    "keywords": ["cai auto-bid", "cai auto bid", "thiet lap auto-bid", "bat auto-bid"],
+    "response": "Để cài Auto-Bid, hãy mở chi tiết phiên đấu giá rồi bấm nút cài đặt Auto-Bid. Bạn nhập mức giá tối đa và bước tăng, sau đó lưu cấu hình để hệ thống tự trả giá trong giới hạn đã đặt.",
     "suggestions": ["Chi tiết Auto-Bid", "Mở chợ đấu giá"]
   },
   {
-    "id": "auto_bid_deep_guide",
-    "keywords": ["chi tiet auto bid", "auto bid hoat dong the nao", "co che tu dong", "giai thich auto", "cai auto-bid", "cai auto bid", "thiet lap auto bid"],
+    "id": "bidder_auto_bid_detail",
     "targetRoles": ["BIDDER"],
-    "response": "Auto-Bid thay mặt bạn trả giá trong phiên đấu giá.\nBạn nhập 'Giới hạn ví' là mức giá cao nhất có thể trả và 'Bước giá' là số tiền tăng mỗi lần.\nKhi có người trả cao hơn bạn, hệ thống tự động cộng thêm 1 bước giá cho đến khi chạm giới hạn ví của bạn.",
-    "suggestions": ["Mở chợ đấu giá", "Luật trừ điểm"]
+    "keywords": ["chi tiet auto-bid", "chi tiet auto bid", "co che auto-bid", "auto-bid hoat dong"],
+    "response": "Auto-Bid tự động cộng thêm tiền theo bước tăng bạn đã cấu hình khi có người trả cao hơn. Hệ thống chỉ đặt giá đến mức tối đa bạn cho phép, nên bạn không cần theo dõi phiên liên tục.",
+    "suggestions": ["Cách đặt giá", "Điểm uy tín"]
   },
   {
-    "id": "payment_bidder",
-    "keywords": ["thanh toan", "chuyen khoan", "sau khi thang", "huong dan thanh toan", "nhan hang the nao", "tra tien ra sao"],
+    "id": "bidder_reputation_score",
     "targetRoles": ["BIDDER"],
-    "response": "Sau khi phiên kết thúc, người thắng sẽ thấy sản phẩm ở 'Lịch sử đấu giá'.\nHai bên tự liên hệ để chuyển khoản và giao hàng.\nKhi hoàn tất, Seller vào hệ thống bấm 'Xác nhận thanh toán' để kết thúc giao dịch và nhận điểm thưởng.",
-    "suggestions": ["Đánh giá người bán", "Điểm uy tín"]
+    "keywords": ["diem cua toi", "diem uy tin", "diem uy tin cua toi", "uy tin cua toi"],
+    "response": "{name} hiện có {reputation} điểm uy tín. Điểm này phản ánh lịch sử giao dịch của bạn và ảnh hưởng đến khả năng tiếp tục tham gia đấu giá.",
+    "suggestions": ["Chi tiết uy tín", "Thanh toán"]
   },
   {
-    "id": "seller_rating_guide",
-    "keywords": ["danh gia nguoi ban", "rate seller", "cach danh gia"],
+    "id": "bidder_reputation_detail",
     "targetRoles": ["BIDDER"],
-    "response": "Chỉ Người thắng cuộc và Đã thanh toán mới được đánh giá Seller từ 1 đến 5 sao.\nĐánh giá này giúp những người mua sau biết được độ uy tín của người bán.",
-    "suggestions": ["Hướng dẫn thanh toán", "Điểm uy tín"]
+    "keywords": ["chi tiet uy tin", "quy tac uy tin", "luat tru diem", "huy don tru diem", "tre thanh toan tru diem"],
+    "response": "Quy tắc uy tín: hủy giao dịch bị trừ 60 điểm, thanh toán trễ bị trừ 15 điểm mỗi ngày, và hoàn tất giao dịch tốt được cộng điểm theo chính sách hệ thống. Nếu điểm xuống quá thấp, tài khoản Bidder có thể bị hạn chế đấu giá.",
+    "suggestions": ["Điểm của tôi"]
   },
   {
-    "id": "seller_deep_guide",
-    "keywords": ["huong dan ban hang", "cach dang ban", "dang ban san pham", "tro thanh nguoi ban", "cach tao phien dau gia", "tao phien dau gia"],
-    "targetRoles": ["SELLER"],
-    "response": "Hướng dẫn dành cho Người bán:\n1. Đăng nhập bằng tài khoản Seller.\n2. Vào Quản lý sản phẩm -> Thêm mới để tạo sản phẩm.\n3. Chọn Đăng trực tiếp hoặc Hẹn giờ lên sàn để tạo phiên đấu giá.",
-    "suggestions": ["Mở quản lý sản phẩm", "Xác nhận tiền"]
-  },
-  {
-    "id": "seller_manage_items",
-    "keywords": ["quan ly san pham", "quan li san pham", "san pham cua toi", "mo quan ly", "mo quan li"],
-    "targetRoles": ["SELLER"],
-    "response": "Mình sẽ mở trang Quản lý sản phẩm để bạn theo dõi, thêm mới hoặc tạo phiên đấu giá.",
-    "action": "NAV_MANAGE_ITEM",
-    "suggestions": ["Cách đăng bán", "Tổng quan"]
-  },
-  {
-    "id": "seller_confirm_payment",
-    "keywords": ["xac nhan tien", "xac nhan thanh toan", "nguoi mua da tra tien", "hoan tat giao dich"],
-    "targetRoles": ["SELLER"],
-    "response": "Khi người mua đã thanh toán hoặc hai bên đã hoàn tất giao dịch, Seller vào phần quản lý liên quan và bấm 'Xác nhận thanh toán'. Việc này giúp kết thúc giao dịch và cập nhật điểm thưởng cho người mua.",
-    "suggestions": ["Quản lý sản phẩm", "Cách đăng bán"]
-  },
-  {
-    "id": "usage_guide_general",
-    "keywords": ["huong dan", "cach dau gia", "cach tham gia", "huong dan su dung", "cach dat gia", "huong dan dat gia", "dat gia the nao"],
-    "response": "AuctionPro hỗ trợ đấu giá theo vai trò hiện tại của bạn.\nNgười mua có thể vào Chợ Đấu Giá để đặt giá hoặc dùng Auto-Bid.\nNgười bán có thể vào Quản lý sản phẩm để đăng bán và tạo phiên đấu giá.",
-    "suggestions": ["Mở chợ đấu giá", "Tổng quan", "Mở hồ sơ"]
-  },
-  {
-    "id": "navigate_market",
-    "keywords": ["cho dau gia", "thi truong", "market", "xem san pham", "mo cho dau gia", "di den cho dau gia"],
+    "id": "bidder_payment_guide",
     "targetRoles": ["BIDDER"],
-    "response": "Mình sẽ mở Chợ Đấu Giá để bạn xem các phiên đấu giá hiện có.",
-    "action": "NAV_MARKET"
+    "keywords": ["huong dan thanh toan", "thanh toan", "cach thanh toan", "chuyen tien", "tra tien"],
+    "response": "Sau khi thắng đấu giá, bạn tự liên hệ Seller bên ngoài hệ thống để thống nhất chuyển tiền và nhận hàng. Khi Seller đã nhận đủ tiền, Seller sẽ bấm xác nhận thanh toán để đóng giao dịch.",
+    "suggestions": ["Đánh giá Seller", "Lịch sử mua"]
   },
   {
-    "id": "navigate_dashboard",
-    "keywords": ["tong quan", "dashboard", "trang chu", "ve tong quan"],
-    "response": "Mình sẽ đưa bạn về trang Tổng Quan.",
-    "action": "NAV_DASHBOARD"
-  },
-  {
-    "id": "navigate_profile",
-    "keywords": ["ho so", "tai khoan", "profile", "thong tin ca nhan", "mo ho so"],
-    "response": "Mình sẽ mở trang Hồ sơ cá nhân cho bạn.",
-    "action": "NAV_PROFILE"
-  },
-  {
-    "id": "navigate_purchase_history",
-    "keywords": ["lich su dau gia", "di den lich su", "xem lich su", "lich su mua"],
+    "id": "bidder_rate_seller",
     "targetRoles": ["BIDDER"],
-    "response": "Mình sẽ mở Lịch sử đấu giá để bạn xem các phiên đã tham gia, trạng thái thanh toán và giao dịch sau đấu giá.",
+    "keywords": ["danh gia seller", "danh gia nguoi ban", "vote seller", "rate seller"],
+    "response": "Bạn chỉ có thể đánh giá Seller sau khi giao dịch đã được xác nhận là đã thanh toán. Điểm đánh giá giúp các Bidder khác tham khảo chất lượng giao dịch của Seller.",
+    "suggestions": ["Lịch sử mua"]
+  },
+  {
+    "id": "bidder_purchase_history",
+    "targetRoles": ["BIDDER"],
+    "keywords": ["mo lich su mua", "mo lich su dau gia", "xem lich su mua", "di den lich su mua"],
+    "response": "Mình sẽ mở Lịch sử mua để bạn xem các phiên đã tham gia, trạng thái thanh toán và thông tin giao dịch sau đấu giá.",
+    "suggestions": ["Hướng dẫn thanh toán", "Đánh giá Seller"],
     "action": "NAV_PURCHASE_HISTORY"
   },
   {
-    "id": "navigate_admin_panel",
-    "keywords": ["quan tri", "trang quan tri", "quan tri he thong"],
+    "id": "bidder_purchase_history_info",
+    "targetRoles": ["BIDDER"],
+    "keywords": ["lich su mua", "lich su dau gia", "lich su da mua", "thong tin lich su mua"],
+    "response": "Lịch sử mua là nơi bạn xem các phiên đã tham gia, kết quả thắng đấu giá, trạng thái thanh toán và các giao dịch sau đấu giá.",
+    "suggestions": ["Mở lịch sử mua", "Hướng dẫn thanh toán"]
+  },
+  {
+    "id": "seller_create_item_guide",
+    "targetRoles": ["SELLER"],
+    "keywords": ["cach dang ban", "dang ban san pham", "them san pham moi", "tao phien dau gia", "hen gio dau gia"],
+    "response": "Để đăng bán, bạn vào Quản lý sản phẩm và chọn Thêm mới. Seller có thể đăng trực tiếp hoặc hẹn giờ để sản phẩm lên sàn đấu giá vào thời điểm phù hợp.",
+    "suggestions": ["Mở quản lý SP", "Xác nhận tiền"]
+  },
+  {
+    "id": "seller_open_manage_items",
+    "targetRoles": ["SELLER"],
+    "keywords": ["mo quan ly sp", "mo quan ly san pham", "di den quan ly san pham", "vao quan ly san pham"],
+    "response": "Mình sẽ mở trang Quản lý sản phẩm để bạn thêm mới, theo dõi sản phẩm và quản lý phiên đấu giá.",
+    "suggestions": ["Cách đăng bán", "Xác nhận tiền"],
+    "action": "NAV_MANAGE_ITEM"
+  },
+  {
+    "id": "seller_manage_items_info",
+    "targetRoles": ["SELLER"],
+    "keywords": ["quan ly san pham", "san pham cua toi", "theo doi san pham"],
+    "response": "Quản lý sản phẩm là nơi Seller theo dõi sản phẩm đã tạo, thêm sản phẩm mới và tạo hoặc hẹn giờ phiên đấu giá cho từng sản phẩm.",
+    "suggestions": ["Mở quản lý SP", "Cách đăng bán"]
+  },
+  {
+    "id": "seller_confirm_payment",
+    "targetRoles": ["SELLER"],
+    "keywords": ["xac nhan tien", "xac nhan da nhan tien", "xac nhan thanh toan", "dong don hang"],
+    "response": "Khi đã nhận đủ tiền từ Bidder, Seller bắt buộc bấm xác nhận thanh toán để đóng giao dịch. Bước này giúp hệ thống cập nhật trạng thái đơn và hoàn tất quy trình sau đấu giá.",
+    "suggestions": ["Mở quản lý SP"]
+  },
+  {
+    "id": "seller_reputation_wrong_role",
+    "targetRoles": ["SELLER"],
+    "keywords": ["diem uy tin cua toi", "diem uy tin seller", "uy tin seller", "diem cua seller"],
+    "response": "Điểm uy tín chỉ áp dụng cho Bidder. Seller không dùng hệ thống điểm uy tín này, nhưng vẫn có thể được Bidder đánh giá sau giao dịch đã thanh toán.",
+    "suggestions": ["Cách đăng bán", "Mở quản lý SP"]
+  },
+  {
+    "id": "common_profile_help",
+    "targetRoles": ["BIDDER", "SELLER", "ADMIN"],
+    "keywords": ["doi mat khau", "cach doi mat khau", "cap nhat ho so", "cap nhat thong tin", "cap nhat thong tin ca nhan", "sua ho so"],
+    "response": "Để đổi mật khẩu hoặc cập nhật hồ sơ, bạn vào trang Hồ sơ cá nhân. Tại đó bạn chỉnh thông tin cần thay đổi, nhập mật khẩu hiện tại nếu hệ thống yêu cầu, rồi lưu lại.",
+    "suggestions": ["Mở hồ sơ", "Tổng quan"]
+  },
+  {
+    "id": "common_open_profile",
+    "targetRoles": ["BIDDER", "SELLER", "ADMIN"],
+    "keywords": ["mo ho so", "di den ho so", "vao ho so", "mo trang ho so"],
+    "response": "Mình sẽ mở trang Hồ sơ để bạn đổi mật khẩu hoặc cập nhật thông tin cá nhân.",
+    "suggestions": ["Tổng quan"],
+    "action": "NAV_PROFILE"
+  },
+  {
+    "id": "common_dashboard",
+    "targetRoles": ["BIDDER", "SELLER", "ADMIN"],
+    "keywords": ["tong quan", "dashboard", "ve tong quan", "trang chu"],
+    "response": "Mình sẽ đưa bạn về trang Tổng quan.",
+    "suggestions": ["Đổi mật khẩu"],
+    "action": "NAV_DASHBOARD"
+  },
+  {
+    "id": "admin_panel_overview",
     "targetRoles": ["ADMIN"],
-    "response": "Trang Quản trị hệ thống dành cho Admin để theo dõi và quản lý dữ liệu nền của AuctionPro."
+    "keywords": ["trang quan tri", "quan tri he thong", "tong quan quan tri"],
+    "response": "Trang quản trị giúp Admin theo dõi và quản lý dữ liệu hệ thống của AuctionPro.",
+    "suggestions": ["Tổng quan"]
+  },
+  {
+    "id": "bidder_open_market",
+    "targetRoles": ["BIDDER"],
+    "keywords": ["mo cho dau gia", "vao cho dau gia", "xem san pham dau gia", "vao market"],
+    "response": "Mình sẽ mở Chợ đấu giá để bạn xem các phiên đang diễn ra.",
+    "suggestions": ["Cách đặt giá", "Cài Auto-Bid"],
+    "action": "NAV_MARKET"
   }
 ]

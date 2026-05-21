@@ -110,7 +110,15 @@ public final class ClientEvents {
     public record DashboardLoaded(DashboardResponsePayload data) {
     }
 
-    public record ScreenNotified(int auctionId, double highestPrice, String eventType, String message, String status) {
+    public record ScreenNotified(
+            int auctionId,
+            double highestPrice,
+            int highestBidderId,
+            String eventType,
+            String message,
+            String status,
+            String endTime,
+            BidHistoryResponsePayload.SimpleBid latestBid) {
     }
 
     public record UserDeleted(boolean success, String message) {

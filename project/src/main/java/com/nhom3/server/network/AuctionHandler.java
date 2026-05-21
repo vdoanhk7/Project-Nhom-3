@@ -18,6 +18,7 @@ import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.model.user.Bidder;
 import com.nhom3.shared.network.payload.AutoBidPayload;
+import com.nhom3.shared.network.payload.BidHistoryResponsePayload;
 import com.nhom3.shared.network.payload.BidPayload;
 import com.nhom3.shared.network.payload.ResultPayload;
 
@@ -68,7 +69,7 @@ public class AuctionHandler {
                         isBidSuccess ? "Đặt giá thành công" : "Có người đã trả giá cao hơn, vui lòng thử lại!", -1, "",
                         "", "", "", "");
                 if (isBidSuccess) {
-                    announcer.notify(bidData.getAuctionId(), bidData.getAmount());
+                    publishAuctionSnapshot(currentAuction, "PRICE_UPDATED", newBid);
                 }
                 return bidResultPayload;
             } catch (BusinessRuleException e) {
@@ -144,7 +145,7 @@ public class AuctionHandler {
                     // CHỈ CÒN 1 NGƯỜI DUY NHẤT
                     if (winnerBot.getUserId() == highestBidderId) {
                         if (cancelledAutoBid) {
-                            announcer.notify(auctionId, currentHighest);
+                            publishAuctionSnapshot(currentAuction, "AUTO_BID_CONFIG_CHANGED", null);
                         }
                         return; // Đang dẫn đầu, không cần tự tự nâng giá mình lên
                     }
@@ -153,22 +154,27 @@ public class AuctionHandler {
                     if (winnerBot.getMaxAmount() < requiredMin) {
                         cancelledAutoBid |= dao.cancelAutoBid(auctionId, winnerBot.getUserId());
                         if (cancelledAutoBid) {
-                            announcer.notify(auctionId, currentHighest);
+                            publishAuctionSnapshot(currentAuction, "AUTO_BID_CONFIG_CHANGED", null);
                         }
                         return;
                     }
                     
                     double intendedAmount = currentHighest + winnerBot.getIncrement();
-                    if (intendedAmount < requiredMin) intendedAmount = requiredMin;
-                    if (intendedAmount > winnerBot.getMaxAmount()) intendedAmount = winnerBot.getMaxAmount();
+                    if (intendedAmount < requiredMin) {
+                        intendedAmount = requiredMin;
+                    }
+                    if (intendedAmount > winnerBot.getMaxAmount()) {
+                        intendedAmount = winnerBot.getMaxAmount();
+                    }
 
                     Bidder bidder = new Bidder(winnerBot.getUserId(), null, null);
-                    BidTransaction newBid = new BidTransaction(0, bidder, intendedAmount, LocalDateTime.now(), "Đặt giá qua \ud83e\udd16 Auto-Bid");
+                    BidTransaction newBid = new BidTransaction(
+                            0, bidder, intendedAmount, LocalDateTime.now(), "Đặt giá qua \ud83e\udd16 Auto-Bid");
                     boolean isBidSuccess = auctionService.placeAutoBid(currentAuction, newBid);
                     if (isBidSuccess) {
-                        announcer.notify(auctionId, intendedAmount);
+                        publishAuctionSnapshot(currentAuction, "PRICE_UPDATED", newBid);
                     } else if (cancelledAutoBid) {
-                        announcer.notify(auctionId, currentHighest);
+                        publishAuctionSnapshot(currentAuction, "AUTO_BID_CONFIG_CHANGED", null);
                     }
                 } else {
                     // CÓ 2 NGƯỜI ĐẤU VỚI NHAU TRỞ LÊN
@@ -176,8 +182,12 @@ public class AuctionHandler {
                     double intendedAmount = secondBot.getMaxAmount() + winnerBot.getIncrement();
                     
                     double requiredMin = currentHighest + bidStep;
-                    if (intendedAmount < requiredMin) intendedAmount = requiredMin;
-                    if (intendedAmount > winnerBot.getMaxAmount()) intendedAmount = winnerBot.getMaxAmount();
+                    if (intendedAmount < requiredMin) {
+                        intendedAmount = requiredMin;
+                    }
+                    if (intendedAmount > winnerBot.getMaxAmount()) {
+                        intendedAmount = winnerBot.getMaxAmount();
+                    }
 
                     // Hủy người thua cuộc (secondBot) và tất cả các bot yếu hơn trong hàng đợi
                     cancelledAutoBid |= dao.cancelAutoBid(auctionId, secondBot.getUserId());
@@ -187,12 +197,13 @@ public class AuctionHandler {
 
                     // Chốt giá chiến thắng cho winnerBot (chỉ gọi 1 lần duy nhất vào DB, tránh spam đệ quy)
                     Bidder bidder = new Bidder(winnerBot.getUserId(), null, null);
-                    BidTransaction newBid = new BidTransaction(0, bidder, intendedAmount, LocalDateTime.now(), "Đặt giá qua \ud83e\udd16 Auto-Bid");
+                    BidTransaction newBid = new BidTransaction(
+                            0, bidder, intendedAmount, LocalDateTime.now(), "Đặt giá qua \ud83e\udd16 Auto-Bid");
                     boolean isBidSuccess = auctionService.placeAutoBid(currentAuction, newBid);
                     if (isBidSuccess) {
-                        announcer.notify(auctionId, intendedAmount);
+                        publishAuctionSnapshot(currentAuction, "PRICE_UPDATED", newBid);
                     } else if (cancelledAutoBid) {
-                        announcer.notify(auctionId, currentHighest);
+                        publishAuctionSnapshot(currentAuction, "AUTO_BID_CONFIG_CHANGED", null);
                     }
                 }
             } catch (BusinessRuleException e) {
@@ -205,5 +216,22 @@ public class AuctionHandler {
         } catch (Exception e) {
             logger.error("Lỗi đặt giá", e);
         }
+    }
+
+    private void publishAuctionSnapshot(Auction auction, String eventType, BidTransaction latestBid) {
+        BidHistoryResponsePayload.SimpleBid simpleBid = null;
+        if (latestBid != null) {
+            int bidderId = latestBid.getBidder() != null ? latestBid.getBidder().getId() : -1;
+            String bidderName = bidderId > 0 ? dao.getBidderDisplayName(bidderId) : null;
+            if (bidderName == null || bidderName.isBlank()) {
+                bidderName = bidderId > 0 ? "Bidder #" + bidderId : "Ẩn danh";
+            }
+            simpleBid = new BidHistoryResponsePayload.SimpleBid(
+                    latestBid.getAmount(),
+                    latestBid.getBidTime().toString(),
+                    latestBid.getNote(),
+                    bidderName);
+        }
+        announcer.notifyAuctionSnapshot(auction, eventType, null, simpleBid);
     }
 }

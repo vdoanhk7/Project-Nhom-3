@@ -1006,8 +1006,8 @@ public class AuctionDAOImpl implements AuctionDAO {
                                         rs.getString("full_name"), rs.getDouble("total_spent")));
                 }
             }
-            // 5. Lấy Top 5 Sản phẩm đắt nhất (FINISHED hoặc PAID)
-            String sqlTopItem = "SELECT i.name, i.cur_highest FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status IN ('PAID', 'FINISHED') ORDER BY i.cur_highest DESC LIMIT ?";
+            // 5. Lấy Top 5 Sản phẩm đắt nhất đã thanh toán
+            String sqlTopItem = "SELECT i.name, i.cur_highest FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = 'PAID' ORDER BY i.cur_highest DESC LIMIT ?";
             try (PreparedStatement stmt = conn.prepareStatement(sqlTopItem)) {
                 stmt.setInt(1, DASHBOARD_TOP_LIMIT);
                 try (ResultSet rs = stmt.executeQuery()) {

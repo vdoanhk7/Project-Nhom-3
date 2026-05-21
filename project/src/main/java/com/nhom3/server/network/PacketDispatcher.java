@@ -449,11 +449,11 @@ public class PacketDispatcher {
                                     + String.format("%,.0f VNĐ", auction.getBidStep()) + "!",
                             -1, "", "", "", "", ""));
         }
-        double minAutoBidAmount = auction.getItem().getStartPrice() + auction.getBidStep();
+        double minAutoBidAmount = auction.getItem().getCurHighest() + auction.getBidStep();
         if (autoData.getMaxAmount() <= minAutoBidAmount) {
             return new Packet(PacketType.PLACE_AUTO_BID,
                     new ResultPayload(false,
-                            "Giá tối đa Auto-Bid phải lớn hơn giá khởi điểm + bước giá ("
+                            "Giá tối đa Auto-Bid phải lớn hơn giá hiện tại + bước giá ("
                                     + String.format("%,.0f VNĐ", minAutoBidAmount) + ")!",
                             -1, "", "", "", "", ""));
         }

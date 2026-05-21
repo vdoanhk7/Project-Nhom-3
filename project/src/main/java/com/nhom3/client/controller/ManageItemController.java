@@ -152,6 +152,9 @@ public class ManageItemController {
         itemHighestBidderMap.clear();
         requestedImageIds.clear();
         for (SellerItemsResponsePayload.SellerItemDTO dto : dtoList) {
+            if ("CANCELLED".equals(dto.status)) {
+                continue;
+            }
             ItemType type = ItemType.valueOf(dto.type);
             Item item = type.createItem(dto.id, dto.name, dto.startPrice);
             item.setDescription(dto.description);

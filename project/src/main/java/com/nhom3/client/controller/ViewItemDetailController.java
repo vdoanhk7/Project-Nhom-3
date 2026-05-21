@@ -22,6 +22,7 @@ import com.nhom3.shared.network.payload.SellerRatingPayload;
 import com.nhom3.shared.network.payload.TransactionActionPayload;
 import com.nhom3.client.network.ServerConnection;
 import com.nhom3.client.utils.DialogUtils;
+import com.nhom3.client.utils.UserBehaviorTracker;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -62,6 +63,7 @@ public class ViewItemDetailController {
     private static final double AUTO_BID_INFO_SHADOW_OFFSET_Y = 3;
     private static final double AUTO_BID_BUTTON_BOX_SPACING = 15;
     private static final double AUTO_BID_BUTTON_BOX_TOP_PADDING = 10;
+    private static final int BID_TABLE_MAX_ROWS = 100;
 
     @FXML
     private Label lblItemName, lblItemType, lblStatusBadge, lblNoImage;
@@ -135,6 +137,8 @@ public class ViewItemDetailController {
             return;
 
         LocalDateTime now = LocalDateTime.now();
+        StatusOfAuction previousStatus = currentAuction.getStatus();
+        syncTemporalAuctionStatus(now);
 
         if (currentAuction.getStatus() == StatusOfAuction.CANCELLED) {
             setupCancelledState(currentAuction);
@@ -144,14 +148,36 @@ public class ViewItemDetailController {
             setupPaidState(currentAuction);
         } else if (currentAuction.getStatus() == StatusOfAuction.FINISHED) {
             setupFinishedState(currentAuction);
-        } else if (now.isBefore(currentAuction.getStartTime())) {
+        } else if (currentAuction.getStatus() == StatusOfAuction.OPEN) {
             setupOpenState(currentAuction);
-        } else if (now.isBefore(currentAuction.getEndTime())) {
+        } else if (currentAuction.getStatus() == StatusOfAuction.RUNNING) {
             setupRunningState(currentAuction);
         } else {
-            currentAuction.setStatus(StatusOfAuction.FINISHED);
             setupFinishedState(currentAuction);
         }
+
+        if (currentAuction.getStatus() != previousStatus) {
+            setupDynamicUI();
+        }
+    }
+
+    private void syncTemporalAuctionStatus(LocalDateTime now) {
+        StatusOfAuction status = currentAuction.getStatus();
+        if (status == StatusOfAuction.PAID
+                || status == StatusOfAuction.CANCELLED
+                || status == StatusOfAuction.DEAL_CANCELLED) {
+            return;
+        }
+
+        if (currentAuction.getStartTime() != null && now.isBefore(currentAuction.getStartTime())) {
+            currentAuction.setStatus(StatusOfAuction.OPEN);
+            return;
+        }
+        if (currentAuction.getEndTime() != null && now.isBefore(currentAuction.getEndTime())) {
+            currentAuction.setStatus(StatusOfAuction.RUNNING);
+            return;
+        }
+        currentAuction.setStatus(StatusOfAuction.FINISHED);
     }
 
     @FXML
@@ -230,6 +256,7 @@ public class ViewItemDetailController {
 
     public void setItemData(Item item, Auction auction, String status) {
         this.currentItem = item;
+        UserBehaviorTracker.getInstance().recordView(item);
         lblItemName.setText(item.getName());
         lblItemType.setText("Phân loại: " + item.getType());
         String description = item.getDescription();
@@ -239,6 +266,7 @@ public class ViewItemDetailController {
         lblStartPrice.setText(String.format("Khởi điểm: %,.0f VNĐ", item.getStartPrice()));
         lblCurrentPrice.setText(String.format("%,.0f VNĐ", item.getCurHighest()));
         this.currentAuction = auction;
+        ClientEventBus.getDefault().publish(new ClientEvents.ChatContextChanged("VIEW_ITEM", currentAuction));
 
         if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
             renderItemImage(item.getImageBase64());
@@ -426,7 +454,6 @@ public class ViewItemDetailController {
             if (countdownTimeline != null)
                 countdownTimeline.stop();
             refreshState();
-            setupDynamicUI();
             return false;
         }
 
@@ -803,6 +830,7 @@ public class ViewItemDetailController {
             showAlert(Alert.AlertType.INFORMATION, "Thành công",
                     "Bạn đã đặt giá " + String.format("%,.0f VNĐ", pendingBidAmount) + " thành công!");
             currentAuction.getItem().setCurHighest(pendingBidAmount);
+            UserBehaviorTracker.getInstance().recordBid(currentItem);
             lblCurrentPrice.setText(String.format("%,.0f VNĐ", pendingBidAmount));
             updateBidInputHint();
             txtBidAmount.clear();
@@ -852,20 +880,7 @@ public class ViewItemDetailController {
 
         List<BidTransaction> realList = new java.util.ArrayList<>();
         for (com.nhom3.shared.network.payload.BidHistoryResponsePayload.SimpleBid sb : simpleList) {
-            com.nhom3.shared.model.user.UserInfo info = new com.nhom3.shared.model.user.UserInfo("", "",
-                    sb.bidderName != null ? sb.bidderName : "Ẩn danh");
-            com.nhom3.shared.model.user.Bidder fakeBidder = new com.nhom3.shared.model.user.Bidder(0, info, null);
-
-            java.time.LocalDateTime realTime;
-            try {
-                realTime = java.time.LocalDateTime.parse(sb.timeStr);
-            } catch (Exception e) {
-                realTime = java.time.LocalDateTime.now();
-            }
-
-            String safeNote = sb.note != null ? sb.note : "";
-            BidTransaction bid = new BidTransaction(0, fakeBidder, sb.amount, realTime, safeNote);
-            realList.add(bid);
+            realList.add(toBidTransaction(sb));
         }
 
         javafx.application.Platform.runLater(() -> {
@@ -918,19 +933,28 @@ public class ViewItemDetailController {
         }
     }
 
-    public void handleScreenNotify(double highestPrice) {
-        if (currentAuction == null)
+    public void handleScreenNotify(ClientEvents.ScreenNotified event) {
+        if (currentAuction == null || event == null)
             return;
 
-        if (highestPrice > currentAuction.getItem().getCurHighest()) {
-            currentAuction.getItem().setCurHighest(highestPrice);
-            lblCurrentPrice.setText(String.format("%,.0f VNĐ", highestPrice));
+        StatusOfAuction previousStatus = currentAuction.getStatus();
+        LocalDateTime previousEndTime = currentAuction.getEndTime();
+        applyAuctionSnapshot(event);
+        appendRealtimeBid(event.latestBid());
+
+        if (event.highestPrice() > currentAuction.getItem().getCurHighest()) {
+            currentAuction.getItem().setCurHighest(event.highestPrice());
+            lblCurrentPrice.setText(String.format("%,.0f VNĐ", event.highestPrice()));
             updateBidInputHint();
         }
-        loadBidHistory();
-        User currentUser = UserSession.getInstance().getLoggedInUser();
-        if (currentUser instanceof Bidder && currentAuction.getStatus() == StatusOfAuction.RUNNING) {
-            checkAutoBidStatus();
+
+        boolean statusChanged = currentAuction.getStatus() != previousStatus;
+        boolean endTimeChanged = !java.util.Objects.equals(currentAuction.getEndTime(), previousEndTime);
+        if (statusChanged || endTimeChanged) {
+            refreshState();
+        }
+        if (statusChanged) {
+            setupDynamicUI();
         }
     }
 
@@ -949,7 +973,97 @@ public class ViewItemDetailController {
             handleAuctionCancelled(event.message());
             return;
         }
-        handleScreenNotify(event.highestPrice());
+        handleScreenNotify(event);
+    }
+
+    private void applyAuctionSnapshot(ClientEvents.ScreenNotified event) {
+        if (event.highestBidderId() > 0 && event.highestBidderId() != currentAuction.getHighestBidderId()) {
+            currentAuction.setHighestBidder(new Bidder(event.highestBidderId(), null, null));
+        }
+
+        StatusOfAuction status = parseStatus(event.status());
+        if (status != null && status != currentAuction.getStatus()) {
+            currentAuction.setStatus(status);
+        }
+
+        LocalDateTime endTime = parseTime(event.endTime());
+        if (endTime != null && !endTime.equals(currentAuction.getEndTime())) {
+            currentAuction.setEndTime(endTime);
+        }
+    }
+
+    private StatusOfAuction parseStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return null;
+        }
+        try {
+            return StatusOfAuction.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private LocalDateTime parseTime(String timeText) {
+        if (timeText == null || timeText.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(timeText);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void appendRealtimeBid(BidHistoryResponsePayload.SimpleBid simpleBid) {
+        if (simpleBid == null || tableBids == null) {
+            return;
+        }
+
+        javafx.collections.ObservableList<BidTransaction> items = tableBids.getItems();
+        if (items == null) {
+            items = javafx.collections.FXCollections.observableArrayList();
+            tableBids.setItems(items);
+        }
+
+        if (containsBid(items, simpleBid)) {
+            return;
+        }
+
+        items.add(0, toBidTransaction(simpleBid));
+        if (items.size() > BID_TABLE_MAX_ROWS) {
+            items.remove(BID_TABLE_MAX_ROWS, items.size());
+        }
+
+        if (priceHistoryChart.isVisible()) {
+            refreshChartFromBidList(items);
+        }
+    }
+
+    private boolean containsBid(List<BidTransaction> items, BidHistoryResponsePayload.SimpleBid simpleBid) {
+        for (BidTransaction bid : items) {
+            if (Math.abs(bid.getAmount() - simpleBid.amount) < 0.01
+                    && bid.getBidTime() != null
+                    && bid.getBidTime().toString().equals(simpleBid.timeStr)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private BidTransaction toBidTransaction(BidHistoryResponsePayload.SimpleBid simpleBid) {
+        com.nhom3.shared.model.user.UserInfo info = new com.nhom3.shared.model.user.UserInfo("", "",
+                simpleBid.bidderName != null ? simpleBid.bidderName : "Ẩn danh");
+        com.nhom3.shared.model.user.Bidder fakeBidder = new com.nhom3.shared.model.user.Bidder(0, info, null);
+
+        java.time.LocalDateTime realTime;
+        try {
+            realTime = java.time.LocalDateTime.parse(simpleBid.timeStr);
+        } catch (Exception e) {
+            realTime = java.time.LocalDateTime.now();
+        }
+
+        String safeNote = simpleBid.note != null ? simpleBid.note : "";
+        return new BidTransaction(0, fakeBidder, simpleBid.amount, realTime, safeNote);
     }
 
     private void handleAuctionCancelled(String message) {
@@ -1016,6 +1130,9 @@ public class ViewItemDetailController {
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (currentUser == null || currentAuction == null)
             return;
+        if (waitingForAutoBidCheck) {
+            return;
+        }
 
         com.nhom3.shared.network.payload.AutoBidPayload payload = new com.nhom3.shared.network.payload.AutoBidPayload(
                 currentUser.getId(), currentAuction.getId(), 0, 0);
@@ -1117,6 +1234,7 @@ public class ViewItemDetailController {
         DialogUtils.initOwner(alert, lblItemName);
         alert.showAndWait();
         if (event.success()) {
+            UserBehaviorTracker.getInstance().recordBid(currentItem);
             checkAutoBidStatus();
         }
     }

@@ -29,6 +29,12 @@ public final class ClientEvents {
     public record NavigationRequested(Route route) {
     }
 
+    public record UserContextChanged(String contextType, Object contextData) {
+    }
+
+    public record ChatContextChanged(String contextType, Object data) {
+    }
+
     public record UserProfileChanged() {
     }
 
@@ -110,7 +116,15 @@ public final class ClientEvents {
     public record DashboardLoaded(DashboardResponsePayload data) {
     }
 
-    public record ScreenNotified(int auctionId, double highestPrice, String eventType, String message, String status) {
+    public record ScreenNotified(
+            int auctionId,
+            double highestPrice,
+            int highestBidderId,
+            String eventType,
+            String message,
+            String status,
+            String endTime,
+            BidHistoryResponsePayload.SimpleBid latestBid) {
     }
 
     public record UserDeleted(boolean success, String message) {

@@ -109,22 +109,36 @@ public class AuctionDAOImpl implements AuctionDAO {
     }
 
     @Override
-    public void closeExpiredAuctions(java.sql.Timestamp currentTime) {
+    public List<Integer> closeExpiredAuctions(java.sql.Timestamp currentTime) {
         // Thay vì dùng NOW(), ta dùng dấu ? để truyền giờ Java vào
-        String sql = "UPDATE auctions SET status = 'FINISHED' WHERE status = 'RUNNING' AND end_time <= ?";
+        List<Integer> changedAuctionIds = new ArrayList<>();
+        String selectSql = "SELECT id FROM auctions WHERE status = 'RUNNING' AND end_time <= ?";
+        String updateSql = "UPDATE auctions SET status = 'FINISHED' WHERE status = 'RUNNING' AND end_time <= ?";
 
-        try (Connection conn = DbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setTimestamp(1, currentTime); // Đẩy giờ Java xuống Database
-
-            int rowsUpdated = stmt.executeUpdate();
-            if (rowsUpdated > 0) {
-                System.out.println("[Hệ thống] Đã tự động ĐÓNG " + rowsUpdated + " phiên đấu giá hết hạn!");
+        try (Connection conn = DbConnection.getConnection()) {
+            try (PreparedStatement stmt = conn.prepareStatement(selectSql)) {
+                stmt.setTimestamp(1, currentTime);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        changedAuctionIds.add(rs.getInt("id"));
+                    }
+                }
+            }
+            if (changedAuctionIds.isEmpty()) {
+                return changedAuctionIds;
+            }
+            try (PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+                stmt.setTimestamp(1, currentTime); // Đẩy giờ Java xuống Database
+                int rowsUpdated = stmt.executeUpdate();
+                if (rowsUpdated > 0) {
+                    System.out.println("[Hệ thống] Đã tự động ĐÓNG " + rowsUpdated + " phiên đấu giá hết hạn!");
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
+            changedAuctionIds.clear();
         }
+        return changedAuctionIds;
     }
 
     @Override
@@ -430,6 +444,22 @@ public class AuctionDAOImpl implements AuctionDAO {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    public String getBidderDisplayName(int bidderId) {
+        String sql = "SELECT full_name FROM users WHERE id = ?";
+        try (Connection conn = DbConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, bidderId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("full_name");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
@@ -848,22 +878,36 @@ public class AuctionDAOImpl implements AuctionDAO {
     }
 
     @Override
-    public void startScheduledAuctions(java.sql.Timestamp currentTime) {
+    public List<Integer> startScheduledAuctions(java.sql.Timestamp currentTime) {
         // Thay vì dùng NOW(), ta dùng dấu ? để truyền giờ Java vào
-        String sql = "UPDATE auctions SET status = 'RUNNING' WHERE status = 'OPEN' AND start_time <= ?";
+        List<Integer> changedAuctionIds = new ArrayList<>();
+        String selectSql = "SELECT id FROM auctions WHERE status = 'OPEN' AND start_time <= ?";
+        String updateSql = "UPDATE auctions SET status = 'RUNNING' WHERE status = 'OPEN' AND start_time <= ?";
 
-        try (Connection conn = DbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setTimestamp(1, currentTime); // Đẩy giờ Java xuống Database
-
-            int rowsUpdated = stmt.executeUpdate();
-            if (rowsUpdated > 0) {
-                System.out.println("[Hệ thống] Đã tự động MỞ " + rowsUpdated + " phiên đấu giá đến giờ lên sàn!");
+        try (Connection conn = DbConnection.getConnection()) {
+            try (PreparedStatement stmt = conn.prepareStatement(selectSql)) {
+                stmt.setTimestamp(1, currentTime);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        changedAuctionIds.add(rs.getInt("id"));
+                    }
+                }
+            }
+            if (changedAuctionIds.isEmpty()) {
+                return changedAuctionIds;
+            }
+            try (PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+                stmt.setTimestamp(1, currentTime); // Đẩy giờ Java xuống Database
+                int rowsUpdated = stmt.executeUpdate();
+                if (rowsUpdated > 0) {
+                    System.out.println("[Hệ thống] Đã tự động MỞ " + rowsUpdated + " phiên đấu giá đến giờ lên sàn!");
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
+            changedAuctionIds.clear();
         }
+        return changedAuctionIds;
     }
 
     @Override

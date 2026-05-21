@@ -250,9 +250,12 @@ public class ClientPacketDispatcher {
         eventBus.publish(new ClientEvents.ScreenNotified(
                 payload.getAuctionId(),
                 payload.getHighestPrice(),
+                payload.getHighestBidderId(),
                 payload.getEventType(),
                 payload.getMessage(),
-                payload.getStatus()));
+                payload.getStatus(),
+                payload.getEndTime(),
+                payload.getLatestBid()));
     }
 
     private void handleAuctionSubscribe(Packet response, Gson gson) {

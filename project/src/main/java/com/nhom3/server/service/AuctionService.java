@@ -2,17 +2,19 @@ package com.nhom3.server.service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.nhom3.server.dao.AuctionDAO;
 import com.nhom3.server.dao.AuctionDAOImpl;
 import com.nhom3.server.exception.AuctionConflictException;
 import com.nhom3.server.exception.BidRejectedException;
 import com.nhom3.server.exception.InvalidAuctionException;
+import com.nhom3.server.network.AuctionHandler;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.model.auction.StatusOfAuction;
-import com.nhom3.server.network.AuctionHandler;
 
 public class AuctionService {
     private final AuctionDAO auctionDAO;
@@ -217,7 +219,7 @@ public class AuctionService {
         }
 
         double currentHighest = auction.getItem().getCurHighest();
-        double requiredMinBid = currentHighest + auction.getBidStep();
+        double requiredMinBid = auction.getHighestBidderId() == -1 ? currentHighest : currentHighest + auction.getBidStep();
         if (bid.getAmount() < requiredMinBid) {
             throw new BidRejectedException(
                     "BID_AMOUNT_TOO_LOW",

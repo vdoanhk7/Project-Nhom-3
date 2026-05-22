@@ -2,17 +2,16 @@ package com.nhom3.client.network;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.InputStreamReader;
 import java.io.IOException;
-// Tự động văng lỗi IOException nếu cố nhận gửi mà ngắt kết nối 
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.gson.Gson;
 
+import com.google.gson.Gson;
 import com.nhom3.shared.network.packet.Packet;
 
 public class ServerConnection {

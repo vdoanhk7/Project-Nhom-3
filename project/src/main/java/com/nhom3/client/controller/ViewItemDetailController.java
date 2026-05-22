@@ -1,28 +1,33 @@
 package com.nhom3.client.controller;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+
 import com.nhom3.client.event.ClientEventBus;
 import com.nhom3.client.event.ClientEvents;
 import com.nhom3.client.event.ControllerLifecycle;
-import com.nhom3.shared.network.payload.BidHistoryResponsePayload;
-import com.nhom3.shared.model.item.Item;
-import com.nhom3.shared.model.user.Bidder;
-import com.nhom3.shared.model.user.User;
+import com.nhom3.client.network.ServerConnection;
+import com.nhom3.client.utils.DialogUtils;
 import com.nhom3.client.utils.MoneyInputFormatter;
+import com.nhom3.client.utils.UserBehaviorTracker;
 import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.auction.Auction;
 import com.nhom3.shared.model.auction.BidTransaction;
 import com.nhom3.shared.model.auction.StatusOfAuction;
+import com.nhom3.shared.model.item.Item;
+import com.nhom3.shared.model.user.Bidder;
+import com.nhom3.shared.model.user.User;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.shared.network.payload.AuctionSubscribePayload;
+import com.nhom3.shared.network.payload.BidHistoryResponsePayload;
+import com.nhom3.shared.network.payload.BidPayload;
 import com.nhom3.shared.network.payload.ItemActionPayload;
 import com.nhom3.shared.network.payload.ItemImagePayload;
-import com.nhom3.shared.network.payload.AuctionSubscribePayload;
-import com.nhom3.shared.network.payload.BidPayload;
 import com.nhom3.shared.network.payload.SellerRatingPayload;
 import com.nhom3.shared.network.payload.TransactionActionPayload;
-import com.nhom3.client.network.ServerConnection;
-import com.nhom3.client.utils.DialogUtils;
-import com.nhom3.client.utils.UserBehaviorTracker;
+
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -30,19 +35,24 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
 
 public class ViewItemDetailController {
     private static final long SECONDS_PER_MINUTE = 60L;
@@ -672,7 +682,7 @@ public class ViewItemDetailController {
                     double incAmt = MoneyInputFormatter.parseAmount(txtIncrement.getText());
 
                     double minAutoBidAmount = currentAuction.getItem().getStartPrice() + sellerBidStep;
-                    if (maxAmt <= minAutoBidAmount) {
+                    if (maxAmt < minAutoBidAmount) {
                         showAlert(Alert.AlertType.ERROR, "Lỗi",
                                 "Giá tối đa Auto-Bid phải lớn hơn giá khởi điểm + bước giá ("
                                         + formatMoney(minAutoBidAmount) + ")!");

@@ -142,6 +142,19 @@ public class AuctionHandler {
                 }
 
                 if (secondBot == null) {
+                    // Chưa có ai đặt giá nào, bot này sẽ là người dẫn đầu với giá khởi điểm
+                    if (highestBidderId == -1) {
+                        double startingPrice = currentAuction.getItem().getStartPrice();
+
+                        Bidder bidder = new Bidder(winnerBot.getUserId(), null, null);
+                        BidTransaction newBid = new BidTransaction(
+                                0, bidder, startingPrice, LocalDateTime.now(), "Đặt giá qua \ud83e\udd16 Auto-Bid");
+                        boolean isBidSuccess = auctionService.placeAutoBid(currentAuction, newBid);
+                        if (isBidSuccess) {
+                            publishAuctionSnapshot(currentAuction, "PRICE_UPDATED", newBid);
+                        }
+                        return;
+                    }
                     // CHỈ CÒN 1 NGƯỜI DUY NHẤT
                     if (winnerBot.getUserId() == highestBidderId) {
                         if (cancelledAutoBid) {

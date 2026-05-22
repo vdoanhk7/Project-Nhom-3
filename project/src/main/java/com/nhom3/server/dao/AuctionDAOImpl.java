@@ -1,14 +1,5 @@
 package com.nhom3.server.dao;
 
-import com.nhom3.server.db.DbConnection;
-
-import com.nhom3.shared.model.auction.Auction;
-import com.nhom3.shared.model.auction.BidTransaction;
-import com.nhom3.shared.model.auction.StatusOfAuction;
-import com.nhom3.shared.model.user.Bidder;
-import com.nhom3.shared.model.user.UserInfo;
-import com.nhom3.shared.network.payload.AutoBidPayload;
-import com.nhom3.shared.model.item.Item;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,8 +12,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.LoggerFactory;
+
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.nhom3.server.db.DbConnection;
+import com.nhom3.shared.model.auction.Auction;
+import com.nhom3.shared.model.auction.BidTransaction;
+import com.nhom3.shared.model.auction.StatusOfAuction;
+import com.nhom3.shared.model.item.Item;
+import com.nhom3.shared.model.user.Bidder;
+import com.nhom3.shared.model.user.UserInfo;
+import com.nhom3.shared.network.payload.AutoBidPayload;
 
 public class AuctionDAOImpl implements AuctionDAO {
     private static final Logger log = LoggerFactory.getLogger(AuctionDAOImpl.class);
@@ -41,7 +42,8 @@ public class AuctionDAOImpl implements AuctionDAO {
                 "JOIN users u ON u.id = ? " +
                 "SET i.cur_highest = ? " +
                 "WHERE a.id = ? " +
-                "AND ? >= i.cur_highest + a.bid_step " +
+                "AND ((a.highest_bidder_id IS NULL AND ? >= i.cur_highest) " +
+                "OR (a.highest_bidder_id IS NOT NULL AND ? >= i.cur_highest + a.bid_step)) " +
                 "AND a.status = 'RUNNING' " +
                 "AND u.role = 'BIDDER' " +
                 "AND u.reputation_score > 0";
@@ -57,6 +59,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                     stmt1.setDouble(2, newAmount);
                     stmt1.setInt(3, auctionId);
                     stmt1.setDouble(4, newAmount);
+                    stmt1.setDouble(5, newAmount);
 
                     int rowsUpdated = stmt1.executeUpdate();
                     if (rowsUpdated == 0) {
@@ -1006,8 +1009,8 @@ public class AuctionDAOImpl implements AuctionDAO {
                                         rs.getString("full_name"), rs.getDouble("total_spent")));
                 }
             }
-            // 5. Lấy Top 5 Sản phẩm đắt nhất (FINISHED hoặc PAID)
-            String sqlTopItem = "SELECT i.name, i.cur_highest FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status IN ('PAID', 'FINISHED') ORDER BY i.cur_highest DESC LIMIT ?";
+            // 5. Lấy Top 5 Sản phẩm đắt nhất đã thanh toán
+            String sqlTopItem = "SELECT i.name, i.cur_highest FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = 'PAID' ORDER BY i.cur_highest DESC LIMIT ?";
             try (PreparedStatement stmt = conn.prepareStatement(sqlTopItem)) {
                 stmt.setInt(1, DASHBOARD_TOP_LIMIT);
                 try (ResultSet rs = stmt.executeQuery()) {

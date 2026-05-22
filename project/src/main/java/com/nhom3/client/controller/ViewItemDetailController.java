@@ -957,6 +957,9 @@ public class ViewItemDetailController {
             lblCurrentPrice.setText(String.format("%,.0f VNĐ", event.highestPrice()));
             updateBidInputHint();
         }
+        if ("AUTO_BID_CONFIG_CHANGED".equals(event.eventType())) {
+            checkAutoBidStatus();
+        }
 
         boolean statusChanged = currentAuction.getStatus() != previousStatus;
         boolean endTimeChanged = !java.util.Objects.equals(currentAuction.getEndTime(), previousEndTime);

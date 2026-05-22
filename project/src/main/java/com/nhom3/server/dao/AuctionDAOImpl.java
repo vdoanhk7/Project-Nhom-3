@@ -1275,7 +1275,8 @@ public class AuctionDAOImpl implements AuctionDAO {
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, auctionId);
             stmt.setInt(2, userId);
-            return stmt.executeUpdate() > 0;
+            stmt.executeUpdate();
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;

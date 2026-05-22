@@ -117,3 +117,137 @@ java.io.IOException: Lỗi khi nhận phản hồi từ server
 Caused by: java.io.IOException: Kết nối đã bị đóng bởi server
 	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:88)
 	... 2 common frames omitted
+2026-05-22 23:29:11 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:597)
+	at java.base/sun.nio.ch.Net.connect(Net.java:586)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:583)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at java.base/java.net.Socket.connect(Socket.java:686)
+	at java.base/java.net.Socket.<init>(Socket.java:555)
+	at java.base/java.net.Socket.<init>(Socket.java:324)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:43)
+	at com.nhom3.client.App.main(App.java:39)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-22 23:29:13 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:597)
+	at java.base/sun.nio.ch.Net.connect(Net.java:586)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:583)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at java.base/java.net.Socket.connect(Socket.java:686)
+	at java.base/java.net.Socket.<init>(Socket.java:555)
+	at java.base/java.net.Socket.<init>(Socket.java:324)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:43)
+	at com.nhom3.client.App.main(App.java:39)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-22 23:29:15 [main] ERROR c.n.client.network.ServerConnection - Lỗi kết nối đến server: 
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:597)
+	at java.base/sun.nio.ch.Net.connect(Net.java:586)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:583)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at java.base/java.net.Socket.connect(Socket.java:686)
+	at java.base/java.net.Socket.<init>(Socket.java:555)
+	at java.base/java.net.Socket.<init>(Socket.java:324)
+	at com.nhom3.client.network.ServerConnection.connect(ServerConnection.java:43)
+	at com.nhom3.client.App.main(App.java:39)
+	at com.nhom3.client.Main.main(Main.java:5)
+2026-05-22 23:29:16 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-22 23:29:16 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-22 23:29:17 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-22 23:29:18 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@694d52ab
+2026-05-22 23:29:18 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-22 23:29:18 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-22 23:30:17 [virtual-33] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: vdoanhk7
+2026-05-22 23:30:17 [virtual-33] INFO  c.nhom3.server.service.AuthService - Server: Ngô Văn Doanh đã đăng nhập thành công!
+2026-05-22 23:30:17 [virtual-33] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Bidder[id=19, username=vdoanhk7, fullName=Ngô Văn Doanh, email=vdoanhk7@gmail.com, phone=0889945111, reputation=40, sellerRating=0.00/0]
+2026-05-22 23:30:17 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-22 23:33:35 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-22 23:33:42 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-22 23:33:58 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-22 23:34:20 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-22 23:35:38 [virtual-49] INFO  c.n.server.network.PacketDispatcher - Yêu cầu ĐĂNG KÝ từ user: a
+2026-05-22 23:35:39 [virtual-49] INFO  c.nhom3.server.service.AuthService - Server: Đăng ký thất bại. Tài khoản có thể đã tồn tại.
+2026-05-22 23:35:39 [virtual-49] INFO  c.n.server.network.PacketDispatcher - Yêu cầu ĐĂNG KÝ từ user: a
+2026-05-22 23:35:39 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng ký: false
+2026-05-22 23:35:39 [virtual-49] INFO  c.nhom3.server.service.AuthService - Server: Đăng ký thất bại. Tài khoản có thể đã tồn tại.
+2026-05-22 23:35:39 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng ký: false
+2026-05-22 23:35:44 [virtual-49] INFO  c.n.server.network.PacketDispatcher - Yêu cầu ĐĂNG KÝ từ user: aa
+2026-05-22 23:35:44 [virtual-49] INFO  c.nhom3.server.service.AuthService - Server: a đã đăng ký thành công với vai trò BIDDER!
+2026-05-22 23:35:44 [virtual-49] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Registered user detail: Bidder[id=0, username=aa, fullName=a, email=a@f.com, phone=0898989812, reputation=100, sellerRating=0.00/0]
+2026-05-22 23:35:44 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng ký: true
+2026-05-22 23:35:49 [virtual-49] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: aa
+2026-05-22 23:35:50 [virtual-49] INFO  c.nhom3.server.service.AuthService - Server: a đã đăng nhập thành công!
+2026-05-22 23:35:50 [virtual-49] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Bidder[id=33, username=aa, fullName=a, email=a@f.com, phone=0898989812, reputation=100, sellerRating=0.00/0]
+2026-05-22 23:35:50 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-22 23:36:22 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=0, bidderId=33, amount=900000, time=2026-05-22T23:36:21.414028400, note=Đặt giá qua 🤖 Auto-Bid]
+2026-05-22 23:36:22 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=53, item=adad, startTime=2026-05-22T00:32:27, endTime=2026-05-23T22:00, bidStep=50000, status=RUNNING, highestBidderId=33]
+2026-05-22 23:36:39 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=0, bidderId=33, amount=1000000, time=2026-05-22T23:36:38.198126100, note=Đặt giá qua 🤖 Auto-Bid]
+2026-05-22 23:36:39 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=53, item=adad, startTime=2026-05-22T00:32:27, endTime=2026-05-23T22:00, bidStep=50000, status=RUNNING, highestBidderId=33]
+2026-05-22 23:37:15 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=0, bidderId=33, amount=1500000, time=2026-05-22T23:37:14.251309900, note=Đặt giá qua 🤖 Auto-Bid]
+2026-05-22 23:37:15 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=53, item=adad, startTime=2026-05-22T00:32:27, endTime=2026-05-23T22:00, bidStep=50000, status=RUNNING, highestBidderId=33]
+2026-05-22 23:38:03 [virtual-33] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 1550000.0 từ User ID: 19
+2026-05-22 23:38:05 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=0, bidderId=19, amount=1550000, time=2026-05-22T23:38:04.207549900, note=Đặt giá qua mạng]
+2026-05-22 23:38:05 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=53, item=adad, startTime=2026-05-22T00:32:27, endTime=2026-05-23T22:00, bidStep=50000, status=RUNNING, highestBidderId=19]
+2026-05-22 23:38:05 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: true
+2026-05-22 23:38:16 [virtual-33] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 2000000.0 từ User ID: 19
+2026-05-22 23:38:17 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=0, bidderId=33, amount=1600000, time=2026-05-22T23:38:16.853415700, note=Đặt giá qua 🤖 Auto-Bid]
+2026-05-22 23:38:17 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=53, item=adad, startTime=2026-05-22T00:32:27, endTime=2026-05-23T22:00, bidStep=50000, status=RUNNING, highestBidderId=33]
+2026-05-22 23:38:19 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=0, bidderId=19, amount=2000000, time=2026-05-22T23:38:18.237930300, note=Đặt giá qua mạng]
+2026-05-22 23:38:19 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=53, item=adad, startTime=2026-05-22T00:32:27, endTime=2026-05-23T22:00, bidStep=50000, status=RUNNING, highestBidderId=19]
+2026-05-22 23:38:19 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: true
+2026-05-22 23:38:46 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=0, bidderId=33, amount=2050000, time=2026-05-22T23:38:45.948597200, note=Đặt giá qua 🤖 Auto-Bid]
+2026-05-22 23:38:46 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=53, item=adad, startTime=2026-05-22T00:32:27, endTime=2026-05-23T22:00, bidStep=50000, status=RUNNING, highestBidderId=33]
+2026-05-22 23:38:51 [virtual-33] INFO  c.n.server.network.PacketDispatcher - Nhận yêu cầu Đặt giá: 2100000.0 từ User ID: 19
+2026-05-22 23:38:53 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=0, bidderId=19, amount=2100000, time=2026-05-22T23:38:52.358580200, note=Đặt giá qua mạng]
+2026-05-22 23:38:53 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=53, item=adad, startTime=2026-05-22T00:32:27, endTime=2026-05-23T22:00, bidStep=50000, status=RUNNING, highestBidderId=19]
+2026-05-22 23:38:53 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đặt giá: true
+2026-05-22 23:39:04 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Accepted bid detail: BidTransaction[id=0, bidderId=33, amount=2150000, time=2026-05-22T23:39:03.661708400, note=Đặt giá qua 🤖 Auto-Bid]
+2026-05-22 23:39:04 [pool-4-thread-1] INFO  c.n.server.service.AuctionService - [OOP printInfo] Auction after bid: Auction[id=53, item=adad, startTime=2026-05-22T00:32:27, endTime=2026-05-23T22:00, bidStep=50000, status=RUNNING, highestBidderId=33]
+2026-05-22 23:39:18 [virtual-33] ERROR c.nhom3.server.network.ClientHandler - Client ngắt kết nối
+2026-05-22 23:39:18 [Thread-1] ERROR c.n.client.network.ServerConnection - Lỗi khi nhận phản hồi từ server
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:318)
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346)
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796)
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099)
+	at java.base/sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:350)
+	at java.base/sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:393)
+	at java.base/sun.nio.cs.StreamDecoder.lockedRead(StreamDecoder.java:217)
+	at java.base/sun.nio.cs.StreamDecoder.read(StreamDecoder.java:171)
+	at java.base/java.io.InputStreamReader.read(InputStreamReader.java:188)
+	at java.base/java.io.BufferedReader.fill(BufferedReader.java:160)
+	at java.base/java.io.BufferedReader.implReadLine(BufferedReader.java:370)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:347)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:436)
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:85)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-05-22 23:39:18 [Thread-1] ERROR c.nhom3.client.network.ServerHandler - Lỗi mất kết nối. Đang thử kết nối lại...
+java.io.IOException: Lỗi khi nhận phản hồi từ server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:93)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:318)
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346)
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796)
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099)
+	at java.base/sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:350)
+	at java.base/sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:393)
+	at java.base/sun.nio.cs.StreamDecoder.lockedRead(StreamDecoder.java:217)
+	at java.base/sun.nio.cs.StreamDecoder.read(StreamDecoder.java:171)
+	at java.base/java.io.InputStreamReader.read(InputStreamReader.java:188)
+	at java.base/java.io.BufferedReader.fill(BufferedReader.java:160)
+	at java.base/java.io.BufferedReader.implReadLine(BufferedReader.java:370)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:347)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:436)
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:85)
+	... 2 common frames omitted

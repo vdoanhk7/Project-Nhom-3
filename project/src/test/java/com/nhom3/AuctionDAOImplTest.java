@@ -125,6 +125,21 @@ public class AuctionDAOImplTest {
     }
 
     @Test
+    void testCancelAutoBidAlreadyMissingStillSucceeds() throws Exception {
+        try (MockedStatic<DbConnection> mockedDb = Mockito.mockStatic(DbConnection.class)) {
+            mockedDb.when(DbConnection::getConnection).thenReturn(conn);
+            when(conn.prepareStatement(anyString())).thenReturn(stmt1);
+            when(stmt1.executeUpdate()).thenReturn(0);
+
+            boolean result = auctionDAO.cancelAutoBid(1, 10);
+
+            assertTrue(result);
+            verify(stmt1).setInt(1, 1);
+            verify(stmt1).setInt(2, 10);
+        }
+    }
+
+    @Test
     void testGetAuctionByIdFound() throws Exception {
         try (MockedStatic<DbConnection> mockedDb = Mockito.mockStatic(DbConnection.class)) {
             mockedDb.when(DbConnection::getConnection).thenReturn(conn);

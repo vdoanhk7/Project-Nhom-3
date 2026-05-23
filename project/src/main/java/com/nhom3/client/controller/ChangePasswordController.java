@@ -10,6 +10,7 @@ import com.nhom3.shared.model.user.User;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
 import com.nhom3.shared.network.payload.ChangePasswordPayload;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -23,6 +24,7 @@ public class ChangePasswordController {
     @FXML private PasswordField txtNewPass;
     @FXML private PasswordField txtConfirmPass;
     @FXML private Button btnCancel;
+    @FXML private Button btnSave;
 
     private boolean waitingForChangePasswordResult;
 
@@ -35,40 +37,44 @@ public class ChangePasswordController {
 
     @FXML
     void handleSavePassword(ActionEvent event) {
+        if (waitingForChangePasswordResult) {
+            return;
+        }
+
         String oldPass = txtOldPass.getText();
         String newPass = txtNewPass.getText();
         String confirmPass = txtConfirmPass.getText();
 
         if (oldPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Canh bao", "Vui long nhap day du thong tin!");
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng nhập đầy đủ thông tin!");
             return;
         }
 
         if (!newPass.equals(confirmPass)) {
-            showAlert(Alert.AlertType.ERROR, "Loi nhap lieu", "Mat khau xac nhan khong khop!");
+            showAlert(Alert.AlertType.ERROR, "Lỗi nhập liệu", "Mật khẩu xác nhận không khớp!");
             return;
         }
 
         if (newPass.equals(oldPass)) {
-            showAlert(Alert.AlertType.WARNING, "Thong bao", "Mat khau moi phai khac mat khau cu!");
+            showAlert(Alert.AlertType.WARNING, "Thông báo", "Mật khẩu mới phải khác mật khẩu cũ!");
             return;
         }
 
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (currentUser == null) {
-            showAlert(Alert.AlertType.ERROR, "Loi", "Khong tim thay phien dang nhap!");
+            showAlert(Alert.AlertType.ERROR, "Lỗi", "Không tìm thấy phiên đăng nhập!");
             return;
         }
 
         try {
             ChangePasswordPayload payload =
                     new ChangePasswordPayload(currentUser.getId(), oldPass, newPass);
-            waitingForChangePasswordResult = true;
+            setChangePasswordPending(true);
             ServerConnection.getInstance().sendMessage(new Packet(PacketType.CHANGE_PASSWORD, payload));
         } catch (Exception e) {
-            waitingForChangePasswordResult = false;
+            setChangePasswordPending(false);
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Loi mang", "Khong the gui yeu cau doi mat khau!");
+            showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi yêu cầu đổi mật khẩu!");
         }
     }
 
@@ -76,13 +82,15 @@ public class ChangePasswordController {
         if (!waitingForChangePasswordResult) {
             return;
         }
-        waitingForChangePasswordResult = false;
+        setChangePasswordPending(false);
 
-        showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
-                success ? "Thanh cong" : "That bai", message);
-        if (success) {
-            closeWindow();
-        }
+        Platform.runLater(() -> {
+            if (success) {
+                DialogUtils.showAlertAsync(Alert.AlertType.INFORMATION, "Thành công", message, btnCancel, this::closeWindow);
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Thất bại", message);
+            }
+        });
     }
 
     private void handleChangePasswordEvent(ClientEvents.ChangePasswordResult event) {
@@ -99,12 +107,24 @@ public class ChangePasswordController {
         stage.close();
     }
 
+    private void setChangePasswordPending(boolean pending) {
+        waitingForChangePasswordResult = pending;
+        Runnable updateButtons = () -> {
+            if (btnSave != null) {
+                btnSave.setDisable(pending);
+            }
+            if (btnCancel != null) {
+                btnCancel.setDisable(pending);
+            }
+        };
+        if (Platform.isFxApplicationThread()) {
+            updateButtons.run();
+        } else {
+            Platform.runLater(updateButtons);
+        }
+    }
+
     private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        DialogUtils.initOwner(alert, btnCancel);
-        alert.showAndWait();
+        DialogUtils.showAlertAsync(type, title, content, btnCancel);
     }
 }

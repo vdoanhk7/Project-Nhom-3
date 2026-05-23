@@ -251,3 +251,108 @@ Caused by: java.net.SocketException: Connection reset
 	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:436)
 	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:85)
 	... 2 common frames omitted
+2026-05-23 12:30:20 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-23 12:30:20 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-23 12:30:22 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@37011f47
+2026-05-23 12:30:22 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-23 12:30:22 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-23 12:30:25 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-23 12:32:25 [virtual-32] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: qanh
+2026-05-23 12:32:26 [virtual-32] INFO  c.nhom3.server.service.AuthService - Server: Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.
+2026-05-23 12:32:26 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: false
+2026-05-23 12:32:34 [virtual-32] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: qanh
+2026-05-23 12:32:35 [virtual-32] INFO  c.nhom3.server.service.AuthService - Server: Mai Quang Anh đã đăng nhập thành công!
+2026-05-23 12:32:35 [virtual-32] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=25, username=qanh, fullName=Mai Quang Anh, email=qanh@gmail.com, phone=0978685958, reputation=100, sellerRating=5,00/1][managedItems=0, managedAuctions=0]
+2026-05-23 12:32:35 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-23 12:32:54 [virtual-32] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu thêm sản phẩm mới từ Seller ID: 25
+2026-05-23 12:32:55 [virtual-32] INFO  c.nhom3.server.service.ItemService - Đã lưu thành công sản phẩm '3' cho Seller ID: 25
+2026-05-23 12:32:55 [virtual-32] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Created item detail: Vehicle[id=64, name=3, description=3, startPrice=6000000, currentHighest=6000000, seller=Chua co thong tin]
+2026-05-23 12:40:19 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-23 12:41:00 [virtual-52] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: qanh
+2026-05-23 12:41:01 [virtual-52] INFO  c.nhom3.server.service.AuthService - Server: Mai Quang Anh đã đăng nhập thành công!
+2026-05-23 12:41:01 [virtual-52] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=25, username=qanh, fullName=Mai Quang Anh, email=qanh@gmail.com, phone=0978685958, reputation=100, sellerRating=5,00/1][managedItems=0, managedAuctions=0]
+2026-05-23 12:41:01 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-23 12:45:35 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-23 13:02:24 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-23 13:03:00 [virtual-65] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: qanh
+2026-05-23 13:03:01 [virtual-65] INFO  c.nhom3.server.service.AuthService - Server: Mai Quang Anh đã đăng nhập thành công!
+2026-05-23 13:03:01 [virtual-65] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=25, username=qanh, fullName=Mai Quang Anh, email=qanh@gmail.com, phone=0978685958, reputation=100, sellerRating=5,00/1][managedItems=0, managedAuctions=0]
+2026-05-23 13:03:01 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-23 13:04:26 [virtual-65] INFO  c.nhom3.server.service.ItemService - Bắt đầu xử lý yêu cầu cập nhật sản phẩm ID: 64
+2026-05-23 13:04:26 [virtual-65] INFO  c.nhom3.server.service.ItemService - Đã cập nhật thành công sản phẩm ID: 64
+2026-05-23 13:04:26 [virtual-65] INFO  c.nhom3.server.service.ItemService - [OOP printInfo] Updated item detail: Vehicle[id=64, name=3, description=3, startPrice=6000000, currentHighest=6000000, seller=Chua co thong tin]
+2026-05-23 13:04:53 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-23 13:06:13 [virtual-71] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: qanh
+2026-05-23 13:06:14 [virtual-71] INFO  c.nhom3.server.service.AuthService - Server: Mai Quang Anh đã đăng nhập thành công!
+2026-05-23 13:06:14 [virtual-71] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=25, username=qanh, fullName=Mai Quang Anh, email=qanh@gmail.com, phone=0978685958, reputation=100, sellerRating=5,00/1][managedItems=0, managedAuctions=0]
+2026-05-23 13:06:14 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-23 13:13:31 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-23 13:13:46 [virtual-74] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: qanh
+2026-05-23 13:13:47 [virtual-74] INFO  c.nhom3.server.service.AuthService - Server: Mai Quang Anh đã đăng nhập thành công!
+2026-05-23 13:13:47 [virtual-74] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=25, username=qanh, fullName=Mai Quang Anh, email=qanh@gmail.com, phone=0978685958, reputation=100, sellerRating=5,00/1][managedItems=0, managedAuctions=0]
+2026-05-23 13:13:47 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-23 13:14:08 [virtual-74] ERROR c.nhom3.server.network.ClientHandler - Client ngắt kết nối
+2026-05-23 13:14:14 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-23 13:14:14 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-23 13:14:15 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@778be506
+2026-05-23 13:14:15 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-23 13:14:15 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-23 13:14:17 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-23 13:14:34 [virtual-32] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: qanh
+2026-05-23 13:14:34 [virtual-32] INFO  c.nhom3.server.service.AuthService - Server: Mai Quang Anh đã đăng nhập thành công!
+2026-05-23 13:14:34 [virtual-32] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=25, username=qanh, fullName=Mai Quang Anh, email=qanh@gmail.com, phone=0978685958, reputation=100, sellerRating=5,00/1][managedItems=0, managedAuctions=0]
+2026-05-23 13:14:34 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-23 13:17:27 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-23 13:17:39 [virtual-46] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: qanh
+2026-05-23 13:17:39 [virtual-46] INFO  c.nhom3.server.service.AuthService - Server: Mai Quang Anh đã đăng nhập thành công!
+2026-05-23 13:17:39 [virtual-46] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=25, username=qanh, fullName=Mai Quang Anh, email=qanh@gmail.com, phone=0978685958, reputation=100, sellerRating=5,00/1][managedItems=0, managedAuctions=0]
+2026-05-23 13:17:39 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-23 13:20:51 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-23 13:21:04 [virtual-48] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: qanh
+2026-05-23 13:21:05 [virtual-48] INFO  c.nhom3.server.service.AuthService - Server: Mai Quang Anh đã đăng nhập thành công!
+2026-05-23 13:21:05 [virtual-48] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=25, username=qanh, fullName=Mai Quang Anh, email=qanh@gmail.com, phone=0978685958, reputation=100, sellerRating=5,00/1][managedItems=0, managedAuctions=0]
+2026-05-23 13:21:05 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-23 13:23:55 [virtual-48] ERROR c.nhom3.server.network.ClientHandler - Client ngắt kết nối
+2026-05-23 13:23:55 [Thread-1] ERROR c.n.client.network.ServerConnection - Lỗi khi nhận phản hồi từ server
+java.io.IOException: Kết nối đã bị đóng bởi server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:87)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-05-23 13:23:55 [Thread-1] ERROR c.nhom3.client.network.ServerHandler - Lỗi mất kết nối. Đang thử kết nối lại...
+java.io.IOException: Lỗi khi nhận phản hồi từ server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:93)
+	at com.nhom3.client.network.ServerHandler.run(ServerHandler.java:29)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.io.IOException: Kết nối đã bị đóng bởi server
+	at com.nhom3.client.network.ServerConnection.receiveResponse(ServerConnection.java:87)
+	... 2 common frames omitted
+2026-05-23 13:24:03 [main] INFO  c.n.s.service.AuctionMonitorService - [Monitor] Bắt đầu giám sát đấu giá (Chu kỳ: 5 SECONDS)...
+2026-05-23 13:24:04 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-23 13:24:05 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@40866a08
+2026-05-23 13:24:05 [AuctionMonitor-Worker] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-23 13:24:05 [AuctionMonitor-Worker] INFO  com.nhom3.server.db.DbConnection - [Server] Khoi tao connection pool thanh cong.
+2026-05-23 13:24:07 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-23 13:24:18 [virtual-32] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: qanh
+2026-05-23 13:24:19 [virtual-32] INFO  c.nhom3.server.service.AuthService - Server: Mai Quang Anh đã đăng nhập thành công!
+2026-05-23 13:24:19 [virtual-32] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=25, username=qanh, fullName=Mai Quang Anh, email=qanh@gmail.com, phone=0978685958, reputation=100, sellerRating=5,00/1][managedItems=0, managedAuctions=0]
+2026-05-23 13:24:19 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-23 13:28:45 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-23 13:29:06 [virtual-47] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: qanh
+2026-05-23 13:29:07 [virtual-47] INFO  c.nhom3.server.service.AuthService - Server: Mai Quang Anh đã đăng nhập thành công!
+2026-05-23 13:29:07 [virtual-47] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=25, username=qanh, fullName=Mai Quang Anh, email=qanh@gmail.com, phone=0978685958, reputation=100, sellerRating=5,00/1][managedItems=0, managedAuctions=0]
+2026-05-23 13:29:07 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-23 13:32:57 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-23 13:33:10 [virtual-54] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: qanh
+2026-05-23 13:33:10 [virtual-54] INFO  c.nhom3.server.service.AuthService - Server: Mai Quang Anh đã đăng nhập thành công!
+2026-05-23 13:33:10 [virtual-54] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=25, username=qanh, fullName=Mai Quang Anh, email=qanh@gmail.com, phone=0978685958, reputation=100, sellerRating=5,00/1][managedItems=0, managedAuctions=0]
+2026-05-23 13:33:11 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-23 13:36:26 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-23 13:36:38 [virtual-59] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: qanh
+2026-05-23 13:36:39 [virtual-59] INFO  c.nhom3.server.service.AuthService - Server: Mai Quang Anh đã đăng nhập thành công!
+2026-05-23 13:36:39 [virtual-59] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=25, username=qanh, fullName=Mai Quang Anh, email=qanh@gmail.com, phone=0978685958, reputation=100, sellerRating=5,00/1][managedItems=0, managedAuctions=0]
+2026-05-23 13:36:39 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true
+2026-05-23 13:42:17 [main] INFO  c.n.client.network.ServerConnection - Kết nối đến server thành công tại localhost:8080
+2026-05-23 13:42:31 [virtual-64] INFO  c.n.server.network.PacketDispatcher - Yêu cầu đăng nhập từ: qanh
+2026-05-23 13:42:31 [virtual-64] INFO  c.nhom3.server.service.AuthService - Server: Mai Quang Anh đã đăng nhập thành công!
+2026-05-23 13:42:31 [virtual-64] INFO  c.nhom3.server.service.AuthService - [OOP printInfo] Logged-in user detail: Seller[id=25, username=qanh, fullName=Mai Quang Anh, email=qanh@gmail.com, phone=0978685958, reputation=100, sellerRating=5,00/1][managedItems=0, managedAuctions=0]
+2026-05-23 13:42:31 [JavaFX Application Thread] INFO  c.n.c.network.ClientPacketDispatcher - Server phản hồi Đăng nhập: true

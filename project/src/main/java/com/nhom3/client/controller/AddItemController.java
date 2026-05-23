@@ -14,10 +14,12 @@ import com.nhom3.shared.model.user.User;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
 import com.nhom3.shared.network.payload.ItemPayload;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -37,6 +39,7 @@ public class AddItemController {
     @FXML private TextField txtStartPrice;
     @FXML private ImageView imgPreview;
     @FXML private Label lblImageName;
+    @FXML private Button btnSave;
 
     private String selectedImageBase64 = null;
 
@@ -94,6 +97,10 @@ public class AddItemController {
 
     @FXML
     void handleSave(ActionEvent event) {
+        if (waitingForSaveResult) {
+            return;
+        }
+
         String name = txtName.getText().trim();
         String description = txtDescription.getText().trim();
         String type = cbType.getValue();
@@ -132,10 +139,10 @@ public class AddItemController {
             PacketType packetType = editingItem == null ? PacketType.SAVE_ITEM : PacketType.UPDATE_ITEM;
             Packet packet = new Packet(packetType, payload);
             
-            waitingForSaveResult = true;
+            setSavePending(true);
             ServerConnection.getInstance().sendMessage(packet);
         } catch (Exception e) {
-            waitingForSaveResult = false;
+            setSavePending(false);
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể kết nối đến máy chủ để lưu sản phẩm!");
         }
@@ -145,20 +152,36 @@ public class AddItemController {
         if (!waitingForSaveResult) {
             return;
         }
-        waitingForSaveResult = false;
+        setSavePending(false);
 
-        javafx.application.Platform.runLater(() -> {
-            showAlert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR, 
-                     success ? "Thành công" : "Lỗi Server", message);
+        Platform.runLater(() -> {
             if (success) {
-                closeWindow();
-                ClientEventBus.getDefault().publish(new ClientEvents.SellerItemsChanged());
+                DialogUtils.showAlertAsync(Alert.AlertType.INFORMATION, "Thành công", message, txtName, () -> {
+                    closeWindow();
+                    ClientEventBus.getDefault().publish(new ClientEvents.SellerItemsChanged());
+                });
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Lỗi Server", message);
             }
         });
     }
 
     private void handleItemMutationEvent(ClientEvents.ItemMutationResult event) {
         handleItemMutationResult(event.packetType(), event.success(), event.message());
+    }
+
+    private void setSavePending(boolean pending) {
+        waitingForSaveResult = pending;
+        Runnable updateButton = () -> {
+            if (btnSave != null) {
+                btnSave.setDisable(pending);
+            }
+        };
+        if (Platform.isFxApplicationThread()) {
+            updateButton.run();
+        } else {
+            Platform.runLater(updateButton);
+        }
     }
 
     @FXML
@@ -172,11 +195,6 @@ public class AddItemController {
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        DialogUtils.initOwner(alert, txtName);
-        alert.showAndWait();
+        DialogUtils.showAlertAsync(type, title, content, txtName);
     }
 }

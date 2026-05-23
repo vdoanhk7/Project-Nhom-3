@@ -296,13 +296,7 @@ public class MainController {
         accountDeletedHandled = true;
         UserSession.getInstance().logout();
 
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Tài khoản đã bị xóa");
-        alert.setHeaderText(null);
-        alert.setContentText(event.message());
-        DialogUtils.initOwner(alert, contentArea);
-        alert.showAndWait();
-
+        DialogUtils.showAlertAsync(Alert.AlertType.ERROR, "Tài khoản đã bị xóa", event.message(), contentArea);
         showLoginScene();
     }
 

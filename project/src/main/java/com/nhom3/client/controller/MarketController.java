@@ -487,11 +487,10 @@ public class MarketController {
             stage.setTitle("Chi tiết sản phẩm - " + item.getName());
             stage.setScene(new Scene(root));
             preparePopupStage(stage);
-            stage.showAndWait();
-
             if (onWindowClosed != null) {
-                onWindowClosed.run();
+                stage.setOnHidden(event -> onWindowClosed.run());
             }
+            stage.show();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -500,9 +499,9 @@ public class MarketController {
     private void preparePopupStage(Stage stage) {
         if (flowMarket != null && flowMarket.getScene() != null) {
             stage.initOwner(flowMarket.getScene().getWindow());
-            stage.initModality(Modality.WINDOW_MODAL);
+            stage.initModality(Modality.NONE);
         } else {
-            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initModality(Modality.NONE);
         }
         stage.setFullScreen(false);
         stage.setMaximized(false);

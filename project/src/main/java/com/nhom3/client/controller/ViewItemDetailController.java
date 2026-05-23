@@ -98,6 +98,8 @@ public class ViewItemDetailController {
     private Label lblSellerRatingStatus;
     @FXML
     private Button btnRateSeller;
+    @FXML
+    private Button btnCancelTransaction;
     // ĐÃ FIX: Thêm ID dòng ngang để nhét nút Auto-bid vào cạnh nút Đặt giá
     @FXML
     private HBox boxBidInputRow;
@@ -133,6 +135,7 @@ public class ViewItemDetailController {
     private Item currentItem;
     private int currentBidCount = -1;
     private double pendingBidAmount = 0;
+    private boolean waitingForBidResult;
     private boolean waitingForAutoBidResult;
     private boolean waitingForAutoBidCheck;
     private boolean waitingForAutoBidCancelResult;
@@ -141,6 +144,9 @@ public class ViewItemDetailController {
     private int pendingSellerRating = -1;
     private boolean auctionCancelledHandled;
     private javafx.scene.layout.VBox autoBidInfoBox;
+    private Button btnAutoBid;
+    private Button btnAutoBidEdit;
+    private Button btnCancelAutoBid;
 
     private void refreshState() {
         if (currentAuction == null)
@@ -483,7 +489,7 @@ public class ViewItemDetailController {
     }
 
     private String formatTime(LocalDateTime time) {
-        return time.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm - dd/MM"));
+        return time.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm - dd/MM/yyyy"));
     }
 
     private void setupDynamicUI() {
@@ -534,6 +540,7 @@ public class ViewItemDetailController {
                     && boxBidInputRow.getChildren().stream().noneMatch(n -> "btnAutoBid".equals(n.getId()))) {
                 Button btnAutoBid = new Button("🤖 Auto-Bid");
                 btnAutoBid.setId("btnAutoBid");
+                this.btnAutoBid = btnAutoBid;
 
                 String styleNormal = "-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px; -fx-cursor: hand; -fx-background-radius: 5;";
                 String styleHover = "-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px; -fx-cursor: hand; -fx-background-radius: 5;";
@@ -545,6 +552,7 @@ public class ViewItemDetailController {
                 btnAutoBid.setOnMouseEntered(e -> btnAutoBid.setStyle(styleHover));
                 btnAutoBid.setOnMouseExited(e -> btnAutoBid.setStyle(styleNormal));
 
+                btnAutoBid.setDisable(waitingForAutoBidResult);
                 btnAutoBid.setOnAction(e -> openAutoBidDialog());
                 boxBidInputRow.getChildren().add(btnAutoBid);
             }
@@ -571,28 +579,37 @@ public class ViewItemDetailController {
                 ? item.getSellerName()
                 : "người bán";
         lblSellerRatingStatus.setText("Giao dịch đã thanh toán. Bạn có thể đánh giá " + sellerName + ".");
-        btnRateSeller.setDisable(false);
+        btnRateSeller.setDisable(waitingForSellerRatingResult);
         btnRateSeller.setText("ĐÁNH GIÁ NGƯỜI BÁN");
     }
 
     @FXML
     private void handleRateSeller() {
+        if (waitingForSellerRatingResult) {
+            return;
+        }
+        setSellerRatingPending(true);
+
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (!(currentUser instanceof Bidder) || currentAuction == null || currentItem == null) {
+            setSellerRatingPending(false);
             return;
         }
         if (currentAuction.getStatus() != StatusOfAuction.PAID
                 || currentAuction.getHighestBidderId() != currentUser.getId()) {
+            setSellerRatingPending(false);
             showAlert(Alert.AlertType.WARNING, "Không thể đánh giá",
                     "Chỉ người thắng phiên đã thanh toán mới được đánh giá người bán.");
             return;
         }
         if (currentItem.getSellerId() == currentUser.getId()) {
+            setSellerRatingPending(false);
             showAlert(Alert.AlertType.WARNING, "Không thể đánh giá",
                     "Bạn không thể tự đánh giá chính mình.");
             return;
         }
         if (currentAuction.getSellerRatingByCurrentBuyer() >= 0) {
+            setSellerRatingPending(false);
             showAlert(Alert.AlertType.INFORMATION, "Đã đánh giá",
                     "Bạn đã đánh giá người bán cho phiên đấu giá này.");
             return;
@@ -604,25 +621,30 @@ public class ViewItemDetailController {
         dialog.setContentText("Số sao:");
         DialogUtils.initOwner(dialog, lblItemName);
 
-        dialog.showAndWait().ifPresent(stars -> {
+        dialog.showAndWait().ifPresentOrElse(stars -> {
             try {
                 pendingSellerRating = stars;
-                waitingForSellerRatingResult = true;
                 ServerConnection.getInstance().sendMessage(new Packet(
                         PacketType.RATE_SELLER,
                         new SellerRatingPayload(currentAuction.getId(), currentUser.getId(), stars)));
             } catch (Exception e) {
-                waitingForSellerRatingResult = false;
                 pendingSellerRating = -1;
+                setSellerRatingPending(false);
                 e.printStackTrace();
                 showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi đánh giá người bán.");
             }
-        });
+        }, () -> setSellerRatingPending(false));
     }
 
     private void openAutoBidDialog() {
+        if (waitingForAutoBidResult) {
+            return;
+        }
+        setAutoBidResultPending(true);
+
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (currentAuction == null || currentAuction.getStatus() == StatusOfAuction.CANCELLED) {
+            setAutoBidResultPending(false);
             showAlert(Alert.AlertType.WARNING, "Phiên đấu giá đã bị hủy",
                     "Phiên đấu giá này đã bị quản trị viên hủy, bạn không thể bật Auto-Bid.");
             return;
@@ -706,32 +728,38 @@ public class ViewItemDetailController {
         DialogUtils.initOwner(dialog, lblItemName);
 
         // Gửi qua mạng nếu có dữ liệu hợp lệ
-        dialog.showAndWait().ifPresent(payload -> {
+        dialog.showAndWait().ifPresentOrElse(payload -> {
             try {
                 Packet packet = new Packet(PacketType.PLACE_AUTO_BID, payload);
-                waitingForAutoBidResult = true;
                 ServerConnection.getInstance().sendMessage(packet);
                 System.out.println("[Client] Đã gửi yêu cầu Auto-Bid: Max=" + payload.getMaxAmount());
 
                 // Đợi Server xử lý rồi tự động gọi giao diện cập nhật (Không gọi showAlert thủ
                 // công để tránh popup đúp)
             } catch (Exception e) {
-                waitingForAutoBidResult = false;
+                setAutoBidResultPending(false);
                 e.printStackTrace();
             }
-        });
+        }, () -> setAutoBidResultPending(false));
     }
 
     @FXML
     private void handlePlaceBid() {
+        if (waitingForBidResult) {
+            return;
+        }
+        setBidResultPending(true);
+
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (!(currentUser instanceof Bidder)) {
+            setBidResultPending(false);
             showAlert(Alert.AlertType.ERROR, "Lỗi phân quyền",
                     "Chỉ có Người mua (Bidder) mới được phép tham gia trả giá!");
             return;
         }
 
         if (currentAuction == null || currentAuction.getStatus() == StatusOfAuction.CANCELLED) {
+            setBidResultPending(false);
             showAlert(Alert.AlertType.WARNING, "Phiên đấu giá đã bị hủy",
                     "Phiên đấu giá này đã bị quản trị viên hủy, bạn không thể đặt giá nữa.");
             return;
@@ -739,6 +767,7 @@ public class ViewItemDetailController {
 
         String input = txtBidAmount.getText().trim();
         if (input.isEmpty()) {
+            setBidResultPending(false);
             showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng nhập số tiền bạn muốn trả!");
             return;
         }
@@ -750,6 +779,7 @@ public class ViewItemDetailController {
             double validMinPrice = currentHighest + minStep;
 
             if (bidAmount < validMinPrice) {
+                setBidResultPending(false);
                 showAlert(Alert.AlertType.ERROR, "Giá không hợp lệ",
                         "Số tiền trả giá phải lớn hơn hoặc bằng " + String.format("%,.0f VNĐ", validMinPrice) +
                                 "\n(Bao gồm giá hiện tại + bước giá " + formatMoney(minStep) + ")");
@@ -765,10 +795,12 @@ public class ViewItemDetailController {
             System.out.println("[Client] Đã gửi yêu cầu đặt giá: " + bidAmount);
 
         } catch (NumberFormatException e) {
+            setBidResultPending(false);
             showAlert(Alert.AlertType.ERROR, "Lỗi nhập liệu",
                     "Vui lòng chỉ nhập số tiền hợp lệ (VD: 5500000 hoặc 5.500.000)");
         } catch (Exception e) {
             this.pendingBidAmount = 0;
+            setBidResultPending(false);
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi yêu cầu đặt giá.");
         }
@@ -776,8 +808,14 @@ public class ViewItemDetailController {
 
     @FXML
     private void handleCancelTransaction() {
+        if (waitingForCancelTransactionResult) {
+            return;
+        }
+        setCancelTransactionPending(true);
+
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (!(currentUser instanceof Bidder) || currentAuction == null) {
+            setCancelTransactionPending(false);
             return;
         }
 
@@ -789,16 +827,16 @@ public class ViewItemDetailController {
         DialogUtils.initOwner(confirm, lblItemName);
 
         if (confirm.showAndWait().orElse(ButtonType.NO) != ButtonType.YES) {
+            setCancelTransactionPending(false);
             return;
         }
 
         try {
-            waitingForCancelTransactionResult = true;
             ServerConnection.getInstance().sendMessage(new Packet(
                     PacketType.CANCEL_TRANSACTION,
                     new TransactionActionPayload(currentAuction.getId(), currentUser.getId())));
         } catch (Exception e) {
-            waitingForCancelTransactionResult = false;
+            setCancelTransactionPending(false);
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi yêu cầu hủy giao dịch.");
         }
@@ -832,7 +870,9 @@ public class ViewItemDetailController {
     }
 
     public void handleBidResult(boolean isSuccess, String message) {
-        if (pendingBidAmount <= 0) {
+        if (!waitingForBidResult || pendingBidAmount <= 0) {
+            pendingBidAmount = 0;
+            setBidResultPending(false);
             return;
         }
 
@@ -850,10 +890,57 @@ public class ViewItemDetailController {
             showAlert(Alert.AlertType.ERROR, "Thất bại", message);
         }
         pendingBidAmount = 0;
+        setBidResultPending(false);
     }
 
     private void handleBidEvent(ClientEvents.BidResult event) {
         handleBidResult(event.success(), event.message());
+    }
+
+    private void setBidResultPending(boolean pending) {
+        waitingForBidResult = pending;
+        setButtonDisabled(btnPlaceBid, pending);
+    }
+
+    private void setAutoBidResultPending(boolean pending) {
+        waitingForAutoBidResult = pending;
+        setAutoBidConfigControlsDisabled(pending);
+    }
+
+    private void setAutoBidConfigControlsDisabled(boolean disabled) {
+        setButtonDisabled(resolveAutoBidButton(), disabled);
+        setButtonDisabled(btnAutoBidEdit, disabled);
+    }
+
+    private void setAutoBidCancelPending(boolean pending) {
+        waitingForAutoBidCancelResult = pending;
+        setButtonDisabled(btnCancelAutoBid, pending);
+    }
+
+    private void setCancelTransactionPending(boolean pending) {
+        waitingForCancelTransactionResult = pending;
+        setButtonDisabled(btnCancelTransaction, pending);
+    }
+
+    private void setSellerRatingPending(boolean pending) {
+        waitingForSellerRatingResult = pending;
+        setButtonDisabled(btnRateSeller, pending);
+    }
+
+    private Button resolveAutoBidButton() {
+        if (btnAutoBid == null && boxBidInputRow != null) {
+            javafx.scene.Node node = boxBidInputRow.lookup("#btnAutoBid");
+            if (node instanceof Button button) {
+                btnAutoBid = button;
+            }
+        }
+        return btnAutoBid;
+    }
+
+    private void setButtonDisabled(Button button, boolean disabled) {
+        if (button != null) {
+            button.setDisable(disabled);
+        }
     }
 
     private void loadBidHistory() {
@@ -873,12 +960,7 @@ public class ViewItemDetailController {
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        DialogUtils.initOwner(alert, lblItemName);
-        alert.showAndWait();
+        DialogUtils.showAlertAsync(type, title, content, lblItemName);
     }
 
     public void handleLoadHistoryResult(int responseAuctionId, List<BidHistoryResponsePayload.SimpleBid> simpleList) {
@@ -1082,8 +1164,10 @@ public class ViewItemDetailController {
     private void handleAuctionCancelled(String message) {
         currentAuction.setStatus(StatusOfAuction.CANCELLED);
         waitingForAutoBidCheck = false;
-        waitingForAutoBidResult = false;
-        waitingForAutoBidCancelResult = false;
+        pendingBidAmount = 0;
+        setBidResultPending(false);
+        setAutoBidResultPending(false);
+        setAutoBidCancelPending(false);
         setupCancelledState(currentAuction);
         setupDynamicUI();
 
@@ -1099,9 +1183,11 @@ public class ViewItemDetailController {
     private void handleDealCancelled(String message) {
         currentAuction.setStatus(StatusOfAuction.DEAL_CANCELLED);
         waitingForAutoBidCheck = false;
-        waitingForAutoBidResult = false;
-        waitingForAutoBidCancelResult = false;
-        waitingForCancelTransactionResult = false;
+        pendingBidAmount = 0;
+        setBidResultPending(false);
+        setAutoBidResultPending(false);
+        setAutoBidCancelPending(false);
+        setCancelTransactionPending(false);
         setupDealCancelledState(currentAuction);
         setupDynamicUI();
 
@@ -1200,19 +1286,23 @@ public class ViewItemDetailController {
                 btnBox.setPadding(new javafx.geometry.Insets(AUTO_BID_BUTTON_BOX_TOP_PADDING, 0, 0, 0));
 
                 Button btnEdit = new Button("Thay đổi thiết lập");
+                this.btnAutoBidEdit = btnEdit;
                 String editStyle = "-fx-background-color: white; -fx-text-fill: #2c3e50; -fx-border-color: #bdc3c7; -fx-border-radius: 5; -fx-cursor: hand; -fx-background-radius: 5; -fx-padding: 8 20; -fx-font-weight: bold;";
                 String editHover = "-fx-background-color: #ecf0f1; -fx-text-fill: #2c3e50; -fx-border-color: #bdc3c7; -fx-border-radius: 5; -fx-cursor: hand; -fx-background-radius: 5; -fx-padding: 8 20; -fx-font-weight: bold;";
                 btnEdit.setStyle(editStyle);
                 btnEdit.setOnMouseEntered(e -> btnEdit.setStyle(editHover));
                 btnEdit.setOnMouseExited(e -> btnEdit.setStyle(editStyle));
+                btnEdit.setDisable(waitingForAutoBidResult);
                 btnEdit.setOnAction(e -> openAutoBidDialog());
 
                 Button btnCancelAuto = new Button("Dừng Auto-Bid");
+                this.btnCancelAutoBid = btnCancelAuto;
                 String cancelStyle = "-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5; -fx-padding: 8 20;";
                 String cancelHover = "-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5; -fx-padding: 8 20;";
                 btnCancelAuto.setStyle(cancelStyle);
                 btnCancelAuto.setOnMouseEntered(e -> btnCancelAuto.setStyle(cancelHover));
                 btnCancelAuto.setOnMouseExited(e -> btnCancelAuto.setStyle(cancelStyle));
+                btnCancelAuto.setDisable(waitingForAutoBidCancelResult);
                 btnCancelAuto.setOnAction(e -> handleCancelAutoBid());
 
                 btnBox.getChildren().addAll(btnEdit, btnCancelAuto);
@@ -1238,14 +1328,11 @@ public class ViewItemDetailController {
         if (!waitingForAutoBidResult) {
             return;
         }
-        waitingForAutoBidResult = false;
+        setAutoBidResultPending(false);
 
-        Alert alert = new Alert(event.success() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
-        alert.setTitle("Auto-Bid");
-        alert.setHeaderText(null);
-        alert.setContentText(event.message());
-        DialogUtils.initOwner(alert, lblItemName);
-        alert.showAndWait();
+        showAlert(event.success() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
+                "Auto-Bid",
+                event.message());
         if (event.success()) {
             UserBehaviorTracker.getInstance().recordBid(currentItem);
             checkAutoBidStatus();
@@ -1269,14 +1356,11 @@ public class ViewItemDetailController {
         if (!waitingForAutoBidCancelResult) {
             return;
         }
-        waitingForAutoBidCancelResult = false;
+        setAutoBidCancelPending(false);
 
-        Alert alert = new Alert(event.success() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
-        alert.setTitle("Hủy Auto-Bid");
-        alert.setHeaderText(null);
-        alert.setContentText(event.message());
-        DialogUtils.initOwner(alert, lblItemName);
-        alert.showAndWait();
+        showAlert(event.success() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
+                "Hủy Auto-Bid",
+                event.message());
         if (event.success()) {
             checkAutoBidStatus();
         }
@@ -1286,7 +1370,7 @@ public class ViewItemDetailController {
         if (!waitingForSellerRatingResult) {
             return;
         }
-        waitingForSellerRatingResult = false;
+        setSellerRatingPending(false);
 
         showAlert(event.success() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
                 event.success() ? "Đã đánh giá" : "Thất bại",
@@ -1303,7 +1387,7 @@ public class ViewItemDetailController {
         if (!waitingForCancelTransactionResult) {
             return;
         }
-        waitingForCancelTransactionResult = false;
+        setCancelTransactionPending(false);
 
         showAlert(event.success() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
                 event.success() ? "Đã hủy giao dịch" : "Thất bại",
@@ -1326,6 +1410,11 @@ public class ViewItemDetailController {
     }
 
     private void handleCancelAutoBid() {
+        if (waitingForAutoBidCancelResult) {
+            return;
+        }
+        setAutoBidCancelPending(true);
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                 "Bạn có chắc chắn muốn dừng hệ thống đấu giá tự động?\nSau khi dừng, bạn sẽ phải tự đặt giá bằng tay.",
                 ButtonType.YES, ButtonType.NO);
@@ -1335,20 +1424,23 @@ public class ViewItemDetailController {
 
         if (confirm.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
             User currentUser = UserSession.getInstance().getLoggedInUser();
-            if (currentUser == null || currentAuction == null)
+            if (currentUser == null || currentAuction == null) {
+                setAutoBidCancelPending(false);
                 return;
+            }
 
             com.nhom3.shared.network.payload.AutoBidPayload payload = new com.nhom3.shared.network.payload.AutoBidPayload(
                     currentUser.getId(), currentAuction.getId(), 0, 0);
             Packet packet = new Packet(PacketType.CANCEL_AUTO_BID, payload);
 
             try {
-                waitingForAutoBidCancelResult = true;
                 ServerConnection.getInstance().sendMessage(packet);
             } catch (Exception e) {
-                waitingForAutoBidCancelResult = false;
+                setAutoBidCancelPending(false);
                 e.printStackTrace();
             }
+        } else {
+            setAutoBidCancelPending(false);
         }
     }
 

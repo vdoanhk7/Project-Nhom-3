@@ -101,7 +101,7 @@ public class ProfileController {
             popupStage.setTitle("Thay đổi mật khẩu");
             popupStage.setScene(new Scene(root));
             preparePopupStage(popupStage);
-            popupStage.showAndWait();
+            popupStage.show();
         } catch (IOException e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể mở cửa sổ đổi mật khẩu!");
@@ -360,20 +360,15 @@ public class ProfileController {
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        DialogUtils.initOwner(alert, txtName);
-        alert.showAndWait();
+        DialogUtils.showAlertAsync(type, title, content, txtName);
     }
 
     private void preparePopupStage(Stage stage) {
         if (txtName != null && txtName.getScene() != null) {
             stage.initOwner(txtName.getScene().getWindow());
-            stage.initModality(Modality.WINDOW_MODAL);
+            stage.initModality(Modality.NONE);
         } else {
-            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initModality(Modality.NONE);
         }
         stage.setFullScreen(false);
         stage.setMaximized(false);

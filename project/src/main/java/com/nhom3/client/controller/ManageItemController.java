@@ -548,7 +548,7 @@ public class ManageItemController {
             popupStage.setTitle("Thêm Sản Phẩm Mới");
             popupStage.setScene(new Scene(root));
             preparePopupStage(popupStage);
-            popupStage.showAndWait();
+            popupStage.show();
         } catch (IOException e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể mở cửa sổ thêm sản phẩm!");
@@ -569,7 +569,7 @@ public class ManageItemController {
             stage.setScene(new Scene(root));
             stage.setTitle("Đăng Bán Sản Phẩm");
             preparePopupStage(stage);
-            stage.showAndWait();
+            stage.show();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -602,7 +602,7 @@ public class ManageItemController {
             popupStage.setTitle("Sửa Sản Phẩm: " + item.getName());
             popupStage.setScene(new Scene(root));
             preparePopupStage(popupStage);
-            popupStage.showAndWait();
+            popupStage.show();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -716,20 +716,15 @@ public class ManageItemController {
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        DialogUtils.initOwner(alert, tableItems);
-        alert.showAndWait();
+        DialogUtils.showAlertAsync(type, title, content, tableItems);
     }
 
     private void preparePopupStage(Stage stage) {
         if (tableItems != null && tableItems.getScene() != null) {
             stage.initOwner(tableItems.getScene().getWindow());
-            stage.initModality(Modality.WINDOW_MODAL);
+            stage.initModality(Modality.NONE);
         } else {
-            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initModality(Modality.NONE);
         }
         stage.setFullScreen(false);
         stage.setMaximized(false);

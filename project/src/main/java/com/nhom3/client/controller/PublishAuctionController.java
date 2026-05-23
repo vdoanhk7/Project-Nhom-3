@@ -8,6 +8,7 @@ import com.nhom3.client.utils.UserSession;
 import com.nhom3.shared.model.item.Item;
 import com.nhom3.shared.model.user.User;
 import com.nhom3.client.utils.MoneyInputFormatter;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 
 public class PublishAuctionController {
     @FXML private Label lblItemName;
@@ -32,7 +34,9 @@ public class PublishAuctionController {
     private Item currentItem;
     private boolean waitingForPublishResult;
     private final ToggleGroup publishModeGroup = new ToggleGroup();
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("HH:mm").withResolverStyle(ResolverStyle.STRICT);
+    private static final int MAX_AUCTION_YEAR_OFFSET = 10;
 
     @FXML
     public void initialize() {
@@ -97,18 +101,31 @@ public class PublishAuctionController {
 
     @FXML
     void handleConfirm() {
+        if (waitingForPublishResult) {
+            return;
+        }
+
         try {
             LocalDateTime start;
             if (isPublishNowMode()) {
                 start = LocalDateTime.now();
             } else {
-                start = LocalDateTime.of(dpStartDate.getValue(), LocalTime.parse(txtStartTime.getText()));
+                LocalDate startDate = readAuctionDate(dpStartDate, "Ngày bắt đầu");
+                LocalTime startTime = readAuctionTime(txtStartTime, "Giờ bắt đầu");
+                start = LocalDateTime.of(startDate, startTime);
                 if (start.isBefore(LocalDateTime.now())) {
                     showAlert("Lỗi", "Thời gian bắt đầu không được ở trong quá khứ!");
                     return;
                 }
             }
-            LocalDateTime end = LocalDateTime.of(dpEndDate.getValue(), LocalTime.parse(txtEndTime.getText()));
+            LocalDate endDate = readAuctionDate(dpEndDate, "Ngày kết thúc");
+            LocalTime endTime = readAuctionTime(txtEndTime, "Giờ kết thúc");
+            LocalDateTime end = LocalDateTime.of(endDate, endTime);
+
+            if (end.isBefore(LocalDateTime.now())) {
+                showAlert("Lỗi", "Thời gian kết thúc không được ở trong quá khứ!");
+                return;
+            }
             
             if (!end.isAfter(start)) {
                 showAlert("Lỗi", "Thời gian kết thúc phải sau thời gian bắt đầu!");
@@ -133,14 +150,20 @@ public class PublishAuctionController {
             );
             com.nhom3.shared.network.packet.Packet packet = new com.nhom3.shared.network.packet.Packet(com.nhom3.shared.network.packet.PacketType.PUBLISH_AUCTION, payload);
             
-            waitingForPublishResult = true;
+            setPublishPending(true);
             com.nhom3.client.network.ServerConnection.getInstance().sendMessage(packet);
             System.out.println("[Client] Đã gửi yêu cầu đăng bán sản phẩm ID: " + currentItem.getId());
 
+        } catch (InvalidAuctionDateException e) {
+            setPublishPending(false);
+            showAlert("Lỗi ngày tháng", e.getMessage());
+        } catch (InvalidAuctionTimeException e) {
+            setPublishPending(false);
+            showAlert("Lỗi giờ", e.getMessage());
         } catch (Exception e) {
-            waitingForPublishResult = false;
+            setPublishPending(false);
             e.printStackTrace();
-            showAlert("Lỗi định dạng", "Vui lòng nhập giờ đúng định dạng HH:mm và bước giá hợp lệ.");
+            showAlert("Lỗi định dạng", "Vui lòng kiểm tra lại bước giá.");
         }
     }
 
@@ -148,15 +171,17 @@ public class PublishAuctionController {
         if (!waitingForPublishResult) {
             return;
         }
-        waitingForPublishResult = false;
+        setPublishPending(false);
 
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
             if (isSuccess) {
-                showAlert("Thành công", isPublishNowMode()
-                    ? "Sản phẩm đã được đăng bán ngay thành công!"
-                    : "Sản phẩm đã được lên lịch đấu giá thành công!");
-                ((Stage) lblItemName.getScene().getWindow()).close();
-                ClientEventBus.getDefault().publish(new ClientEvents.SellerItemsChanged());
+                String successMessage = isPublishNowMode()
+                        ? "Sản phẩm đã được đăng bán ngay thành công!"
+                        : "Sản phẩm đã được lên lịch đấu giá thành công!";
+                DialogUtils.showAlertAsync(Alert.AlertType.INFORMATION, "Thành công", successMessage, lblItemName, () -> {
+                    closeWindow();
+                    ClientEventBus.getDefault().publish(new ClientEvents.SellerItemsChanged());
+                });
             } else {
                 showAlert("Lỗi", message);
             }
@@ -167,7 +192,28 @@ public class PublishAuctionController {
         handlePublishResult(event.success(), event.message());
     }
 
-    @FXML void handleCancel() { ((Stage) lblItemName.getScene().getWindow()).close(); }
+    private void setPublishPending(boolean pending) {
+        waitingForPublishResult = pending;
+        Runnable updateButtons = () -> {
+            if (btnConfirm != null) {
+                btnConfirm.setDisable(pending);
+            }
+            if (btnCancel != null) {
+                btnCancel.setDisable(pending);
+            }
+        };
+        if (Platform.isFxApplicationThread()) {
+            updateButtons.run();
+        } else {
+            Platform.runLater(updateButtons);
+        }
+    }
+
+    @FXML void handleCancel() { closeWindow(); }
+
+    private void closeWindow() {
+        ((Stage) lblItemName.getScene().getWindow()).close();
+    }
 
     private boolean isPublishNowMode() {
         return rbPublishNow.isSelected();
@@ -185,12 +231,66 @@ public class PublishAuctionController {
         }
     }
 
+    private LocalDate readAuctionDate(DatePicker datePicker, String fieldName) {
+        String editorText = datePicker.getEditor().getText();
+        LocalDate date;
+        try {
+            date = editorText == null || editorText.isBlank()
+                    ? datePicker.getValue()
+                    : datePicker.getConverter().fromString(editorText.trim());
+        } catch (RuntimeException e) {
+            throw new InvalidAuctionDateException(
+                    fieldName + " không hợp lệ. Vui lòng nhập ngày đúng định dạng của ô chọn ngày.");
+        }
+
+        if (date == null) {
+            throw new InvalidAuctionDateException(fieldName + " không hợp lệ.");
+        }
+
+        validateAuctionYear(date, fieldName);
+        datePicker.setValue(date);
+        return date;
+    }
+
+    private LocalTime readAuctionTime(TextField timeField, String fieldName) {
+        String timeText = timeField.getText();
+        if (timeText == null || timeText.isBlank()) {
+            throw new InvalidAuctionTimeException(fieldName + " không được để trống.");
+        }
+
+        try {
+            LocalTime time = LocalTime.parse(timeText.trim(), TIME_FORMATTER);
+            timeField.setText(time.format(TIME_FORMATTER));
+            return time;
+        } catch (RuntimeException e) {
+            throw new InvalidAuctionTimeException(
+                    fieldName + " không hợp lệ. Vui lòng nhập đúng định dạng HH:mm, ví dụ 08:00.");
+        }
+    }
+
+    private void validateAuctionYear(LocalDate date, String fieldName) {
+        int currentYear = LocalDate.now().getYear();
+        int maxYear = currentYear + MAX_AUCTION_YEAR_OFFSET;
+        int year = date.getYear();
+        if (year < currentYear || year > maxYear) {
+            throw new InvalidAuctionDateException(
+                    fieldName + " quá xa so với hiện tại.");
+        }
+    }
+
+    private static class InvalidAuctionDateException extends RuntimeException {
+        InvalidAuctionDateException(String message) {
+            super(message);
+        }
+    }
+
+    private static class InvalidAuctionTimeException extends RuntimeException {
+        InvalidAuctionTimeException(String message) {
+            super(message);
+        }
+    }
+
     private void showAlert(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        DialogUtils.initOwner(alert, lblItemName);
-        alert.showAndWait();
+        DialogUtils.showAlertAsync(Alert.AlertType.INFORMATION, title, content, lblItemName);
     }
 }

@@ -166,7 +166,7 @@
                </font>
             </Label>
             <Label text="Bạn đang là người thắng phiên này. Nếu không tiếp tục giao dịch, bạn có thể hủy và sẽ bị trừ 60 điểm uy tín." textFill="#6B7280" wrapText="true" />
-            <Button onAction="#handleCancelTransaction" prefHeight="40.0" style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;" text="HỦY GIAO DỊCH" />
+            <Button fx:id="btnCancelTransaction" onAction="#handleCancelTransaction" prefHeight="40.0" style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;" text="HỦY GIAO DỊCH" />
          </children>
       </VBox>
 

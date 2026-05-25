@@ -1032,7 +1032,12 @@ public class ViewItemDetailController {
         StatusOfAuction previousStatus = currentAuction.getStatus();
         LocalDateTime previousEndTime = currentAuction.getEndTime();
         applyAuctionSnapshot(event);
-        appendRealtimeBid(event.latestBid());
+        BidHistoryResponsePayload.SimpleBid latestBid = event.latestBid();
+        if (latestBid != null) {
+            appendRealtimeBid(latestBid);
+        } else if ("PRICE_UPDATED".equals(event.eventType())) {
+            loadBidHistory();
+        }
 
         if (event.highestPrice() > currentAuction.getItem().getCurHighest()) {
             currentAuction.getItem().setCurHighest(event.highestPrice());
@@ -1128,6 +1133,7 @@ public class ViewItemDetailController {
         if (items.size() > BID_TABLE_MAX_ROWS) {
             items.remove(BID_TABLE_MAX_ROWS, items.size());
         }
+        tableBids.refresh();
 
         if (priceHistoryChart.isVisible()) {
             refreshChartFromBidList(items);

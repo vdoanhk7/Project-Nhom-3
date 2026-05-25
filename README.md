@@ -218,12 +218,15 @@ Mở terminal khác và chạy client
 - Admin hủy phiên đấu giá khi cần.
 - Admin theo dõi log hệ thống trên màn hình quản trị.
 
+- Đề xuất hiển thị phiên đấu giá cho Bidder theo mức độ tương tác
+- Điểm uy tín cho Bidder và star cho Seller 
 - Tự động chuyển trạng thái phiên đấu giá theo thời gian đã cấu hình.
 - Tự động mở phiên khi đến giờ bắt đầu và đóng phiên khi hết hạn.
 - Hỗ trợ chống đặt giá vào phút cuối (anti-sniping).
 - Cập nhật realtime giá hiện tại cho các client đang theo dõi phiên đấu giá.
 - Cập nhật realtime khi phiên đấu giá bị hủy.
 - Cập nhật realtime log hệ thống cho Admin.
+- Rule-based chatbot đơn giản4
 - Server hỗ trợ nhiều client kết nối đồng thời.
 - Lưu trữ dữ liệu người dùng, sản phẩm, phiên đấu giá, lịch sử đặt giá và auto bid.
 - Ghi log hoạt động của server, client và hệ thống.

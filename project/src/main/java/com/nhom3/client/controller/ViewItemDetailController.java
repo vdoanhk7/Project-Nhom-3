@@ -141,6 +141,8 @@ public class ViewItemDetailController {
     private boolean waitingForAutoBidCancelResult;
     private boolean waitingForCancelTransactionResult;
     private boolean waitingForSellerRatingResult;
+    private boolean resolvingAutoBidCancelFailure;
+    private String pendingAutoBidCancelFailureMessage;
     private int pendingSellerRating = -1;
     private boolean auctionCancelledHandled;
     private javafx.scene.layout.VBox autoBidInfoBox;
@@ -703,10 +705,10 @@ public class ViewItemDetailController {
                     double maxAmt = MoneyInputFormatter.parseAmount(txtMaxAmount.getText());
                     double incAmt = MoneyInputFormatter.parseAmount(txtIncrement.getText());
 
-                    double minAutoBidAmount = currentAuction.getItem().getStartPrice() + sellerBidStep;
+                    double minAutoBidAmount = currentAuction.getItem().getCurHighest() + sellerBidStep;
                     if (maxAmt < minAutoBidAmount) {
                         showAlert(Alert.AlertType.ERROR, "Lỗi",
-                                "Giá tối đa Auto-Bid phải lớn hơn giá khởi điểm + bước giá ("
+                                "Giá tối đa Auto-Bid phải lớn hơn giá hiện tại + bước giá ("
                                         + formatMoney(minAutoBidAmount) + ")!");
                         return null;
                     }
@@ -1350,6 +1352,7 @@ public class ViewItemDetailController {
             return;
         }
         handleCheckAutoBidResult(config);
+        resolveAutoBidCancelFailure(config);
     }
 
     private void handleAutoBidCancelled(ClientEvents.AutoBidCancelled event) {
@@ -1358,12 +1361,41 @@ public class ViewItemDetailController {
         }
         setAutoBidCancelPending(false);
 
+        if (!event.success()) {
+            resolvingAutoBidCancelFailure = true;
+            pendingAutoBidCancelFailureMessage = event.message();
+            checkAutoBidStatus();
+            return;
+        }
+
         showAlert(event.success() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
                 "Hủy Auto-Bid",
                 event.message());
         if (event.success()) {
             checkAutoBidStatus();
         }
+    }
+
+    private void resolveAutoBidCancelFailure(com.nhom3.shared.network.payload.AutoBidPayload config) {
+        if (!resolvingAutoBidCancelFailure) {
+            return;
+        }
+        resolvingAutoBidCancelFailure = false;
+        String failureMessage = pendingAutoBidCancelFailureMessage;
+        pendingAutoBidCancelFailureMessage = null;
+
+        if (config == null) {
+            showAlert(Alert.AlertType.INFORMATION,
+                    "Hủy Auto-Bid",
+                    "Auto-Bid đã được tắt hoặc không còn hoạt động.");
+            return;
+        }
+
+        showAlert(Alert.AlertType.ERROR,
+                "Hủy Auto-Bid",
+                failureMessage != null && !failureMessage.isBlank()
+                        ? failureMessage
+                        : "Lỗi hệ thống khi tắt Auto-Bid!");
     }
 
     private void handleSellerRatingResult(ClientEvents.SellerRatingResult event) {

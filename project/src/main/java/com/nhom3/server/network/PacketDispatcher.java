@@ -471,8 +471,13 @@ public class PacketDispatcher {
         AuctionDAOImpl dao = new AuctionDAOImpl();
         AutoBidPayload existingConfig = dao.getUserAutoBid(checkReq.getAuctionId(), checkReq.getUserId());
         Auction auction = dao.getAuctionById(checkReq.getAuctionId());
-        if (existingConfig != null && auction != null && existingConfig.getIncrement() < auction.getBidStep()) {
-            existingConfig = null;
+        if (existingConfig != null && auction != null) {
+            double minAutoBidAmount = auction.getItem().getCurHighest() + auction.getBidStep();
+            if (existingConfig.getIncrement() < auction.getBidStep()
+                    || existingConfig.getMaxAmount() < minAutoBidAmount) {
+                dao.cancelAutoBid(checkReq.getAuctionId(), checkReq.getUserId());
+                existingConfig = null;
+            }
         }
         return new Packet(PacketType.CHECK_AUTO_BID, existingConfig);
     }

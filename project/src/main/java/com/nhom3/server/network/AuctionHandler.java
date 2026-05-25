@@ -63,13 +63,14 @@ public class AuctionHandler {
                 Bidder bidder = new Bidder(bidData.getUserId(), null, null);
                 BidTransaction newBid = new BidTransaction(0, bidder, bidData.getAmount(), LocalDateTime.now(),
                         "Đặt giá qua mạng");
+                LocalDateTime previousEndTime = currentAuction.getEndTime();
                 boolean isBidSuccess = auctionService.placeBid(currentAuction, newBid);
 
                 ResultPayload bidResultPayload = new ResultPayload(isBidSuccess,
                         isBidSuccess ? "Đặt giá thành công" : "Có người đã trả giá cao hơn, vui lòng thử lại!", -1, "",
                         "", "", "", "");
                 if (isBidSuccess) {
-                    publishAuctionSnapshot(currentAuction, "PRICE_UPDATED", newBid);
+                    publishPriceUpdateSnapshot(currentAuction, previousEndTime, newBid);
                 }
                 return bidResultPayload;
             } catch (BusinessRuleException e) {
@@ -149,9 +150,10 @@ public class AuctionHandler {
                         Bidder bidder = new Bidder(winnerBot.getUserId(), null, null);
                         BidTransaction newBid = new BidTransaction(
                                 0, bidder, startingPrice, LocalDateTime.now(), "Đặt giá qua \ud83e\udd16 Auto-Bid");
+                        LocalDateTime previousEndTime = currentAuction.getEndTime();
                         boolean isBidSuccess = auctionService.placeAutoBid(currentAuction, newBid);
                         if (isBidSuccess) {
-                            publishAuctionSnapshot(currentAuction, "PRICE_UPDATED", newBid);
+                            publishPriceUpdateSnapshot(currentAuction, previousEndTime, newBid);
                         }
                         return;
                     }
@@ -183,9 +185,10 @@ public class AuctionHandler {
                     Bidder bidder = new Bidder(winnerBot.getUserId(), null, null);
                     BidTransaction newBid = new BidTransaction(
                             0, bidder, intendedAmount, LocalDateTime.now(), "Đặt giá qua \ud83e\udd16 Auto-Bid");
+                    LocalDateTime previousEndTime = currentAuction.getEndTime();
                     boolean isBidSuccess = auctionService.placeAutoBid(currentAuction, newBid);
                     if (isBidSuccess) {
-                        publishAuctionSnapshot(currentAuction, "PRICE_UPDATED", newBid);
+                        publishPriceUpdateSnapshot(currentAuction, previousEndTime, newBid);
                     } else if (cancelledAutoBid) {
                         publishAuctionSnapshot(currentAuction, "AUTO_BID_CONFIG_CHANGED", null);
                     }
@@ -212,9 +215,10 @@ public class AuctionHandler {
                     Bidder bidder = new Bidder(winnerBot.getUserId(), null, null);
                     BidTransaction newBid = new BidTransaction(
                             0, bidder, intendedAmount, LocalDateTime.now(), "Đặt giá qua \ud83e\udd16 Auto-Bid");
+                    LocalDateTime previousEndTime = currentAuction.getEndTime();
                     boolean isBidSuccess = auctionService.placeAutoBid(currentAuction, newBid);
                     if (isBidSuccess) {
-                        publishAuctionSnapshot(currentAuction, "PRICE_UPDATED", newBid);
+                        publishPriceUpdateSnapshot(currentAuction, previousEndTime, newBid);
                     } else if (cancelledAutoBid) {
                         publishAuctionSnapshot(currentAuction, "AUTO_BID_CONFIG_CHANGED", null);
                     }
@@ -228,6 +232,28 @@ public class AuctionHandler {
             auctionThreads[auctionId % AUCTION_SHARDS].submit(autoBidTask);
         } catch (Exception e) {
             logger.error("Lỗi đặt giá", e);
+        }
+    }
+
+    private void publishPriceUpdateSnapshot(Auction auction, LocalDateTime previousEndTime, BidTransaction latestBid) {
+        syncAuctionEndTimeFromDatabase(auction);
+        String eventType = auction != null
+                && previousEndTime != null
+                && auction.getEndTime() != null
+                && auction.getEndTime().isAfter(previousEndTime)
+                        ? "AUCTION_EXTENDED"
+                        : "PRICE_UPDATED";
+        publishAuctionSnapshot(auction, eventType, latestBid);
+    }
+
+    private void syncAuctionEndTimeFromDatabase(Auction auction) {
+        if (auction == null) {
+            return;
+        }
+
+        LocalDateTime latestEndTime = dao.getEndTime(auction.getId());
+        if (latestEndTime != null) {
+            auction.setEndTime(latestEndTime);
         }
     }
 

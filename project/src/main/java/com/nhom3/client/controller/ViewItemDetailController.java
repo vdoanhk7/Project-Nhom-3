@@ -1,7 +1,6 @@
 package com.nhom3.client.controller;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import com.nhom3.client.event.ClientEventBus;
@@ -20,6 +19,7 @@ import com.nhom3.shared.model.user.Bidder;
 import com.nhom3.shared.model.user.User;
 import com.nhom3.shared.network.packet.Packet;
 import com.nhom3.shared.network.packet.PacketType;
+import com.nhom3.shared.network.payload.AuctionListResponsePayload;
 import com.nhom3.shared.network.payload.AuctionSubscribePayload;
 import com.nhom3.shared.network.payload.BidHistoryResponsePayload;
 import com.nhom3.shared.network.payload.BidPayload;
@@ -145,6 +145,7 @@ public class ViewItemDetailController {
     private String pendingAutoBidCancelFailureMessage;
     private int pendingSellerRating = -1;
     private boolean auctionCancelledHandled;
+    private boolean handlingCountdownExpiration;
     private javafx.scene.layout.VBox autoBidInfoBox;
     private Button btnAutoBid;
     private Button btnAutoBidEdit;
@@ -261,6 +262,8 @@ public class ViewItemDetailController {
         ClientEventBus eventBus = ClientEventBus.getDefault();
         eventBus.subscribe(ClientEvents.BidResult.class, this, ViewItemDetailController::handleBidEvent);
         eventBus.subscribe(ClientEvents.BidHistoryLoaded.class, this, ViewItemDetailController::handleBidHistoryLoaded);
+        eventBus.subscribe(ClientEvents.AuctionByItemLoaded.class, this,
+                ViewItemDetailController::handleAuctionByItemLoaded);
         eventBus.subscribe(ClientEvents.ItemImageLoaded.class, this, ViewItemDetailController::handleItemImageLoaded);
         eventBus.subscribe(ClientEvents.AutoBidPlaced.class, this, ViewItemDetailController::handleAutoBidPlaced);
         eventBus.subscribe(ClientEvents.AutoBidChecked.class, this, ViewItemDetailController::handleAutoBidChecked);
@@ -326,8 +329,7 @@ public class ViewItemDetailController {
                 javafx.stage.Stage stage = (javafx.stage.Stage) lblItemName.getScene().getWindow();
                 stage.setOnCloseRequest(event -> {
                     subscribeToAuction(false);
-                    if (countdownTimeline != null)
-                        countdownTimeline.stop();
+                    stopCountdownTimeline();
                 });
             }
         });
@@ -417,8 +419,7 @@ public class ViewItemDetailController {
         lblTimeTitle.setText("PHIÊN ĐÃ ĐÓNG");
         lblCountdown.setText("00:00:00");
         lblTimeRange.setText("Đã đóng lúc: " + formatTime(auction.getEndTime()));
-        if (countdownTimeline != null)
-            countdownTimeline.stop();
+        stopCountdownTimeline();
     }
 
     private void setupPaidState(Auction auction) {
@@ -428,8 +429,7 @@ public class ViewItemDetailController {
         lblTimeTitle.setText("GIAO DỊCH HOÀN TẤT");
         lblCountdown.setText("DONE");
         lblTimeRange.setText("Kết thúc lúc: " + formatTime(auction.getEndTime()));
-        if (countdownTimeline != null)
-            countdownTimeline.stop();
+        stopCountdownTimeline();
     }
 
     private void setupCancelledState(Auction auction) {
@@ -439,8 +439,7 @@ public class ViewItemDetailController {
         lblTimeTitle.setText("PHIÊN ĐÃ ĐÓNG");
         lblCountdown.setText("--:--:--");
         lblTimeRange.setText("Lý do: Theo quy định hệ thống");
-        if (countdownTimeline != null)
-            countdownTimeline.stop();
+        stopCountdownTimeline();
     }
 
     private void setupDealCancelledState(Auction auction) {
@@ -450,13 +449,16 @@ public class ViewItemDetailController {
         lblTimeTitle.setText("GIAO DỊCH ĐÃ ĐÓNG");
         lblCountdown.setText("--:--:--");
         lblTimeRange.setText("Lý do: Bidder không hoàn tất giao dịch đúng quy định");
-        if (countdownTimeline != null)
-            countdownTimeline.stop();
+        stopCountdownTimeline();
     }
 
     private void startCountdown(LocalDateTime targetTime) {
-        if (countdownTimeline != null)
-            countdownTimeline.stop();
+        stopCountdownTimeline();
+
+        if (targetTime == null) {
+            lblCountdown.setText("--:--:--");
+            return;
+        }
 
         if (!updateCountdownLabel(targetTime))
             return;
@@ -467,14 +469,20 @@ public class ViewItemDetailController {
     }
 
     private boolean updateCountdownLabel(LocalDateTime targetTime) {
-        long secondsDiff = ChronoUnit.SECONDS.between(LocalDateTime.now(), targetTime);
-        if (secondsDiff <= 0) {
-            if (countdownTimeline != null)
-                countdownTimeline.stop();
-            refreshState();
+        if (targetTime == null) {
+            lblCountdown.setText("--:--:--");
             return false;
         }
 
+        long millisRemaining = java.time.Duration.between(LocalDateTime.now(), targetTime).toMillis();
+        if (millisRemaining <= 0) {
+            lblCountdown.setText("00:00:00");
+            stopCountdownTimeline();
+            scheduleCountdownExpirationHandling();
+            return false;
+        }
+
+        long secondsDiff = Math.max(1L, (millisRemaining + 999L) / 1000L);
         long hours = secondsDiff / SECONDS_PER_HOUR;
         long minutes = (secondsDiff % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE;
         long seconds = secondsDiff % SECONDS_PER_MINUTE;
@@ -482,11 +490,32 @@ public class ViewItemDetailController {
         return true;
     }
 
+    private void scheduleCountdownExpirationHandling() {
+        if (handlingCountdownExpiration) {
+            return;
+        }
+
+        handlingCountdownExpiration = true;
+        javafx.application.Platform.runLater(() -> {
+            try {
+                refreshState();
+            } finally {
+                handlingCountdownExpiration = false;
+            }
+        });
+    }
+
+    private void stopCountdownTimeline() {
+        if (countdownTimeline != null) {
+            countdownTimeline.stop();
+            countdownTimeline = null;
+        }
+    }
+
     @FXML
     private void handleClose() {
         subscribeToAuction(false);
-        if (countdownTimeline != null)
-            countdownTimeline.stop();
+        stopCountdownTimeline();
         ((Stage) lblItemName.getScene().getWindow()).close();
     }
 
@@ -888,6 +917,7 @@ public class ViewItemDetailController {
             txtBidAmount.clear();
             txtBidNote.clear();
             txtBidAmount.requestFocus();
+            requestAuctionSnapshot();
         } else {
             showAlert(Alert.AlertType.ERROR, "Thất bại", message);
         }
@@ -965,6 +995,78 @@ public class ViewItemDetailController {
         DialogUtils.showAlertAsync(type, title, content, lblItemName);
     }
 
+    private void requestAuctionSnapshot() {
+        if (currentItem == null) {
+            return;
+        }
+
+        try {
+            ServerConnection.getInstance().sendMessage(new Packet(
+                    PacketType.LOAD_AUCTION_BY_ITEM,
+                    new ItemActionPayload(currentItem.getId(), 0)));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleAuctionByItemLoaded(ClientEvents.AuctionByItemLoaded event) {
+        if (event.auctions() == null || currentAuction == null || currentItem == null) {
+            return;
+        }
+
+        for (AuctionListResponsePayload.AuctionDTO dto : event.auctions()) {
+            if (dto.auctionId == currentAuction.getId() || dto.itemId == currentItem.getId()) {
+                applyAuctionDtoSnapshot(dto);
+                return;
+            }
+        }
+    }
+
+    private void applyAuctionDtoSnapshot(AuctionListResponsePayload.AuctionDTO dto) {
+        StatusOfAuction previousStatus = currentAuction.getStatus();
+        LocalDateTime previousStartTime = currentAuction.getStartTime();
+        LocalDateTime previousEndTime = currentAuction.getEndTime();
+
+        LocalDateTime startTime = parseTime(dto.startTime);
+        if (startTime != null && !startTime.equals(currentAuction.getStartTime())) {
+            currentAuction.setStartTime(startTime);
+        }
+
+        LocalDateTime endTime = parseTime(dto.endTime);
+        if (endTime != null && !endTime.equals(currentAuction.getEndTime())) {
+            currentAuction.setEndTime(endTime);
+        }
+
+        StatusOfAuction status = parseStatus(dto.status);
+        if (status != null && status != currentAuction.getStatus()) {
+            currentAuction.setStatus(status);
+        }
+
+        currentAuction.setBidStep(dto.bidStep);
+        if (dto.highestBidderId > 0 && dto.highestBidderId != currentAuction.getHighestBidderId()) {
+            currentAuction.setHighestBidder(new Bidder(dto.highestBidderId, null, null));
+        }
+        if (currentAuction.getItem() != null
+                && Math.abs(dto.curHighest - currentAuction.getItem().getCurHighest()) > 0.01) {
+            currentAuction.getItem().setCurHighest(dto.curHighest);
+            lblCurrentPrice.setText(String.format("%,.0f VNĐ", dto.curHighest));
+            updateBidInputHint();
+        }
+
+        boolean statusChanged = currentAuction.getStatus() != previousStatus;
+        boolean timeChanged = !java.util.Objects.equals(currentAuction.getStartTime(), previousStartTime)
+                || !java.util.Objects.equals(currentAuction.getEndTime(), previousEndTime);
+        if (timeChanged && restartCountdownForUpdatedEndTime()) {
+            return;
+        }
+        if (statusChanged || timeChanged) {
+            refreshState();
+        }
+        if (statusChanged) {
+            setupDynamicUI();
+        }
+    }
+
     public void handleLoadHistoryResult(int responseAuctionId, List<BidHistoryResponsePayload.SimpleBid> simpleList) {
         if (simpleList == null || currentAuction == null)
             return;
@@ -1034,7 +1136,12 @@ public class ViewItemDetailController {
         StatusOfAuction previousStatus = currentAuction.getStatus();
         LocalDateTime previousEndTime = currentAuction.getEndTime();
         applyAuctionSnapshot(event);
-        appendRealtimeBid(event.latestBid());
+        BidHistoryResponsePayload.SimpleBid latestBid = event.latestBid();
+        if (latestBid != null) {
+            appendRealtimeBid(latestBid);
+        } else if (isBidPriceEvent(event.eventType())) {
+            loadBidHistory();
+        }
 
         if (event.highestPrice() > currentAuction.getItem().getCurHighest()) {
             currentAuction.getItem().setCurHighest(event.highestPrice());
@@ -1044,15 +1151,49 @@ public class ViewItemDetailController {
         if ("AUTO_BID_CONFIG_CHANGED".equals(event.eventType())) {
             checkAutoBidStatus();
         }
+        if (isBidPriceEvent(event.eventType())) {
+            requestAuctionSnapshot();
+        }
 
         boolean statusChanged = currentAuction.getStatus() != previousStatus;
         boolean endTimeChanged = !java.util.Objects.equals(currentAuction.getEndTime(), previousEndTime);
-        if (statusChanged || endTimeChanged) {
-            refreshState();
+        if (endTimeChanged && restartCountdownForUpdatedEndTime()) {
+            return;
         }
         if (statusChanged) {
+            refreshState();
             setupDynamicUI();
         }
+    }
+
+    private boolean isBidPriceEvent(String eventType) {
+        return "PRICE_UPDATED".equals(eventType) || "AUCTION_EXTENDED".equals(eventType);
+    }
+
+    private boolean restartCountdownForUpdatedEndTime() {
+        if (currentAuction == null || currentAuction.getEndTime() == null) {
+            return false;
+        }
+        StatusOfAuction status = currentAuction.getStatus();
+        if (status == StatusOfAuction.PAID
+                || status == StatusOfAuction.CANCELLED
+                || status == StatusOfAuction.DEAL_CANCELLED) {
+            return false;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (!now.isBefore(currentAuction.getEndTime())) {
+            return false;
+        }
+        if (currentAuction.getStartTime() != null && now.isBefore(currentAuction.getStartTime())) {
+            currentAuction.setStatus(StatusOfAuction.OPEN);
+            setupOpenState(currentAuction);
+        } else {
+            currentAuction.setStatus(StatusOfAuction.RUNNING);
+            setupRunningState(currentAuction);
+        }
+        setupDynamicUI();
+        return true;
     }
 
     private void handleScreenNotified(ClientEvents.ScreenNotified event) {
@@ -1130,6 +1271,7 @@ public class ViewItemDetailController {
         if (items.size() > BID_TABLE_MAX_ROWS) {
             items.remove(BID_TABLE_MAX_ROWS, items.size());
         }
+        tableBids.refresh();
 
         if (priceHistoryChart.isVisible()) {
             refreshChartFromBidList(items);

@@ -16,7 +16,7 @@ import com.nhom3.shared.network.packet.Packet;
 
 public class ServerConnection {
     private static ServerConnection instance;
-    private static final String SERVER_HOST = readConfig("AUCTION_SERVER_HOST", "localhost");
+    private static final String SERVER_HOST = readConfig("AUCTION_SERVER_HOST", "34.126.166.158");
     private static final int SERVER_PORT = readIntConfig("AUCTION_SERVER_PORT", 8080);
 
     private static final Logger logger = LoggerFactory.getLogger(ServerConnection.class);

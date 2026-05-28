@@ -122,14 +122,14 @@ Chạy nhanh với cấu hình mặc định:
 Bước 1: vào project và chạy server
 
 ```bash
-cd project
+cd Project-Nhom-3/project
 java -jar dist/server-app.jar
 ```
 
 Bước 2: chạy client
 
 ```bash
-cd project
+cd Project-Nhom-3/project
 java -jar dist/client-app.jar
 ```
 

@@ -129,6 +129,7 @@ java -jar dist/server-app.jar
 Bước 2: chạy client
 
 ```bash
+cd project
 java -jar dist/client-app.jar
 ```
 

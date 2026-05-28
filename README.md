@@ -81,7 +81,7 @@ Project-Nhom-3/
 
 ## 4. Vị Trí Các File JAR
 
-Sau khi build, Maven tạo 2 fat JAR tại(Khi clone code thì đã có file JAR sẵn để chạy):
+Sau khi build, Maven tạo 2 fat JAR tại(Khi clone code thì đã có file JAR sẵn để chạy:
 
 ```text
 project/dist/server-app.jar
@@ -119,7 +119,7 @@ Cần chuẩn bị database MySQL trước, sau đó chạy server, rồi mới 
 
 Chạy nhanh với cấu hình mặc định:
 
-Bước 1: chạy server
+Bước 1: vào project và chạy server
 
 ```bash
 cd project
@@ -129,7 +129,6 @@ java -jar dist/server-app.jar
 Bước 2: chạy client
 
 ```bash
-cd project
 java -jar dist/client-app.jar
 ```
 
@@ -160,10 +159,10 @@ java -jar dist/client-app.jar
 
 Muốn thay đổi thông tin cấu hình, dùng Java system properties hoặc cấu hình sẵn Environment variable:
 
-Ví dụ muốn đổi port nhưng vẫn dùng database cloud và các cấu hình còn lại mặc định(Java system properties):
+Ví dụ muốn truy cập server đã chạy trên máy ảo tại id "34.126.166.158"
 
 ```bash
-java -Dauction.server.port=<server-port> -jar dist/server-app.jar
+java -Dauction.server.host=34.126.166.158 -jar dist/server-app.jar
 ```
 
 ### 6.3. Chạy Client

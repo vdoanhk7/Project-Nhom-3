@@ -25,7 +25,7 @@ import com.nhom3.shared.network.payload.BidHistoryResponsePayload;
 import com.nhom3.shared.network.payload.BidPayload;
 import com.nhom3.shared.network.payload.ItemActionPayload;
 import com.nhom3.shared.network.payload.ItemImagePayload;
-import com.nhom3.shared.network.payload.SellerRatingPayload;
+import com.nhom3.shared.network.payload.UserRatingPayload;
 import com.nhom3.shared.network.payload.TransactionActionPayload;
 
 import javafx.animation.Animation;
@@ -95,7 +95,7 @@ public class ViewItemDetailController {
     @FXML
     private VBox boxRatingActions;
     @FXML
-    private Label lblSellerRatingStatus;
+    private Label lblUserRatingStatus;
     @FXML
     private Button btnRateSeller;
     @FXML
@@ -140,10 +140,10 @@ public class ViewItemDetailController {
     private boolean waitingForAutoBidCheck;
     private boolean waitingForAutoBidCancelResult;
     private boolean waitingForCancelTransactionResult;
-    private boolean waitingForSellerRatingResult;
+    private boolean waitingForUserRatingResult;
     private boolean resolvingAutoBidCancelFailure;
     private String pendingAutoBidCancelFailureMessage;
-    private int pendingSellerRating = -1;
+    private int pendingUserRating = -1;
     private boolean auctionCancelledHandled;
     private boolean handlingCountdownExpiration;
     private javafx.scene.layout.VBox autoBidInfoBox;
@@ -270,8 +270,8 @@ public class ViewItemDetailController {
         eventBus.subscribe(ClientEvents.AutoBidCancelled.class, this, ViewItemDetailController::handleAutoBidCancelled);
         eventBus.subscribe(ClientEvents.CancelTransactionResult.class, this,
                 ViewItemDetailController::handleCancelTransactionResult);
-        eventBus.subscribe(ClientEvents.SellerRatingResult.class, this,
-                ViewItemDetailController::handleSellerRatingResult);
+        eventBus.subscribe(ClientEvents.UserRatingResult.class, this,
+                ViewItemDetailController::handleUserRatingResult);
         eventBus.subscribe(ClientEvents.ScreenNotified.class, this, ViewItemDetailController::handleScreenNotified);
     }
 
@@ -548,7 +548,7 @@ public class ViewItemDetailController {
                 && boxRatingActions != null) {
             boxRatingActions.setVisible(true);
             boxRatingActions.setManaged(true);
-            updateSellerRatingAction();
+            updateUserRatingAction();
             return;
         }
 
@@ -592,14 +592,14 @@ public class ViewItemDetailController {
         }
     }
 
-    private void updateSellerRatingAction() {
-        if (lblSellerRatingStatus == null || btnRateSeller == null || currentAuction == null) {
+    private void updateUserRatingAction() {
+        if (lblUserRatingStatus == null || btnRateSeller == null || currentAuction == null) {
             return;
         }
 
-        int ratedStars = currentAuction.getSellerRatingByCurrentBuyer();
+        int ratedStars = currentAuction.getUserRatingByCurrentBuyer();
         if (ratedStars >= 0) {
-            lblSellerRatingStatus.setText("Bạn đã đánh giá người bán " + ratedStars + "/5 sao.");
+            lblUserRatingStatus.setText("Bạn đã đánh giá người bán " + ratedStars + "/5 sao.");
             btnRateSeller.setDisable(true);
             btnRateSeller.setText("ĐÃ ĐÁNH GIÁ");
             return;
@@ -609,38 +609,38 @@ public class ViewItemDetailController {
         String sellerName = item != null && item.getSellerName() != null && !item.getSellerName().isBlank()
                 ? item.getSellerName()
                 : "người bán";
-        lblSellerRatingStatus.setText("Giao dịch đã thanh toán. Bạn có thể đánh giá " + sellerName + ".");
-        btnRateSeller.setDisable(waitingForSellerRatingResult);
+        lblUserRatingStatus.setText("Giao dịch đã thanh toán. Bạn có thể đánh giá " + sellerName + ".");
+        btnRateSeller.setDisable(waitingForUserRatingResult);
         btnRateSeller.setText("ĐÁNH GIÁ NGƯỜI BÁN");
     }
 
     @FXML
     private void handleRateSeller() {
-        if (waitingForSellerRatingResult) {
+        if (waitingForUserRatingResult) {
             return;
         }
-        setSellerRatingPending(true);
+        setUserRatingPending(true);
 
         User currentUser = UserSession.getInstance().getLoggedInUser();
         if (!(currentUser instanceof Bidder) || currentAuction == null || currentItem == null) {
-            setSellerRatingPending(false);
+            setUserRatingPending(false);
             return;
         }
         if (currentAuction.getStatus() != StatusOfAuction.PAID
                 || currentAuction.getHighestBidderId() != currentUser.getId()) {
-            setSellerRatingPending(false);
+            setUserRatingPending(false);
             showAlert(Alert.AlertType.WARNING, "Không thể đánh giá",
                     "Chỉ người thắng phiên đã thanh toán mới được đánh giá người bán.");
             return;
         }
         if (currentItem.getSellerId() == currentUser.getId()) {
-            setSellerRatingPending(false);
+            setUserRatingPending(false);
             showAlert(Alert.AlertType.WARNING, "Không thể đánh giá",
                     "Bạn không thể tự đánh giá chính mình.");
             return;
         }
-        if (currentAuction.getSellerRatingByCurrentBuyer() >= 0) {
-            setSellerRatingPending(false);
+        if (currentAuction.getUserRatingByCurrentBuyer() >= 0) {
+            setUserRatingPending(false);
             showAlert(Alert.AlertType.INFORMATION, "Đã đánh giá",
                     "Bạn đã đánh giá người bán cho phiên đấu giá này.");
             return;
@@ -654,17 +654,17 @@ public class ViewItemDetailController {
 
         dialog.showAndWait().ifPresentOrElse(stars -> {
             try {
-                pendingSellerRating = stars;
+                pendingUserRating = stars;
                 ServerConnection.getInstance().sendMessage(new Packet(
                         PacketType.RATE_SELLER,
-                        new SellerRatingPayload(currentAuction.getId(), currentUser.getId(), stars)));
+                        new UserRatingPayload(currentAuction.getId(), currentUser.getId(), stars)));
             } catch (Exception e) {
-                pendingSellerRating = -1;
-                setSellerRatingPending(false);
+                pendingUserRating = -1;
+                setUserRatingPending(false);
                 e.printStackTrace();
                 showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi đánh giá người bán.");
             }
-        }, () -> setSellerRatingPending(false));
+        }, () -> setUserRatingPending(false));
     }
 
     private void openAutoBidDialog() {
@@ -954,8 +954,8 @@ public class ViewItemDetailController {
         setButtonDisabled(btnCancelTransaction, pending);
     }
 
-    private void setSellerRatingPending(boolean pending) {
-        waitingForSellerRatingResult = pending;
+    private void setUserRatingPending(boolean pending) {
+        waitingForUserRatingResult = pending;
         setButtonDisabled(btnRateSeller, pending);
     }
 
@@ -1540,21 +1540,21 @@ public class ViewItemDetailController {
                         : "Lỗi hệ thống khi tắt Auto-Bid!");
     }
 
-    private void handleSellerRatingResult(ClientEvents.SellerRatingResult event) {
-        if (!waitingForSellerRatingResult) {
+    private void handleUserRatingResult(ClientEvents.UserRatingResult event) {
+        if (!waitingForUserRatingResult) {
             return;
         }
-        setSellerRatingPending(false);
+        setUserRatingPending(false);
 
         showAlert(event.success() ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
                 event.success() ? "Đã đánh giá" : "Thất bại",
                 event.message());
         if (event.success() && currentAuction != null) {
-            currentAuction.setSellerRatingByCurrentBuyer(pendingSellerRating);
-            updateLocalSellerRatingSummary(pendingSellerRating);
-            updateSellerRatingAction();
+            currentAuction.setUserRatingByCurrentBuyer(pendingUserRating);
+            updateLocalUserRatingSummary(pendingUserRating);
+            updateUserRatingAction();
         }
-        pendingSellerRating = -1;
+        pendingUserRating = -1;
     }
 
     private void handleCancelTransactionResult(ClientEvents.CancelTransactionResult event) {
@@ -1573,14 +1573,14 @@ public class ViewItemDetailController {
         }
     }
 
-    private void updateLocalSellerRatingSummary(int stars) {
+    private void updateLocalUserRatingSummary(int stars) {
         if (currentItem == null || stars < 0) {
             return;
         }
-        int count = currentItem.getSellerRatingCount();
-        double average = currentItem.getSellerRatingAverage();
+        int count = currentItem.getUserRatingCount();
+        double average = currentItem.getUserRatingAverage();
         double newAverage = ((average * count) + stars) / (count + 1);
-        currentItem.setSellerRatingSummary(newAverage, count + 1);
+        currentItem.setUserRatingSummary(newAverage, count + 1);
     }
 
     private void handleCancelAutoBid() {

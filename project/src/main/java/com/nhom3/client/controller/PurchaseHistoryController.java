@@ -175,7 +175,7 @@ public class PurchaseHistoryController {
         else if (status.equals("FINISHED")) return isMeTop1 ? "CHIẾN THẮNG" : "THUA CUỘC";
         else if (status.equals("PAID")) {
             if (!isMeTop1) return "THUA CUỘC";
-            return a.getSellerRatingByCurrentBuyer() >= 0 ? "ĐÃ ĐÁNH GIÁ" : "ĐÁNH GIÁ";
+            return a.getUserRatingByCurrentBuyer() >= 0 ? "ĐÃ ĐÁNH GIÁ" : "ĐÁNH GIÁ";
         }
         else if (status.equals("CANCELLED")) return "Đã Bị Huỷ";
         else if (status.equals("DEAL_CANCELLED")) return "Giao Dịch Huỷ";
@@ -216,7 +216,7 @@ public class PurchaseHistoryController {
             item.setImageBase64(dto.imageBase64);
             item.setSellerId(dto.sellerId);
             item.setSellerName(dto.sellerName);
-            item.setSellerRatingSummary(dto.sellerRatingAverage, dto.sellerRatingCount);
+            item.setUserRatingSummary(dto.userRatingAverage, dto.userRatingCount);
 
             // 2. TÁI TẠO THỜI GIAN ĐẦY ĐỦ
             LocalDateTime start = LocalDateTime.now();
@@ -228,7 +228,7 @@ public class PurchaseHistoryController {
 
             Auction auction = new Auction(dto.auctionId, item, start, end); 
             auction.setBidStep(dto.bidStep);
-            auction.setSellerRatingByCurrentBuyer(dto.mySellerRating);
+            auction.setUserRatingByCurrentBuyer(dto.myUserRating);
             
             try { auction.setStatus(StatusOfAuction.valueOf(dto.status)); } 
             catch (Exception e) { auction.setStatus(StatusOfAuction.OPEN); }

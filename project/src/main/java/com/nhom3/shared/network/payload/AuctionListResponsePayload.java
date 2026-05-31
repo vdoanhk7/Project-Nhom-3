@@ -29,8 +29,8 @@ public class AuctionListResponsePayload {
         public final String imageBase64;
         public final int sellerId;
         public final String sellerName;
-        public final double sellerRatingAverage;
-        public final int sellerRatingCount;
+        public final double userRatingAverage;
+        public final int userRatingCount;
 
         public AuctionDTO(int auctionId, int itemId, String itemName, String itemType,
                 double startPrice, double curHighest, String startTime, String endTime,
@@ -58,7 +58,7 @@ public class AuctionListResponsePayload {
         public AuctionDTO(int auctionId, int itemId, String itemName, String itemDescription, String itemType,
                 double startPrice, double curHighest, double bidStep, String startTime, String endTime,
                 String status, int highestBidderId, String imageBase64, int sellerId, String sellerName,
-                double sellerRatingAverage, int sellerRatingCount) {
+                double userRatingAverage, int userRatingCount) {
             this.auctionId = auctionId;
             this.itemId = itemId;
             this.itemName = itemName;
@@ -74,8 +74,8 @@ public class AuctionListResponsePayload {
             this.imageBase64 = imageBase64;
             this.sellerId = sellerId;
             this.sellerName = sellerName;
-            this.sellerRatingAverage = Math.max(0, Math.min(5, sellerRatingAverage));
-            this.sellerRatingCount = Math.max(0, sellerRatingCount);
+            this.userRatingAverage = Math.max(0, Math.min(5, userRatingAverage));
+            this.userRatingCount = Math.max(0, userRatingCount);
         }
 
         public AuctionDTO(int auctionId, int itemId, String itemName, String itemDescription, String itemType,

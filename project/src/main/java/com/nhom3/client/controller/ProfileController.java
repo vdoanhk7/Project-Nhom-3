@@ -47,7 +47,7 @@ public class ProfileController {
     @FXML private Button btnCancel;
     @FXML private Label lblUsername;
     @FXML private Label lblAvatarInitial;
-    @FXML private Label lblSellerRating;
+    @FXML private Label lblUserRating;
     @FXML private ImageView imgAvatar;
 
     private boolean editMode;
@@ -259,19 +259,19 @@ public class ProfileController {
                     ? currentUser.getReputationScore() + " / 100"
                     : "Không áp dụng");
         }
-        if (lblSellerRating != null) {
-            boolean isSeller = currentUser instanceof Seller;
-            lblSellerRating.setVisible(isSeller);
-            lblSellerRating.setManaged(isSeller);
-            if (isSeller) {
-                lblSellerRating.setText(formatSellerRating(currentUser));
+        if (lblUserRating != null) {
+            boolean showUserRating = !(currentUser instanceof Admin);
+            lblUserRating.setVisible(showUserRating);
+            lblUserRating.setManaged(showUserRating);
+            if (showUserRating) {
+                lblUserRating.setText(formatUserRating(currentUser));
             }
         }
     }
 
-    private String formatSellerRating(User user) {
-        int count = user != null ? user.getSellerRatingCount() : 0;
-        double average = user != null ? user.getSellerRatingAverage() : 0;
+    private String formatUserRating(User user) {
+        int count = user != null ? user.getUserRatingCount() : 0;
+        double average = user != null ? user.getUserRatingAverage() : 0;
         return String.format("★ %.1f / 5 (%d đánh giá)", average, count);
     }
 

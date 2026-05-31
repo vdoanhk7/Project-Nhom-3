@@ -17,7 +17,7 @@ public class Auction extends Entity{
     private Bidder highestBidder;
     private StatusOfAuction status;
     private List<BidTransaction> bidHistory;
-    private int sellerRatingByCurrentBuyer;
+    private int userRatingByCurrentBuyer;
     
     public Auction(int id, Item item, LocalDateTime startTime, LocalDateTime endTime) {
         super(id);
@@ -27,7 +27,7 @@ public class Auction extends Entity{
         this.bidStep = DEFAULT_BID_STEP;
         this.status = StatusOfAuction.OPEN;
         this.bidHistory = new ArrayList<>();
-        this.sellerRatingByCurrentBuyer = -1;
+        this.userRatingByCurrentBuyer = -1;
         
     }
 
@@ -95,16 +95,16 @@ public class Auction extends Entity{
         return highestBidder != null ? highestBidder.getId() : -1;
     }
 
-    public int getSellerRatingByCurrentBuyer() {
-        return sellerRatingByCurrentBuyer;
+    public int getUserRatingByCurrentBuyer() {
+        return userRatingByCurrentBuyer;
     }
 
-    public void setSellerRatingByCurrentBuyer(int sellerRatingByCurrentBuyer) {
-        if (sellerRatingByCurrentBuyer < 0) {
-            this.sellerRatingByCurrentBuyer = -1;
+    public void setUserRatingByCurrentBuyer(int userRatingByCurrentBuyer) {
+        if (userRatingByCurrentBuyer < 0) {
+            this.userRatingByCurrentBuyer = -1;
             return;
         }
-        this.sellerRatingByCurrentBuyer = Math.min(5, sellerRatingByCurrentBuyer);
+        this.userRatingByCurrentBuyer = Math.min(5, userRatingByCurrentBuyer);
     }
 
     @Override

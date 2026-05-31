@@ -107,7 +107,7 @@ public class ClientPacketDispatcher {
             default -> new Admin(loginResult.getUserId(), info, contact);
         };
         user.setReputationScore(loginResult.getReputationScore());
-        user.setSellerRatingSummary(loginResult.getSellerRatingAverage(), loginResult.getSellerRatingCount());
+        user.setUserRatingSummary(loginResult.getUserRatingAverage(), loginResult.getUserRatingCount());
         return user;
     }
 
@@ -177,7 +177,7 @@ public class ClientPacketDispatcher {
 
     private void handleRateSeller(Packet response, Gson gson) {
         ResultPayload result = gson.fromJson(response.getPayload(), ResultPayload.class);
-        eventBus.publish(new ClientEvents.SellerRatingResult(result.getResult(), result.getMessage()));
+        eventBus.publish(new ClientEvents.UserRatingResult(result.getResult(), result.getMessage()));
     }
 
     private void handleCancelAuction(Packet response, Gson gson) {

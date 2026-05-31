@@ -13,7 +13,7 @@ import java.sql.Statement;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class SellerRatingIntegrationTest extends IntegrationTestBase {
+class UserRatingIntegrationTest extends IntegrationTestBase {
     private AuctionDAOImpl auctionDAO;
 
     @BeforeEach
@@ -75,7 +75,7 @@ class SellerRatingIntegrationTest extends IntegrationTestBase {
 
         User seller = new UserDAOImpl().getById(1);
 
-        assertEquals(4.0, seller.getSellerRatingAverage(), 0.001);
-        assertEquals(2, seller.getSellerRatingCount());
+        assertEquals(4.0, seller.getUserRatingAverage(), 0.001);
+        assertEquals(2, seller.getUserRatingCount());
     }
 }

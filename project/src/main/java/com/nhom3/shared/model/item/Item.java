@@ -11,8 +11,8 @@ public abstract class Item extends Entity{
     protected String imageBase64;
     protected int sellerId;
     protected String sellerName;
-    protected double sellerRatingAverage;
-    protected int sellerRatingCount;
+    protected double userRatingAverage;
+    protected int userRatingCount;
 
     public Item(int id, String name, double startPrice, ItemType type) {
         super(id);
@@ -69,15 +69,15 @@ public abstract class Item extends Entity{
     public void setSellerName(String sellerName) {
         this.sellerName = sellerName;
     }
-    public double getSellerRatingAverage() {
-        return sellerRatingAverage;
+    public double getUserRatingAverage() {
+        return userRatingAverage;
     }
-    public int getSellerRatingCount() {
-        return sellerRatingCount;
+    public int getUserRatingCount() {
+        return userRatingCount;
     }
-    public void setSellerRatingSummary(double sellerRatingAverage, int sellerRatingCount) {
-        this.sellerRatingAverage = Math.max(0, Math.min(5, sellerRatingAverage));
-        this.sellerRatingCount = Math.max(0, sellerRatingCount);
+    public void setUserRatingSummary(double userRatingAverage, int userRatingCount) {
+        this.userRatingAverage = Math.max(0, Math.min(5, userRatingAverage));
+        this.userRatingCount = Math.max(0, userRatingCount);
     }
 
     protected String formatItemInfo(String categoryName) {

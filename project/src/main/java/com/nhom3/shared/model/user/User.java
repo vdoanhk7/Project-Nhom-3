@@ -9,8 +9,8 @@ public abstract class User extends Entity{
     protected UserContact userContact;
     protected final Role role;
     protected int reputationScore;
-    protected double sellerRatingAverage;
-    protected int sellerRatingCount;
+    protected double userRatingAverage;
+    protected int userRatingCount;
 
     public User(int id, UserInfo userInfo, UserContact userContact, Role role) {
         super(id);
@@ -18,8 +18,8 @@ public abstract class User extends Entity{
         this.userContact = userContact;
         this.role = role;
         this.reputationScore = DEFAULT_REPUTATION_SCORE;
-        this.sellerRatingAverage = 0;
-        this.sellerRatingCount = 0;
+        this.userRatingAverage = 0;
+        this.userRatingCount = 0;
     }
 
     public UserInfo getUserInfo() {
@@ -40,17 +40,17 @@ public abstract class User extends Entity{
         this.reputationScore = Math.max(0, Math.min(DEFAULT_REPUTATION_SCORE, reputationScore));
     }
 
-    public double getSellerRatingAverage() {
-        return sellerRatingAverage;
+    public double getUserRatingAverage() {
+        return userRatingAverage;
     }
 
-    public int getSellerRatingCount() {
-        return sellerRatingCount;
+    public int getUserRatingCount() {
+        return userRatingCount;
     }
 
-    public void setSellerRatingSummary(double sellerRatingAverage, int sellerRatingCount) {
-        this.sellerRatingAverage = Math.max(0, Math.min(5, sellerRatingAverage));
-        this.sellerRatingCount = Math.max(0, sellerRatingCount);
+    public void setUserRatingSummary(double userRatingAverage, int userRatingCount) {
+        this.userRatingAverage = Math.max(0, Math.min(5, userRatingAverage));
+        this.userRatingCount = Math.max(0, userRatingCount);
     }
 
     protected String formatUserInfo(String roleName) {
@@ -60,7 +60,7 @@ public abstract class User extends Entity{
         String phone = userContact == null ? "N/A" : userContact.getPhoneNumber();
 
         return String.format(
-                "%s[id=%d, username=%s, fullName=%s, email=%s, phone=%s, reputation=%d, sellerRating=%.2f/%d]",
+                "%s[id=%d, username=%s, fullName=%s, email=%s, phone=%s, reputation=%d, userRating=%.2f/%d]",
                 roleName,
                 id,
                 username,
@@ -68,8 +68,8 @@ public abstract class User extends Entity{
                 email,
                 phone,
                 reputationScore,
-                sellerRatingAverage,
-                sellerRatingCount);
+                userRatingAverage,
+                userRatingCount);
     }
     
 }

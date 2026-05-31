@@ -180,7 +180,7 @@
                   <Font name="System Bold" size="14.0" />
                </font>
             </Label>
-            <Label fx:id="lblSellerRatingStatus" text="Giao dịch đã thanh toán." textFill="#6B7280" wrapText="true" />
+            <Label fx:id="lblUserRatingStatus" text="Giao dịch đã thanh toán." textFill="#6B7280" wrapText="true" />
             <Button fx:id="btnRateSeller" onAction="#handleRateSeller" prefHeight="40.0" style="-fx-background-color: #0ea5e9; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;" text="ĐÁNH GIÁ NGƯỜI BÁN" />
          </children>
       </VBox>

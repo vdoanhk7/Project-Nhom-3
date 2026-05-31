@@ -33,7 +33,7 @@ public class AuctionDAOImpl implements AuctionDAO {
     private static final int MAX_TRANSACTION_PENALTY = 60;
     private static final int PAYMENT_REWARD = 5;
     private static final String AUCTION_REPUTATION_PENALTY_COLUMN = "reputation_penalty";
-    private static final String SELLER_RATINGS_TABLE = "seller_ratings";
+    private static final String USER_RATINGS_TABLE = "seller_ratings";
 
     @Override
     public boolean updateHighestBid(int auctionId, int bidderId, double newAmount) {
@@ -274,20 +274,20 @@ public class AuctionDAOImpl implements AuctionDAO {
         // Lấy phiên đấu giá mới nhất của sản phẩm này
         String sql = "SELECT a.*, i.id AS item_id, i.name AS item_name, i.description, i.item_type, "
                 + "i.start_price, i.cur_highest, i.seller_id, u.full_name AS seller_name, "
-                + "COALESCE(sr.seller_rating_avg, 0) AS seller_rating_avg, "
-                + "COALESCE(sr.seller_rating_count, 0) AS seller_rating_count "
+                + "COALESCE(sr.user_rating_avg, 0) AS user_rating_avg, "
+                + "COALESCE(sr.user_rating_count, 0) AS user_rating_count "
                 + "FROM auctions a "
                 + "JOIN items i ON a.item_id = i.id "
                 + "JOIN users u ON i.seller_id = u.id "
                 + "LEFT JOIN ("
-                + "    SELECT seller_id, AVG(stars) AS seller_rating_avg, COUNT(*) AS seller_rating_count "
+                + "    SELECT seller_id, AVG(stars) AS user_rating_avg, COUNT(*) AS user_rating_count "
                 + "    FROM seller_ratings GROUP BY seller_id"
                 + ") sr ON sr.seller_id = i.seller_id "
                 + "WHERE a.item_id = ? ORDER BY a.id DESC LIMIT 1";
 
         try (Connection conn = DbConnection.getConnection()) {
             ensureDescriptionColumn(conn);
-            ensureSellerRatingsTable(conn);
+            ensureUserRatingsTable(conn);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, itemId);
             ResultSet rs = stmt.executeQuery();
@@ -406,7 +406,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 + "AND i.seller_id <> ?";
 
         try (Connection conn = DbConnection.getConnection()) {
-            ensureSellerRatingsTable(conn);
+            ensureUserRatingsTable(conn);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, buyerId);
                 stmt.setInt(2, stars);
@@ -578,13 +578,13 @@ public class AuctionDAOImpl implements AuctionDAO {
         // Lấy thêm tên người bán 
         String sql = "SELECT a.*, i.seller_id, i.name, i.description, i.item_type, i.start_price, i.cur_highest, "
                 + "u.full_name AS seller_name, "
-                + "COALESCE(sr.seller_rating_avg, 0) AS seller_rating_avg, "
-                + "COALESCE(sr.seller_rating_count, 0) AS seller_rating_count " +
+                + "COALESCE(sr.user_rating_avg, 0) AS user_rating_avg, "
+                + "COALESCE(sr.user_rating_count, 0) AS user_rating_count " +
             "FROM auctions a " +
             "JOIN items i ON a.item_id = i.id " +
             "JOIN users u ON i.seller_id = u.id " +
             "LEFT JOIN (" +
-            "    SELECT seller_id, AVG(stars) AS seller_rating_avg, COUNT(*) AS seller_rating_count " +
+            "    SELECT seller_id, AVG(stars) AS user_rating_avg, COUNT(*) AS user_rating_count " +
             "    FROM seller_ratings GROUP BY seller_id" +
             ") sr ON sr.seller_id = i.seller_id " +
             "WHERE a.end_time > ? AND a.status IN ('OPEN', 'RUNNING') " +
@@ -592,7 +592,7 @@ public class AuctionDAOImpl implements AuctionDAO {
 
         try (Connection conn = DbConnection.getConnection()) {
             ensureDescriptionColumn(conn);
-            ensureSellerRatingsTable(conn);
+            ensureUserRatingsTable(conn);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setTimestamp(1, java.sql.Timestamp.valueOf(LocalDateTime.now()));
             try (ResultSet rs = stmt.executeQuery()) {
@@ -634,20 +634,20 @@ public class AuctionDAOImpl implements AuctionDAO {
         List<Auction> list = new ArrayList<>();
         String sql = "SELECT a.*, i.seller_id, i.name, i.description, i.item_type, i.start_price, i.cur_highest, "
                 + "u.full_name AS seller_name, "
-                + "COALESCE(sr.seller_rating_avg, 0) AS seller_rating_avg, "
-                + "COALESCE(sr.seller_rating_count, 0) AS seller_rating_count " +
+                + "COALESCE(sr.user_rating_avg, 0) AS user_rating_avg, "
+                + "COALESCE(sr.user_rating_count, 0) AS user_rating_count " +
                 "FROM auctions a " +
                 "JOIN items i ON a.item_id = i.id " +
                 "JOIN users u ON i.seller_id = u.id " +
                 "LEFT JOIN (" +
-                "    SELECT seller_id, AVG(stars) AS seller_rating_avg, COUNT(*) AS seller_rating_count " +
+                "    SELECT seller_id, AVG(stars) AS user_rating_avg, COUNT(*) AS user_rating_count " +
                 "    FROM seller_ratings GROUP BY seller_id" +
                 ") sr ON sr.seller_id = i.seller_id " +
                 "ORDER BY a.id DESC";
 
         try (Connection conn = DbConnection.getConnection()) {
             ensureDescriptionColumn(conn);
-            ensureSellerRatingsTable(conn);
+            ensureUserRatingsTable(conn);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -735,9 +735,9 @@ public class AuctionDAOImpl implements AuctionDAO {
         // từng auction_id
         String sql = "SELECT a.id AS auction_id, a.highest_bidder_id, a.start_time, a.end_time, a.status, " +
                 "a.bid_step, i.id AS item_id, i.seller_id, seller.full_name AS seller_name, " +
-                "COALESCE(sr.seller_rating_avg, 0) AS seller_rating_avg, " +
-                "COALESCE(sr.seller_rating_count, 0) AS seller_rating_count, " +
-                "seller_rating.stars AS my_seller_rating, " +
+                "COALESCE(sr.user_rating_avg, 0) AS user_rating_avg, " +
+                "COALESCE(sr.user_rating_count, 0) AS user_rating_count, " +
+                "seller_rating.stars AS my_user_rating, " +
                 "i.name AS item_name, i.description, i.item_type, i.start_price, i.cur_highest, i.image, " +
                 "my_bids.max_amount AS amount, my_bids.last_bid_time AS bid_time " +
                 "FROM ( " +
@@ -750,7 +750,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 "JOIN items i ON a.item_id = i.id " +
                 "JOIN users seller ON i.seller_id = seller.id " +
                 "LEFT JOIN ( " +
-                "    SELECT seller_id, AVG(stars) AS seller_rating_avg, COUNT(*) AS seller_rating_count " +
+                "    SELECT seller_id, AVG(stars) AS user_rating_avg, COUNT(*) AS user_rating_count " +
                 "    FROM seller_ratings GROUP BY seller_id " +
                 ") sr ON sr.seller_id = i.seller_id " +
                 "LEFT JOIN seller_ratings seller_rating "
@@ -759,7 +759,7 @@ public class AuctionDAOImpl implements AuctionDAO {
 
         try (Connection conn = DbConnection.getConnection()) {
             ensureDescriptionColumn(conn);
-            ensureSellerRatingsTable(conn);
+            ensureUserRatingsTable(conn);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, bidderId);
             stmt.setInt(2, bidderId);
@@ -804,8 +804,8 @@ public class AuctionDAOImpl implements AuctionDAO {
                 BidTransaction myBid = new BidTransaction(0, null, rs.getDouble("amount"),
                         rs.getTimestamp("bid_time").toLocalDateTime(), "");
                 auction.getBidHistory().add(myBid);
-                int mySellerRating = rs.getInt("my_seller_rating");
-                auction.setSellerRatingByCurrentBuyer(rs.wasNull() ? -1 : mySellerRating);
+                int myUserRating = rs.getInt("my_user_rating");
+                auction.setUserRatingByCurrentBuyer(rs.wasNull() ? -1 : myUserRating);
 
                 list.add(auction);
             }
@@ -1030,19 +1030,19 @@ public class AuctionDAOImpl implements AuctionDAO {
     public Auction getAuctionById(int auctionId) {
         String sql = "SELECT a.*, i.id AS item_id, i.seller_id, i.name AS item_name, i.description, i.item_type, "
                 + "i.start_price, i.cur_highest, i.image, u.full_name AS seller_name, "
-                + "COALESCE(sr.seller_rating_avg, 0) AS seller_rating_avg, "
-                + "COALESCE(sr.seller_rating_count, 0) AS seller_rating_count "
+                + "COALESCE(sr.user_rating_avg, 0) AS user_rating_avg, "
+                + "COALESCE(sr.user_rating_count, 0) AS user_rating_count "
                 + "FROM auctions a "
                 + "JOIN items i ON a.item_id = i.id "
                 + "JOIN users u ON i.seller_id = u.id "
                 + "LEFT JOIN ("
-                + "    SELECT seller_id, AVG(stars) AS seller_rating_avg, COUNT(*) AS seller_rating_count "
+                + "    SELECT seller_id, AVG(stars) AS user_rating_avg, COUNT(*) AS user_rating_count "
                 + "    FROM seller_ratings GROUP BY seller_id"
                 + ") sr ON sr.seller_id = i.seller_id "
                 + "WHERE a.id = ?";
         try (Connection conn = DbConnection.getConnection()) {
             ensureDescriptionColumn(conn);
-            ensureSellerRatingsTable(conn);
+            ensureUserRatingsTable(conn);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, auctionId);
             ResultSet rs = stmt.executeQuery();
@@ -1094,16 +1094,16 @@ public class AuctionDAOImpl implements AuctionDAO {
         double average = 0;
         int count = 0;
         try {
-            average = rs.getDouble("seller_rating_avg");
+            average = rs.getDouble("user_rating_avg");
         } catch (Exception e) {
             average = 0;
         }
         try {
-            count = rs.getInt("seller_rating_count");
+            count = rs.getInt("user_rating_count");
         } catch (Exception e) {
             count = 0;
         }
-        item.setSellerRatingSummary(average, count);
+        item.setUserRatingSummary(average, count);
     }
 
     private void ensureDescriptionColumn(Connection conn) {
@@ -1192,8 +1192,8 @@ public class AuctionDAOImpl implements AuctionDAO {
         }
     }
 
-    public static void ensureSellerRatingsTable(Connection conn) {
-        String sql = "CREATE TABLE IF NOT EXISTS " + SELLER_RATINGS_TABLE + " ("
+    public static void ensureUserRatingsTable(Connection conn) {
+        String sql = "CREATE TABLE IF NOT EXISTS " + USER_RATINGS_TABLE + " ("
                 + "id INT AUTO_INCREMENT PRIMARY KEY,"
                 + "auction_id INT NOT NULL,"
                 + "buyer_id INT NOT NULL,"

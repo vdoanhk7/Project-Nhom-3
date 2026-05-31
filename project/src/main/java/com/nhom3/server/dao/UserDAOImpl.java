@@ -67,7 +67,7 @@ public class UserDAOImpl implements UserDAO {
 
                 if (passwordMatch) {
                     User user = mapUser(rs);
-                    attachSellerRatingSummary(conn, user);
+                    attachUserRatingSummary(conn, user);
                     return user;
                 }
             }
@@ -181,7 +181,7 @@ public class UserDAOImpl implements UserDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     User user = mapUser(rs);
-                    attachSellerRatingSummary(conn, user);
+                    attachUserRatingSummary(conn, user);
                     return user;
                 }
             }
@@ -205,7 +205,7 @@ public class UserDAOImpl implements UserDAO {
                     users.add(user);
                 }
             }
-            attachSellerRatingSummaries(conn, users);
+            attachUserRatingSummaries(conn, users);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -474,7 +474,7 @@ public class UserDAOImpl implements UserDAO {
         }
     }
 
-    private void attachSellerRatingSummary(Connection conn, User user) {
+    private void attachUserRatingSummary(Connection conn, User user) {
         if (user == null || user.getRole() != Role.SELLER) {
             return;
         }
@@ -482,7 +482,7 @@ public class UserDAOImpl implements UserDAO {
         String sql = "SELECT AVG(stars) AS avg_stars, COUNT(*) AS rating_count "
                 + "FROM seller_ratings WHERE seller_id = ?";
         try {
-            AuctionDAOImpl.ensureSellerRatingsTable(conn);
+            AuctionDAOImpl.ensureUserRatingsTable(conn);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, user.getId());
                 try (ResultSet rs = stmt.executeQuery()) {
@@ -491,16 +491,16 @@ public class UserDAOImpl implements UserDAO {
                         if (rs.wasNull()) {
                             average = 0;
                         }
-                        user.setSellerRatingSummary(average, rs.getInt("rating_count"));
+                        user.setUserRatingSummary(average, rs.getInt("rating_count"));
                     }
                 }
             }
         } catch (Exception e) {
-            user.setSellerRatingSummary(0, 0);
+            user.setUserRatingSummary(0, 0);
         }
     }
 
-    private void attachSellerRatingSummaries(Connection conn, List<User> users) {
+    private void attachUserRatingSummaries(Connection conn, List<User> users) {
         if (users == null || users.isEmpty()) {
             return;
         }
@@ -508,7 +508,7 @@ public class UserDAOImpl implements UserDAO {
         String sql = "SELECT seller_id, AVG(stars) AS avg_stars, COUNT(*) AS rating_count "
                 + "FROM seller_ratings GROUP BY seller_id";
         try {
-            AuctionDAOImpl.ensureSellerRatingsTable(conn);
+            AuctionDAOImpl.ensureUserRatingsTable(conn);
             java.util.Map<Integer, double[]> ratingMap = new java.util.HashMap<>();
             try (PreparedStatement stmt = conn.prepareStatement(sql);
                     ResultSet rs = stmt.executeQuery()) {
@@ -524,15 +524,15 @@ public class UserDAOImpl implements UserDAO {
                 }
                 double[] rating = ratingMap.get(user.getId());
                 if (rating == null) {
-                    user.setSellerRatingSummary(0, 0);
+                    user.setUserRatingSummary(0, 0);
                 } else {
-                    user.setSellerRatingSummary(rating[0], (int) rating[1]);
+                    user.setUserRatingSummary(rating[0], (int) rating[1]);
                 }
             }
         } catch (Exception e) {
             for (User user : users) {
                 if (user != null && user.getRole() == Role.SELLER) {
-                    user.setSellerRatingSummary(0, 0);
+                    user.setUserRatingSummary(0, 0);
                 }
             }
         }

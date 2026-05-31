@@ -14,8 +14,8 @@ public class ResultPayload {
     private String phone;
     private String profileImageBase64;
     private int reputationScore;
-    private double sellerRatingAverage;
-    private int sellerRatingCount;
+    private double userRatingAverage;
+    private int userRatingCount;
 
     // Cập nhật Constructor có chứa email và phone
     public ResultPayload(boolean result, String message, int userId, String username, String fullName, String role, String email, String phone) {
@@ -36,7 +36,7 @@ public class ResultPayload {
 
     public ResultPayload(boolean result, String message, int userId, String username, String fullName,
             String role, String email, String phone, String profileImageBase64, int reputationScore,
-            double sellerRatingAverage, int sellerRatingCount) {
+            double userRatingAverage, int userRatingCount) {
         this.result = result;
         this.message = message;
         this.userId = userId;
@@ -48,8 +48,8 @@ public class ResultPayload {
         this.profileImageBase64 = profileImageBase64;
         this.reputationScore = Math.max(0,
                 Math.min(com.nhom3.shared.model.user.User.DEFAULT_REPUTATION_SCORE, reputationScore));
-        this.sellerRatingAverage = Math.max(0, Math.min(5, sellerRatingAverage));
-        this.sellerRatingCount = Math.max(0, sellerRatingCount);
+        this.userRatingAverage = Math.max(0, Math.min(5, userRatingAverage));
+        this.userRatingCount = Math.max(0, userRatingCount);
     }
 
     // Getters
@@ -63,6 +63,6 @@ public class ResultPayload {
     public String getPhone() { return phone; } // Lấy sđt
     public String getProfileImageBase64() { return profileImageBase64; }
     public int getReputationScore() { return reputationScore; }
-    public double getSellerRatingAverage() { return sellerRatingAverage; }
-    public int getSellerRatingCount() { return sellerRatingCount; }
+    public double getUserRatingAverage() { return userRatingAverage; }
+    public int getUserRatingCount() { return userRatingCount; }
 }

@@ -80,7 +80,7 @@ public final class ClientEvents {
     public record CancelTransactionResult(boolean success, String message) {
     }
 
-    public record SellerRatingResult(boolean success, String message) {
+    public record UserRatingResult(boolean success, String message) {
     }
 
     public record CancelAuctionResult(boolean success, String message) {

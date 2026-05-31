@@ -22,9 +22,9 @@ public class PurchaseHistoryResponsePayload {
         public String imageBase64;
         public int sellerId;
         public String sellerName;
-        public double sellerRatingAverage;
-        public int sellerRatingCount;
-        public int mySellerRating;
+        public double userRatingAverage;
+        public int userRatingCount;
+        public int myUserRating;
 
         public HistoryDTO(int auctionId, int itemId, String itemName, double myBidAmount, String myBidTimeStr, String status, int topBidderId,
                           String itemType, double startPrice, double curHighest, String startTimeStr, String endTimeStr) {
@@ -54,8 +54,8 @@ public class PurchaseHistoryResponsePayload {
                            String myBidTimeStr, String status, int topBidderId,
                            String itemType, double startPrice, double curHighest, double bidStep,
                            String startTimeStr, String endTimeStr, String imageBase64,
-                           int sellerId, String sellerName, double sellerRatingAverage,
-                           int sellerRatingCount, int mySellerRating) {
+                           int sellerId, String sellerName, double userRatingAverage,
+                           int userRatingCount, int myUserRating) {
             this.auctionId = auctionId;
             this.itemId = itemId;
             this.itemName = itemName;
@@ -73,9 +73,9 @@ public class PurchaseHistoryResponsePayload {
             this.imageBase64 = imageBase64;
             this.sellerId = sellerId;
             this.sellerName = sellerName;
-            this.sellerRatingAverage = Math.max(0, Math.min(5, sellerRatingAverage));
-            this.sellerRatingCount = Math.max(0, sellerRatingCount);
-            this.mySellerRating = mySellerRating < 0 ? -1 : Math.min(5, mySellerRating);
+            this.userRatingAverage = Math.max(0, Math.min(5, userRatingAverage));
+            this.userRatingCount = Math.max(0, userRatingCount);
+            this.myUserRating = myUserRating < 0 ? -1 : Math.min(5, myUserRating);
         }
     }
 

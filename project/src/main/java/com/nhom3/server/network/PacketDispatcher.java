@@ -289,7 +289,7 @@ public class PacketDispatcher {
     }
 
     private Packet handleRateSeller(Packet request, Gson gson) {
-        SellerRatingPayload payload = gson.fromJson(request.getPayload(), SellerRatingPayload.class);
+        UserRatingPayload payload = gson.fromJson(request.getPayload(), UserRatingPayload.class);
         AuctionDAO dao = new AuctionDAOImpl();
         boolean success = dao.rateSeller(payload.getAuctionId(), payload.getBuyerId(), payload.getStars());
         return new Packet(PacketType.RATE_SELLER, new ResultPayload(success,
@@ -412,8 +412,8 @@ public class PacketDispatcher {
                     a.getBidStep(),
                     a.getStartTime().toString(), a.getEndTime().toString(), a.getItem().getImageBase64(),
                     a.getItem().getSellerId(), a.getItem().getSellerName(),
-                    a.getItem().getSellerRatingAverage(), a.getItem().getSellerRatingCount(),
-                    a.getSellerRatingByCurrentBuyer()));
+                    a.getItem().getUserRatingAverage(), a.getItem().getUserRatingCount(),
+                    a.getUserRatingByCurrentBuyer()));
         }
         return new Packet(PacketType.LOAD_PURCHASE_HISTORY, new PurchaseHistoryResponsePayload(purDtoList));
     }
@@ -578,8 +578,8 @@ public class PacketDispatcher {
                 item != null ? item.getImageBase64() : null,
                 item != null ? item.getSellerId() : -1,
                 item != null && item.getSellerName() != null ? item.getSellerName() : "",
-                item != null ? item.getSellerRatingAverage() : 0,
-                item != null ? item.getSellerRatingCount() : 0);
+                item != null ? item.getUserRatingAverage() : 0,
+                item != null ? item.getUserRatingCount() : 0);
     }
 
     private UserListResponsePayload.UserDTO toUserDto(User user) {
@@ -638,7 +638,7 @@ public class PacketDispatcher {
         String profileImage = user.getUserInfo() != null ? user.getUserInfo().getProfileImageBase64() : null;
         return new ResultPayload(success, message, user.getId(), username, fullName,
                 user.getRole().name(), email, phone, profileImage, user.getReputationScore(),
-                user.getSellerRatingAverage(), user.getSellerRatingCount());
+                user.getUserRatingAverage(), user.getUserRatingCount());
     }
 
     private boolean isOverdueUnpaidAuction(Auction auction) {
@@ -668,7 +668,7 @@ public class PacketDispatcher {
             case CANCEL_TRANSACTION ->
                     gson.fromJson(request.getPayload(), TransactionActionPayload.class).getUserId();
             case RATE_SELLER ->
-                    gson.fromJson(request.getPayload(), SellerRatingPayload.class).getBuyerId();
+                    gson.fromJson(request.getPayload(), UserRatingPayload.class).getBuyerId();
             case LOAD_PURCHASE_HISTORY ->
                     gson.fromJson(request.getPayload(), BidderIdPayload.class).getBidderId();
             case LOAD_SELLER_ITEMS ->

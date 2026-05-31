@@ -25,6 +25,7 @@ import com.nhom3.shared.network.payload.ResultPayload;
 public class AuctionHandler {
     private static final Logger logger = LoggerFactory.getLogger(AuctionHandler.class);
     private static final int AUCTION_SHARDS = 10;
+    private static final String AUTO_BID_CONFIG_CHANGED = "AUTO_BID_CONFIG_CHANGED";
     private static AuctionHandler instance;
 
     private final AuctionDAOImpl dao;
@@ -145,42 +146,39 @@ public class AuctionHandler {
                 if (secondBot == null) {
                     // Chưa có ai đặt giá nào, bot này sẽ là người dẫn đầu với giá khởi điểm
                     if (highestBidderId == -1) {
-                        double startingPrice = currentAuction.getItem().getStartPrice();
+                        double intendedAmount = calculateNextAutoBidAmount(currentAuction, winnerBot);
+                        double requiredMin = currentHighest + bidStep;
+                        if (intendedAmount < requiredMin) {
+                            cancelledAutoBid |= dao.cancelAutoBid(auctionId, winnerBot.getUserId());
+                            publishAutoBidConfigChangedIfNeeded(currentAuction, cancelledAutoBid);
+                            return;
+                        }
 
                         Bidder bidder = new Bidder(winnerBot.getUserId(), null, null);
                         BidTransaction newBid = new BidTransaction(
-                                0, bidder, startingPrice, LocalDateTime.now(), "Đặt giá qua \ud83e\udd16 Auto-Bid");
+                                0, bidder, intendedAmount, LocalDateTime.now(), "Đặt giá qua \ud83e\udd16 Auto-Bid");
                         LocalDateTime previousEndTime = currentAuction.getEndTime();
                         boolean isBidSuccess = auctionService.placeAutoBid(currentAuction, newBid);
                         if (isBidSuccess) {
                             publishPriceUpdateSnapshot(currentAuction, previousEndTime, newBid);
                         }
+                        publishAutoBidConfigChangedIfNeeded(currentAuction, cancelledAutoBid);
                         return;
                     }
                     // CHỈ CÒN 1 NGƯỜI DUY NHẤT
                     if (winnerBot.getUserId() == highestBidderId) {
-                        if (cancelledAutoBid) {
-                            publishAuctionSnapshot(currentAuction, "AUTO_BID_CONFIG_CHANGED", null);
-                        }
+                        publishAutoBidConfigChangedIfNeeded(currentAuction, cancelledAutoBid);
                         return; // Đang dẫn đầu, không cần tự tự nâng giá mình lên
                     }
                     
                     double requiredMin = currentHighest + bidStep;
                     if (winnerBot.getMaxAmount() < requiredMin) {
                         cancelledAutoBid |= dao.cancelAutoBid(auctionId, winnerBot.getUserId());
-                        if (cancelledAutoBid) {
-                            publishAuctionSnapshot(currentAuction, "AUTO_BID_CONFIG_CHANGED", null);
-                        }
+                        publishAutoBidConfigChangedIfNeeded(currentAuction, cancelledAutoBid);
                         return;
                     }
                     
-                    double intendedAmount = currentHighest + winnerBot.getIncrement();
-                    if (intendedAmount < requiredMin) {
-                        intendedAmount = requiredMin;
-                    }
-                    if (intendedAmount > winnerBot.getMaxAmount()) {
-                        intendedAmount = winnerBot.getMaxAmount();
-                    }
+                    double intendedAmount = calculateNextAutoBidAmount(currentAuction, winnerBot);
 
                     Bidder bidder = new Bidder(winnerBot.getUserId(), null, null);
                     BidTransaction newBid = new BidTransaction(
@@ -189,9 +187,8 @@ public class AuctionHandler {
                     boolean isBidSuccess = auctionService.placeAutoBid(currentAuction, newBid);
                     if (isBidSuccess) {
                         publishPriceUpdateSnapshot(currentAuction, previousEndTime, newBid);
-                    } else if (cancelledAutoBid) {
-                        publishAuctionSnapshot(currentAuction, "AUTO_BID_CONFIG_CHANGED", null);
                     }
+                    publishAutoBidConfigChangedIfNeeded(currentAuction, cancelledAutoBid);
                 } else {
                     // CÓ 2 NGƯỜI ĐẤU VỚI NHAU TRỞ LÊN
                     // Giá cuối cùng sẽ được đẩy lên bằng giá max của người thứ 2 + bước nhảy của người thứ 1
@@ -219,9 +216,8 @@ public class AuctionHandler {
                     boolean isBidSuccess = auctionService.placeAutoBid(currentAuction, newBid);
                     if (isBidSuccess) {
                         publishPriceUpdateSnapshot(currentAuction, previousEndTime, newBid);
-                    } else if (cancelledAutoBid) {
-                        publishAuctionSnapshot(currentAuction, "AUTO_BID_CONFIG_CHANGED", null);
                     }
+                    publishAutoBidConfigChangedIfNeeded(currentAuction, cancelledAutoBid);
                 }
             } catch (BusinessRuleException e) {
                 logger.error("Lỗi đặt autobid", e);
@@ -232,6 +228,25 @@ public class AuctionHandler {
             auctionThreads[auctionId % AUCTION_SHARDS].submit(autoBidTask);
         } catch (Exception e) {
             logger.error("Lỗi đặt giá", e);
+        }
+    }
+
+    static double calculateNextAutoBidAmount(Auction auction, AutoBidPayload bot) {
+        double currentHighest = auction.getItem().getCurHighest();
+        double requiredMin = currentHighest + auction.getBidStep();
+        double intendedAmount = currentHighest + bot.getIncrement();
+        if (intendedAmount < requiredMin) {
+            intendedAmount = requiredMin;
+        }
+        if (intendedAmount > bot.getMaxAmount()) {
+            intendedAmount = bot.getMaxAmount();
+        }
+        return intendedAmount;
+    }
+
+    private void publishAutoBidConfigChangedIfNeeded(Auction auction, boolean cancelledAutoBid) {
+        if (cancelledAutoBid) {
+            publishAuctionSnapshot(auction, AUTO_BID_CONFIG_CHANGED, null);
         }
     }
 

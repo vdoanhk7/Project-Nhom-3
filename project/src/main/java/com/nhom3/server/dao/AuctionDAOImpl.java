@@ -42,8 +42,7 @@ public class AuctionDAOImpl implements AuctionDAO {
                 "JOIN users u ON u.id = ? " +
                 "SET i.cur_highest = ? " +
                 "WHERE a.id = ? " +
-                "AND ((a.highest_bidder_id IS NULL AND ? >= i.cur_highest) " +
-                "OR (a.highest_bidder_id IS NOT NULL AND ? >= i.cur_highest + a.bid_step)) " +
+                "AND ? >= i.cur_highest + a.bid_step " +
                 "AND a.status = 'RUNNING' " +
                 "AND u.role = 'BIDDER' " +
                 "AND u.reputation_score > 0";
@@ -59,7 +58,6 @@ public class AuctionDAOImpl implements AuctionDAO {
                     stmt1.setDouble(2, newAmount);
                     stmt1.setInt(3, auctionId);
                     stmt1.setDouble(4, newAmount);
-                    stmt1.setDouble(5, newAmount);
 
                     int rowsUpdated = stmt1.executeUpdate();
                     if (rowsUpdated == 0) {

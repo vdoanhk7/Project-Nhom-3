@@ -81,7 +81,7 @@ Project-Nhom-3/
 
 ## 4. Vị Trí Các File JAR
 
-Sau khi build, Maven tạo 2 fat JAR tại(Khi clone code thì đã có file JAR sẵn để chạy:
+Repository đã kèm sẵn 2 file JAR trong `project/dist/` để có thể chạy ngay sau khi clone. Nếu muốn tự build lại, Maven cũng sẽ tạo lại 2 file này tại cùng thư mục:
 
 ```text
 project/dist/server-app.jar
@@ -89,6 +89,8 @@ project/dist/client-app.jar
 ```
 
 Hai file này là fat JAR/uber JAR, đã đóng gói các dependencies cần thiết để chạy bằng lệnh `java -jar`.
+
+Lưu ý: file JAR có sẵn trong `project/dist/` được build để chạy nhanh trên Windows. Nếu sử dụng macOS hoặc Linux, nên tự build lại bằng Maven trên đúng hệ điều hành trước khi chạy, vì JavaFX có thư viện native riêng cho từng hệ điều hành.
 
 GitHub Actions workflow `Build Fat JARs` cũng tự động build và upload artifact tên `auction-fat-jars`, gồm:
 
@@ -98,6 +100,8 @@ client-app.jar
 ```
 
 ## 5. Hướng Dẫn Build
+
+Mục này chỉ cần thực hiện khi muốn tự đóng gói lại JAR, ví dụ khi chạy trên macOS/Linux hoặc sau khi chỉnh sửa source code.
 
 Từ thư mục gốc repository, build nhanh và bỏ qua test:
 
@@ -117,19 +121,31 @@ mvn --batch-mode clean package
 
 Cần chuẩn bị database MySQL trước, sau đó chạy server, rồi mới chạy client.
 
-Chạy nhanh với cấu hình mặc định:
+Chạy nhanh với cấu hình mặc định trên máy Windows bằng file JAR có sẵn trong `project/dist/`:
 
-Bước 1: vào project và chạy server
+Bước 1: vào thư mục `project`.
+
+Trên Windows PowerShell/CMD:
+
+```powershell
+cd Project-Nhom-3\project
+```
+
+Trên macOS/Linux/Git Bash:
 
 ```bash
 cd Project-Nhom-3/project
+```
+
+Sau đó chạy server:
+
+```bash
 java -jar dist/server-app.jar
 ```
 
-Bước 2: chạy client
+Bước 2: mở terminal khác, vào lại thư mục `project` như bước 1 rồi chạy client:
 
 ```bash
-cd Project-Nhom-3/project
 java -jar dist/client-app.jar
 ```
 
@@ -160,10 +176,11 @@ java -jar dist/client-app.jar
 
 Muốn thay đổi thông tin cấu hình, dùng Java system properties hoặc cấu hình sẵn Environment variable:
 
-Ví dụ muốn truy cập server đã chạy trên máy ảo tại id "34.126.166.158"
+Ví dụ muốn mở server ở port 8080
 
 ```bash
-java -Dauction.server.host=34.126.166.158 -jar dist/server-app.jar
+java -Dauction.server.port=8080 -jar dist/server-app.jar
+
 ```
 
 ### 6.3. Chạy Client
@@ -173,7 +190,7 @@ Nếu server chạy trên máy khác hoặc port khác, truyền cấu hình ser
 Ví dụ bằng Java system properties:  
 
 ```bash
-java -Dauction.server.host=<server-host> -Dauction.server.port=<server-port> -jar dist/client-app.jar
+java -Dauction.server.host=34.126.166.158 -Dauction.server.port=8080 -jar dist/client-app.jar
 ```
 
 ### 6.4. Chạy Nhiều Client
@@ -226,7 +243,7 @@ Mở terminal khác và chạy client
 - Cập nhật realtime giá hiện tại cho các client đang theo dõi phiên đấu giá.
 - Cập nhật realtime khi phiên đấu giá bị hủy.
 - Cập nhật realtime log hệ thống cho Admin.
-- Rule-based chatbot đơn giản4
+- Rule-based chatbot đơn giản.
 - Server hỗ trợ nhiều client kết nối đồng thời.
 - Lưu trữ dữ liệu người dùng, sản phẩm, phiên đấu giá, lịch sử đặt giá và auto bid.
 - Ghi log hoạt động của server, client và hệ thống.
@@ -235,5 +252,5 @@ Mở terminal khác và chạy client
 
 ## 8. Báo Cáo PDF Và Video Demo
 
-- Báo cáo PDF: TODO - cập nhật link báo cáo PDF
-- Video demo: TODO - cập nhật link video demo
+- Báo cáo PDF: https://docs.google.com/document/d/1vkhd8-NjLsVCY4TOW3WWXu9rFOdW1iI-/edit
+- Video demo: https://youtu.be/L4qC7BrXk6o

@@ -471,15 +471,26 @@ public class PacketDispatcher {
         AuctionDAOImpl dao = new AuctionDAOImpl();
         AutoBidPayload existingConfig = dao.getUserAutoBid(checkReq.getAuctionId(), checkReq.getUserId());
         Auction auction = dao.getAuctionById(checkReq.getAuctionId());
-        if (existingConfig != null && auction != null) {
-            double minAutoBidAmount = auction.getItem().getCurHighest() + auction.getBidStep();
-            if (existingConfig.getIncrement() < auction.getBidStep()
-                    || existingConfig.getMaxAmount() < minAutoBidAmount) {
-                dao.cancelAutoBid(checkReq.getAuctionId(), checkReq.getUserId());
-                existingConfig = null;
-            }
+        if (shouldCancelAutoBidConfig(existingConfig, auction)) {
+            dao.cancelAutoBid(checkReq.getAuctionId(), checkReq.getUserId());
+            existingConfig = null;
         }
         return new Packet(PacketType.CHECK_AUTO_BID, existingConfig);
+    }
+
+    static boolean shouldCancelAutoBidConfig(AutoBidPayload existingConfig, Auction auction) {
+        if (existingConfig == null || auction == null || auction.getItem() == null) {
+            return false;
+        }
+        if (existingConfig.getIncrement() < auction.getBidStep()) {
+            return true;
+        }
+        if (existingConfig.getUserId() == auction.getHighestBidderId()) {
+            return false;
+        }
+
+        double minAutoBidAmount = auction.getItem().getCurHighest() + auction.getBidStep();
+        return existingConfig.getMaxAmount() < minAutoBidAmount;
     }
 
     private Packet handleCancelAutoBid(Packet request, Gson gson) {

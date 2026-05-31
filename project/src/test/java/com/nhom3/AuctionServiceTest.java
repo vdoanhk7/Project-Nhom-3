@@ -197,6 +197,32 @@ class AuctionServiceTest {
     }
 
     @Test
+    void testPlaceBid_FirstBidMustMeetBidStep() {
+        Auction auction = runningAuctionWithoutLeader();
+        BidTransaction bid = bidFromUser(2, 100.0);
+
+        assertThrows(IllegalStateException.class, () -> auctionService.placeBid(auction, bid));
+        verify(auctionDAO, never()).updateHighestBid(anyInt(), anyInt(), anyDouble());
+    }
+
+    @Test
+    void testPlaceBid_FirstBidAtCurrentPlusBidStep_Success() {
+        Auction auction = runningAuctionWithoutLeader();
+        Bidder bidder = new Bidder(2, null, null);
+        BidTransaction bid = new BidTransaction(1, bidder, 150.0, LocalDateTime.now(), "Test");
+
+        when(auctionDAO.updateHighestBid(1, 2, 150.0)).thenReturn(true);
+        when(auctionDAO.getEndTime(1)).thenReturn(auction.getEndTime());
+
+        boolean result = auctionService.placeBid(auction, bid);
+
+        assertTrue(result);
+        assertEquals(150.0, auction.getItem().getCurHighest());
+        assertEquals(bidder, auction.getHighestBidder());
+        verify(auctionDAO).saveBidTransaction(bid, 1);
+    }
+
+    @Test
     void testPlaceBid_SameBidder_ThrowsException() {
         Item item = mock(Item.class);
         when(item.getId()).thenReturn(1);
@@ -328,6 +354,14 @@ class AuctionServiceTest {
         auction.setBidStep(50.0);
         auction.setStatus(StatusOfAuction.RUNNING);
         auction.setHighestBidder(new Bidder(1, null, null));
+        return auction;
+    }
+
+    private Auction runningAuctionWithoutLeader() {
+        Art item = new Art(1, "Auction item", 100.0);
+        Auction auction = new Auction(1, item, LocalDateTime.now().minusHours(1), LocalDateTime.now().plusHours(1));
+        auction.setBidStep(50.0);
+        auction.setStatus(StatusOfAuction.RUNNING);
         return auction;
     }
 

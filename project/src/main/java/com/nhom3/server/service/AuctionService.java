@@ -219,7 +219,7 @@ public class AuctionService {
         }
 
         double currentHighest = auction.getItem().getCurHighest();
-        double requiredMinBid = auction.getHighestBidderId() == -1 ? currentHighest : currentHighest + auction.getBidStep();
+        double requiredMinBid = currentHighest + auction.getBidStep();
         if (bid.getAmount() < requiredMinBid) {
             throw new BidRejectedException(
                     "BID_AMOUNT_TOO_LOW",
